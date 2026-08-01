@@ -36,6 +36,7 @@ ceiling, not a quality dial; escalation beyond High is per-wave Director approva
 **Core spine (never comes off):** Program Lead · Principal Architect (on-demand) · QA · Governance &
 Audit · SecOps · Backend-API · Backend-Data · Frontend-Web · DevOps.
 **AI/finance-family (on):** AI/ML · AI Quality · FinOps · Legal & Privacy · Data Engineer.
+**Design (on — seated D-TRADE-011):** Design Lead ("Designer") — taste-tier, Director is approver of record.
 **Phase-0 Gauntlet cluster (B9):** DIRECTOR-PENDING — seat only if B9 runs.
 Oversight (Architect·QA·GA·SecOps·FinOps·AIQ·Legal) is **independent of builders and reports to the
 Director**; pod ICs report to their pod lead. No seat certifies its own work.
@@ -126,4 +127,5 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 | FinOps | — | ⏸ not spawned | per-unit COGS + fail-closed governor at chokepoint |
 | Legal & Privacy | — | ⏸ not spawned | SEC/financial-regulatory + PII bright-lines |
 | Data Engineer | — | ⏸ not spawned | EDGAR/market-data ingestion design |
+| **Design Lead** ("Designer") | — | ⏸ **spawning (D-TRADE-011)** | confirm live · claim row · **HOLD for assignment** (no product yet → no UI to design; likely first: product-experience/brand exploration or B9 UX support once `<1.1>` lands) |
 | Gauntlet cluster | — | ⏸ pending B9 | seat if the Director runs B9 |
