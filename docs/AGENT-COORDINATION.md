@@ -114,17 +114,17 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 | Seat | Session | Status | Next-up |
 |---|---|---|---|
 | **Program Lead** | ▶ **LIVE — this session** (set title `HELM (trade) — Program Lead`; owns clone `Trade - Lead`) | ✅ founded · ▶ **active Lead** | run the delivery pipeline; **await Director locks + product `<1.1>`**; assign by message to verified-ACTIVE seats; never self-dispatch |
-| Principal Architect | — | ⏸ not spawned | on-demand: W1 spine ADR (after B9/design locks) |
+| Principal Architect | — | ⏸ **spawning (D-TRADE-016)** · **Fable 5·Max** | HOLD — nothing to architect until product `<1.1>` + a build path; then the W1 spine A0 ADR |
 | QA | — | ⏸ not spawned | arm gate legs at W0; phase-exit sign-offs |
 | Governance & Audit | — | ⏸ not spawned | seed oracle-coverage audit; own RECONCILE gate |
 | SecOps | — | ⏸ **spawning (D-TRADE-015)** | ACTIVE: provider ToS-taint on SEC EDGAR · Polygon · Supabase + author key denylist (SEC key · Supabase service_role/DB pwd · Polygon) → report to Lead |
 | Backend-API | — | ⏸ not spawned | Lane 1 at W1 |
-| Backend-Data | — | ⏸ not spawned | Lane 2 + money-truth chokepoint at W1 |
+| Backend-Data = **SDE1** | — | ⏸ **spawning (D-TRADE-016)** | Lane 2 (data/domain + money-truth chokepoint). HOLD on build; may review DB baseline with DevOps |
 | Frontend-Web | — | ⏸ not spawned | Lane 3 client shell at W2 |
 | DevOps | — | ⏸ **spawning (D-TRADE-015)** | infra-prep: capture DB baseline via read-only MCP · design gate harness + W0 DoD · HOLD on W0 scaffold pending build-GO |
 | AI/ML | — | ⏸ **spawning (D-TRADE-015)** | HOLD — no product `<1.1>` = no engine to design/build |
 | AI Quality | — | ⏸ **spawning (D-TRADE-015)** | HOLD — no AI output yet; may draft eval/ground-truth methodology only |
-| FinOps | — | ⏸ not spawned | per-unit COGS + fail-closed governor at chokepoint |
+| FinOps | — | ⏸ **spawning (D-TRADE-016)** | cost-model the adopted providers (Supabase/Polygon/SEC/LLM) — real dollars; design the fail-closed governor + $/day auto-kill |
 | Legal & Privacy | — | ⏸ not spawned | SEC/financial-regulatory + PII bright-lines |
 | Data Engineer | — | ⏸ not spawned | EDGAR/market-data ingestion design |
 | **Design Lead** ("Designer") | ▶ **LIVE** (owns clone `Trade - Designer`) | ▶ **live** · ⏸ **HOLDING** | **HOLD for assignment** — no product yet (`<1.1>` NOT DECIDED) → no UI to design; D-TRADE-010 stands. "Held is a state, not a failure." Onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE). Likely first: product-experience/brand exploration or B9 UX support once `<1.1>` lands |
