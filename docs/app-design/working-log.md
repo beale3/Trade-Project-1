@@ -519,3 +519,36 @@ byte-identical to the approved mockup — verified by diffing my edit boundaries
   new blocker. AI/ML's backend is live (`flask --app tools/web/app run`, smoke-passing) — next step is
   integration-testing my wiring against their real `/api/scan`, not just my fixture. Reporting once to
   the Lead.
+
+### [AI/ML · 2026-08-01] D-TRADE-023 — real browser integration test, one bug found + isolated
+- Took Designer's own flagged next step: ran the REAL `flask --app tools/web/app run` server (synthetic
+  data monkeypatched into `rolling_watchlist.load_daily`/`load_intraday`/etc. — no live Massive key in
+  this session), loaded the REAL served `tools/web/static/index.html` in an actual browser, and called
+  `window.runScan()` against the real `/api/scan` endpoint. Not a fixture on either side — a genuine
+  end-to-end round-trip through my real `serialize.py` and Designer's real render functions.
+- **Happy path (1 holding-up candidate, 0 skip rows): fully correct.** Verified via `get_page_text` —
+  stat strip, table, guardrail checklist, S3 breakdown, phase stepper, and the intraday chart (pivot/R1/
+  S1/prior-close labels matched the synthetic data exactly) all rendered correctly from the real HTTP
+  response. Confirms AI/ML's backend and Designer's frontend are correctly wired end-to-end for this case.
+- **🔴 Bug found + isolated (2 candidates, 1 holding-up + 1 rolled-over): `TypeError: Cannot read
+  properties of null (reading 'toFixed')`.** Root cause: `tools/web/static/index.html:442`,
+  `renderTable()`'s per-row template calls `d.relVol.toFixed(1)` **unconditionally for every row**,
+  including rolled-over (`holdingUp:false`) ones. My backend correctly sends `relVol:null` for those —
+  `scan_guardrail_criteria` (the only place relative volume gets computed) is only ever called on
+  `holding_tickers` in `main()`'s real pipeline; a genuinely rolled-over ticker's rel-vol is **never
+  computed** by the real system, so `null` is the honest value, not a bug in the serializer. The
+  approved mockup's own synthetic fixture happened to fabricate a plausible `relVol` number for its 2
+  skip-row examples (QTRB/TKDN) — masking that the real backend can't honestly supply one there. Isolated
+  by re-running with only the holding-up ticker (passes clean) vs. both tickers (fails) — confirms the
+  crash is specifically triggered by a null-`relVol` row reaching that line. `renderGuardrail()` has the
+  same unconditional `.toFixed()` at line 467 but is unreachable for skip rows today (guarded upstream by
+  `renderDetail`'s own `if (!d.holdingUp)` early-return) — not currently triggerable, flagging anyway
+  since it's the same latent pattern.
+- **Not my file to fix** (Designer's write-lane) — reported with exact repro + line numbers + root cause,
+  not patched around. Recommended fix: guard the two call sites (`d.relVol != null ? d.relVol.toFixed(1)
+  + 'x' : '—'`, matching how the table already handles `float`/`catalyst` "No data" states), not a
+  backend change — fabricating a relVol number to avoid the crash would violate the same honesty
+  principle as the earlier derived-fields finding.
+- Cleaned up: killed both throwaway server processes, deleted the scratchpad harness script (not
+  committed — synthetic-data test infra only, not shippable code).
+- Reported once to the Lead + messaged Designer directly (protocol 11) with the exact repro.
