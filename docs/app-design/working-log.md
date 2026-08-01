@@ -41,3 +41,20 @@ last**, remove the three markers (LL-54).
   `origin/main`, clean). Not a blocker; flagged so the stand-up gap is on record.
 - No design content authored (my write-lane is `docs/adr/**` + this log; only the Lead edits the canonical
   doc). Awaiting Lead dispatch.
+
+### [AIQ · 2026-08-01] Spawn · onboarded · eval methodology draft (HOLD)
+- **Live + onboarded.** Clone `Trade - AIQ` was empty on spawn → cloned `beale3/Trade-Project-1`
+  (origin/main @ `0ec2358`, D-TRADE-014); `pull --rebase` clean. Read in order: charter → decisions-log →
+  canonical-design → my `oracle-boundary` row (VERIFIER) → PROFILE. Board row claimed. **HOLDING** per
+  D-TRADE-010: `<1.1>` NOT DECIDED and no AI/ML output exists yet → no golden set can honestly exist.
+- **Light prep (methodology only, no eval set — the fabrication line held):** drafted
+  `docs/eval/methodology-draft.md` — a proposal for the **Lead to absorb**. It fixes the eval *method*
+  before any output exists: freeze-before-measure/pin the commit (LL-41) · accuracy-vs-consistency as
+  separate claims + blind write-once ground truth (LL-40) · pre-register write-once before the run (LL-44)
+  · catch-matching against a shared reason-vocab co-authored with AI/ML (LL-42) · fresh-draw is the honest
+  number, same-set re-seal is labelled confirmation only (LL-43) · void-on-contamination (LL-47) ·
+  builder≠judge. Contains a **placeholder** reason-vocab skeleton (structural buckets, NOT product claims).
+- **Nothing to grade, nothing fabricated.** No golden items, thresholds, or accuracy numbers authored.
+- **Instantiation blocked on (for Lead visibility):** ① `<1.1>` product · ② `<3.4>` engine + first sealed
+  outputs · ③ reason-vocab co-authored w/ AI/ML · ④ Director rubric ratification · ⑤ named blind
+  ground-truth expert · ⑥ providers `<2.1>` for source-of-record grounding. Reported once to Lead.
