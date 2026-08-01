@@ -132,6 +132,30 @@ last**, remove the three markers (LL-54).
 - **Nothing to audit yet, verified**: `git log`/tree at `47f6e60` shows no P1-2 (screener ingestion) or
   P1-3 (validation engine) code committed. HOLDING is correct, same posture as before, now against real
   near-term work instead of an undecided product.
+
+### [DevOps · 2026-08-01] Pivot re-scope — Python gate harness + Phase-1 DoD (design only)
+- Rebased onto D-TRADE-020 (`<1.1>` locked — personal options-signal tool). Re-authored (not patched,
+  LL-19) `docs/roles/devops/harness-design.md`: the prior Node/Fastify/Docker/RLS design is deleted; a
+  lighter Python-only gate harness replaces it (ruff/mypy + pytest + a CV-reproducibility leg + legs
+  K/T/G), matching the re-authored `gate-spec.md`.
+- **Independently re-verified the toolchain in this (DevOps) session, not taken on the Lead's report
+  alone:** Python 3.12.10 + pip resolve here too, and every core analysis library the existing screener/
+  backtest/study scripts already use (pandas/numpy/scipy/yfinance/matplotlib/requests) imports cleanly.
+  This closes the earlier open question of whether D-TRADE-017's Node/Docker absence was session-specific
+  — it wasn't; only Node/Docker/pnpm/gh are genuinely absent, and `<3.5>` drops that entire stack anyway.
+  `ruff`/`mypy`/`pytest` are not yet installed — a trivial `pip install`, unlike the Node/Docker gap.
+- **Leg K/T wiring plan built on SecOps's already-authored specs, not re-derived:** `key-denylist.md`'s
+  7 patterns (K0–K6) encoded as the wiring target; `tos-taint-review.md`'s sanctioned-module rule adapted
+  from the superseded `apps/web`/Lane-2 framing to a draft Python module layout (`helm/ingest/*`,
+  `helm/storage/*`) — final module names await the Architect's P1-0 design ADR.
+- **Flag (not a fix — not my lane):** `docs/finops/governor-spec.md` (leg G's target) is still written at
+  the superseded SaaS scale (per-tenant caps, transactional ledger, billing reconciliation vs. invoice) —
+  canonical `<3.2>` explicitly calls that machinery overbuilt for a personal spend guard now. FinOps
+  authors caps; I only wire — flagging for FinOps to re-author a light version before leg G is real.
+- **Held on actual file creation** (`pyproject.toml`, `scripts/gate/**`) — stage-plan.md itself frames
+  D-TRADE-010's applicability to Phase-1 scaffold work as the Lead's recommendation pending Director
+  confirmation, and a Wave-Entry Gate (Architect P1-0 ADR + Director GO) still applies regardless. The
+  design above is a ready-to-execute plan for the moment either lands, not a build.
 - Reported once to the Lead (protocol 15).
 
 ### [AIQ · 2026-08-01] D-TRADE-021 ratification synced (no content change)
