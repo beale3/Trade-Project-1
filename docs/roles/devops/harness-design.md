@@ -104,25 +104,34 @@ the concrete module names change under `<3.5>`'s Python layout (final names awai
 **Negative control:** plant a Massive/Polygon import in, e.g., a top-level analysis script outside the
 ingestion module → leg RED. Same fixture doubles as the harness done-bar (§B.2).
 
-## §E · Leg G — spend guard (⚠️ flag: FinOps's current spec is pre-pivot, needs a light re-author)
-Canonical `<3.2>` and the re-authored `gate-spec.md` both describe leg G as **lightweight**: "a call that
-would breach the daily cap is BLOCKED before firing" — a cap-check + block, not the SaaS-scale
-append-only-ledger/idempotency/billing-reconciliation machinery.
+## §E · Leg G — spend guard (✅ RESOLVED — wired against FinOps's re-authored `governor-spec.md`)
+FinOps re-authored the spec at personal scale (`ab23303`, absorbed here 2026-08-01) — the earlier flag in
+this section is closed. FinOps: authors the cap logic + recommended posture. **DevOps wires §2's mechanical
+leg.** Cap **values** stay Director-locked (`<2.1>` tier confirmations pending) — the mechanism below does
+not need them to be built and tested.
 
-**What exists today** (`docs/finops/governor-spec.md`) is still written at that **superseded SaaS scale**
-(per-tenant caps, transactional ledger rows, billing reconciliation vs. a provider invoice, arms at "W1
-with the money-truth chokepoint") — it predates D-TRADE-020 and canonical `<3.2>` explicitly calls that
-machinery **"overbuilt"** for personal scale now. **I do not re-scope FinOps's spec myself (not my lane —
-FinOps authors caps, I only wire); flagging this to the Lead (§F) so FinOps re-authors a right-sized
-version** before I wire leg G for real. Until then, my wiring skeleton is deliberately minimal and
-mechanism-only:
-
-- **Mechanism (mine to wire once FinOps confirms the light-scale shape):** before a priced Massive/
-  SEC-API.io call, read today's tally (a simple counter — a local file, or a Supabase table row, TBD with
-  FinOps/SDE1), compare projected post-call spend to a single `K_day` cap (Director-locked value), **REFUSE
-  (raise, don't call) if it would cross** — no per-tenant layer (single user, `<1.2>`), no billing-
-  reconciliation-vs-invoice oracle (personal scale, FinOps's call whether that's still worth it).
-- **Negative control:** drive the tally to `K_day − ε`, attempt a call that would cross → REFUSED, not silently allowed.
+- **Assertion (§2, unchanged from gate-spec leg G):** before a call to a provider with any per-use/overage
+  pricing dimension, check **today's running count/estimated-$ for that provider against a daily cap**; a
+  call that would **breach** it is **BLOCKED** (never fires) and the block is logged with why (which
+  provider, which cap, today's tally) — no silent skip.
+- **Cap expression, not a baked number (LL-61):** `min(quota_calls, $_ceiling)` — "whichever bites first."
+  SEC-API.io's measured 50 GB/mo → $0.30/GB overage (`cost-model.md` §2.3) is the one **real, current**
+  overage line; Massive's paid tiers are flat, so its cap matters mainly on the free/basic rate limit.
+- **State/storage — explicitly left to DevOps/SDE1 by the spec (§4), decided here:** a **flat JSON file**
+  (e.g. `.gate/spend-tally.json`, gitignored — it's runtime state, not config) for Phase 1, keyed by
+  `(provider, UTC date) → {calls, est_$}`. Chosen over a Supabase table row because it needs **zero new
+  schema/migration work** to stand up and there is **no concurrency to coordinate** (single user, one
+  process at a time, per §1/§4) — a Supabase row is a natural *later* upgrade (visibility from anywhere) but
+  not a Phase-1 requirement. **Read-before-call, write-after-call**; on a write failure, treat the day as
+  uncounted-unsafe and block rather than assume zero spend (§4's conservative-default recommendation).
+- **No ledger/idempotency/reconciliation** — correctly dropped per §5; a single counter increment per call
+  is sufficient at this scale.
+- **Negative control (§2, the actual admission-test artifact — reproducible by QA or the Director):** drive
+  the day's tally to the cap, fire one more call → **BLOCKED**, not silently allowed. I plant this as a
+  scripted test (seed the tally file at `cap − 1`, assert the next call raises/blocks and does not reach
+  the provider), QA re-runs it on phase exit.
+- **Light co-check (§6, right-sized):** FinOps confirms the block behavior matches §2; one other seat (QA
+  or the Director) reproduces it — no multi-seat sign-off matrix needed at this scale.
 
 ---
 
@@ -138,7 +147,7 @@ Director explicitly confirms light scaffold-writing is in-bounds under the curre
 | P1-4c gate harness | DevOps | `scripts/gate/run.py` + `scripts/gate/legs/*.py`; exits 0 on the scaffold tree; **a planted violation makes it FAIL** (LL-48 done-bar) |
 | P1-4d leg K wiring | DevOps ← SecOps spec (already authored) | SecOps's 7 patterns encoded; each of the 7 negative controls shown to bite |
 | P1-4e leg T wiring | DevOps ← SecOps rule (adapted, §D) | planted cross-module provider import → RED |
-| P1-4f leg G skeleton | DevOps ← **FinOps re-authored spec (not yet delivered, flagged below)** | cap-check-and-block mechanism; cap **value** stays Director-locked, never invented here |
+| P1-4f leg G skeleton | DevOps ← FinOps's re-authored spec (delivered, §E) | flat-file tally + cap-check-and-block mechanism; cap **value** stays Director-locked, never invented here |
 | P1-4g Supabase persistence for scan/backtest history | **SDE1** (not DevOps — noted for coordination only) | co-owned task per stage-plan P1-4; DevOps's role is the surrounding scaffold, not the schema |
 
 **Exit:** `gate` green on the scaffold tree; leg K/T armed + negative controls shown to bite; leg 3
@@ -150,9 +159,10 @@ Director explicitly confirms light scaffold-writing is in-bounds under the curre
    Director ruling, and still requires the Wave-Entry Gate (Architect P1-0 ADR + Director GO). I am
    holding on creating actual files (`pyproject.toml`, `scripts/gate/**`) until one of those two lands —
    this document is the one-shot plan for when it does.
-2. 🟡 **FinOps's `governor-spec.md` is pre-pivot (SaaS-scale)** — canonical `<3.2>` calls that machinery
-   overbuilt for a personal spend guard. I can't wire leg G for real against a stale spec; flagging for
-   FinOps to re-author a light version (not mine to rewrite — builder ≠ judge; FinOps authors caps).
+2. 🟢 **RESOLVED — FinOps re-authored `governor-spec.md` at personal scale** (`ab23303`); leg G's wiring
+   plan is now fully specified against it (§E), including the storage choice (flat JSON tally file).
+   Cap **values** remain Director-locked pending `<2.1>` tier confirmations, but the mechanism doesn't
+   need them to be built/tested against the negative control.
 3. 🟢 **Toolchain, mostly resolved.** Python + every core analysis library are confirmed present and
    importable in **this** session (not just the Lead's) — D-TRADE-017's Node/Docker gap is genuinely
    superseded for Phase 1, not just claimed superseded. Only `ruff`/`mypy`/`pytest` need a trivial install.
