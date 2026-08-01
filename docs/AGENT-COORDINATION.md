@@ -127,5 +127,5 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 | FinOps | — | ⏸ not spawned | per-unit COGS + fail-closed governor at chokepoint |
 | Legal & Privacy | — | ⏸ not spawned | SEC/financial-regulatory + PII bright-lines |
 | Data Engineer | — | ⏸ not spawned | EDGAR/market-data ingestion design |
-| **Design Lead** ("Designer") | — | ⏸ **spawning (D-TRADE-011)** | confirm live · claim row · **HOLD for assignment** (no product yet → no UI to design; likely first: product-experience/brand exploration or B9 UX support once `<1.1>` lands) |
+| **Design Lead** ("Designer") | ▶ **LIVE** (owns clone `Trade - Designer`) | ▶ **live** · ⏸ **HOLDING** | **HOLD for assignment** — no product yet (`<1.1>` NOT DECIDED) → no UI to design; D-TRADE-010 stands. "Held is a state, not a failure." Onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE). Likely first: product-experience/brand exploration or B9 UX support once `<1.1>` lands |
 | Gauntlet cluster | — | ⏸ pending B9 | seat if the Director runs B9 |
