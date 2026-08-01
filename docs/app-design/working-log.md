@@ -314,3 +314,34 @@ stage-plan · PROJECT-CONFIG §2–4. Grounded in the **real artifacts** (LL-39)
   new design debt; only P-1 + wave-entry GO stand between it and armed.
 - Reported once to the Lead (protocol 15), folded into the next report rather than a standalone ping —
   routine confirmation, not a new blocker.
+
+### [Architect · 2026-08-01] ADR-0002 — Rolling-Watchlist browser UI (D-TRADE-023, design note)
+Dispatched by Lead. Kept proportionate (personal side-tool, not ADR-0001 scale). Grounded in the **real
+source** (LL-39): read `tools/rolling_watchlist.py`'s return dicts + `main()` pipeline, and the approved
+mockup HTML (structure + its `const DATA` consumer). `docs/adr/ADR-0002-rolling-watchlist-web-ui.md`, PROPOSED.
+- **Framework = Flask** (not FastAPI): single-user localhost wrapper over synchronous pandas/Massive calls
+  → no async/schema/uvicorn machinery warranted; `flask run` one-command; run `threaded=True`. Python core,
+  Node stays dropped (`<3.5>`), no toolchain re-verify.
+- **Adapt the approved mockup IN-PLACE** (not rebuild): it's Director-approved, fully self-contained
+  (embedded fonts + inlined D3, **no CDN**, offline-clean), and its render layer already encodes the
+  contract. Only change = swap the `const DATA` literal + `hashSeed` synthetic generator for a
+  `fetch('/api/scan')`. Copy the source into `tools/web/static/index.html`.
+- **API contract** matched to the mockup's existing camelCase `DATA` consumer (minimizes Designer rewiring):
+  `GET /api/health` · `POST /api/scan` → `{meta,stats,candidates:[Candidate]}`. Each `Candidate` maps 1:1
+  from the scanner dicts (guardrail←`scan_guardrail_criteria`, s3←`compute_s3_score`, phase←`classify_pnd_phase`,
+  intraday←`analyze_intraday_alignment`+`load_intraday`, simulatedTrades←`simulate_day_trades`); non-holding
+  names carry `holdingUp:false`+nulls, mirroring the real scan + the mockup. Serializer rules: NaN→null,
+  Timestamp→ISO8601, DataFrame→records.
+- **Security NN (legs K/T):** Massive key resolved **server-side only**; `/api/scan` never accepts a key
+  from the client; provider calls never leave `tools/rolling_watchlist.py`. `/api/health` reports key
+  *presence*, never value.
+- **Module layout `tools/web/`** (disjoint; scanner UNCHANGED): `app.py` (routes) · `scan_service.py`
+  (orchestrates the scanner's fns, returns data instead of printing) · `serialize.py` (dict→contract) ·
+  `static/index.html`. Web layer is a thin adapter — no logic of its own.
+- **3 disjoint build tasks, all `adr_reference: ADR-0002`:** AI/ML = backend (app/scan_service/serialize) ·
+  Designer = frontend wiring (DATA→fetch + loading/empty/error states, design system 1:1; UI-gate satisfied)
+  · DevOps = `flask` install + run entry + server-side key env + boot smoke.
+- **Open points:** OP-A long scans block the request → v1 synchronous + loading state (one user; job model
+  deferred). OP-B the intraday chart is the one cross-seat interface point — Designer + AI/ML confirm the
+  bar-array shape against the mockup's D3 code together before wiring the chart. Tier = STANDARD.
+- Reporting to the Lead + a direct pointer to each of the 3 waiting seats (protocol 11).
