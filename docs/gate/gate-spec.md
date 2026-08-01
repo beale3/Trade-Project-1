@@ -22,8 +22,8 @@ Greenfield: **almost every leg is SKIP until W0** creates the tree; each arms at
 | Leg | Assertion (what green actually means) | Negative control (proves it bites) | Arms | Now |
 |---|---|---|---|---|
 | **M · money-truth** | a billed provider call bypassing the single metered chokepoint `<3.2>` FAILS the build; every call writes a spend-ledger row + passes the fail-closed governor | plant a provider call outside the chokepoint → leg RED | W1 spine (B4 L4) | ⏸ SKIP |
-| **K · no-secret** | a committed SEC/market-data key pattern (or key in logs) FAILS | plant a fake `SEC_API_KEY=...` in a tracked file → leg RED | W0 (CI secret-scan) | ⏸ SKIP |
-| **T · provider-taint** | a provider SDK import or provider hostname/raw-HTTP outside its sanctioned module FAILS (B4 L1/L3) | plant a Polygon/EDGAR import in `apps/web` → leg RED | W0 static, W1 egress | ⏸ SKIP |
+| **K · no-secret** | a committed key pattern (SEC / market-data / **Supabase service_role / DB password**) or key-in-logs FAILS | plant a fake `SUPABASE_SERVICE_ROLE_KEY=...` or `SEC_API_KEY=...` in a tracked file → leg RED | W0 (CI secret-scan) | ⏸ SKIP |
+| **T · provider-taint** | a provider SDK/host outside its sanctioned module FAILS (B4 L1/L3): **`@supabase/supabase-js` + the service_role key are server-data-layer-only** (never in `apps/web`); Polygon/EDGAR likewise | plant a `@supabase/supabase-js` service_role import in `apps/web` → leg RED | W0 static, W1 egress | ⏸ SKIP |
 | **C · compliance** | (armed once Legal scopes `<4.3>`) a forbidden code-path / dependency FAILS | plant the forbidden path → leg RED | after Legal ruling | ⏸ SKIP (rule unwritten = GAP, not a pass) |
 | **O · oracle legs** | the §10 per-seat oracle legs (`oracle-boundary.md`) — DevOps wires; GA audits coverage | per row | each seat's build wave | ⏸ SKIP |
 

@@ -82,9 +82,9 @@ baked as a "verified" runtime value; planned defaults are labelled as such.
 | Git baseline | fresh `git init` at founding commit (no prior product history); **no remote** |
 | App tree | **none yet** — planned (default stack): `apps/api` (Fastify) · `apps/web` (React/Vite) · `packages/{domain,db,contracts,config}` |
 | Ports | **none yet** — planned defaults (DevOps confirms at W0): API `:3000` · web `:5173` · Postgres `:5432`/Supabase. **NOT validated — do not bake into a gate leg until W0.** |
-| DB / migrations | **none yet** — Postgres/Supabase; forward-only reviewed migrations under `packages/db/migrations`, baseline set at W0 |
+| DB / migrations | **Supabase project `zyscsnhiymitpfdhjuci`** (D-TRADE-013, reachability verified 2026-08-01) — `https://zyscsnhiymitpfdhjuci.supabase.co`; forward-only reviewed migrations under `packages/db/migrations`, RLS+policy-lint per tenant table; baseline at W0. Connection details: `docs/infra/supabase.md` |
 | Gate scripts | **none exist** — `tsc`/`build`/`test`/`migrate`/RLS-lint/smoke/drift all to be added at W0 (SKIP-visible until armed) |
-| Secrets present | `..\Trade\sec_api_key.txt` (SEC EDGAR key, gitignored in that dir) — never copy into this repo; install to the secret store at B5 |
+| Secrets present | (1) `..\Trade\sec_api_key.txt` (SEC EDGAR key); (2) **Supabase keys** (anon · service_role) + **DB password** for project `zyscsnhiymitpfdhjuci` — service_role + DB password are full-access, **B5, Director/SecOps into gitignored `.env`/store only, never chat or repo**. `.env`/`.env.*` gitignored (verified). |
 
 ## 6 · Isolation rule
 The target project stated **no explicit isolation rule** (no design docs existed at founding). Standing
