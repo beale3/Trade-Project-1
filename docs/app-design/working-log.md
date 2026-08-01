@@ -345,3 +345,33 @@ mockup HTML (structure + its `const DATA` consumer). `docs/adr/ADR-0002-rolling-
   deferred). OP-B the intraday chart is the one cross-seat interface point — Designer + AI/ML confirm the
   bar-array shape against the mockup's D3 code together before wiring the chart. Tier = STANDARD.
 - Reporting to the Lead + a direct pointer to each of the 3 waiting seats (protocol 11).
+=======
+### [Designer · 2026-08-01] Rolling Watchlist dashboard — mockup isolated from sandbox chrome (D-TRADE-023)
+Re-activated by the Lead: `tools/rolling_watchlist.py` ships as a browser dashboard, reusing the
+Director-already-approved "Rolling Watchlist" claude.ai mockup (stat strip · watchlist table · Guardrail #1
+detail panel · S3 score breakdown · P&D phase stepper · intraday pivot chart), wired to the real
+Massive-backed backend instead of the mockup's illustrative data. INTEGRATION work, not new design — the
+approved visual design is preserved exactly, not redesigned.
+- **Done this entry:** isolated/cleaned the real mockup source (Lead-supplied, 193,642 bytes,
+  `artifact-7601fb84-1785090475-b26e.html`) → `docs/design/rolling-watchlist-dashboard.html` (181,137
+  bytes). Stripped ONLY the claude.ai frame-runtime bootstrap (the iframe-sandbox script + `__FRAME_PREAMBLE`
+  + postMessage/theme/scroll-restore plumbing — 12,177-byte first line, verified as a single self-contained
+  block via structural grep, not interleaved with app logic) and replaced it with a minimal standalone
+  `<head>` (charset/viewport/title/base reset). The design's own CSS (custom `TradeSlab`/`TradeMono`
+  embedded fonts, `#faf9f5`/`#141413` palette, `tw-*` class convention), markup, and rendering script
+  (mock-data generation + S3-bar/pivot-chart SVG logic) are byte-identical to the source — copied verbatim,
+  not retyped, to guarantee no drift from the approved design (checkable artifact, protocol 16).
+- **Verified, not just claimed:** grepped the app's own markup+script (lines 235–627 of the source) for any
+  `postMessage`/`__frame`/`window.claude` reference — zero hits, confirming the design was already
+  self-contained and portable. Loaded the cleaned file standalone in-browser (no claude.ai runtime): zero
+  console errors, full DOM text-render-confirmed for every named section (stat strip 4 tiles, 6-row
+  watchlist table, Guardrail #1 6-item checklist, S3 breakdown + total, 7-phase P&D stepper, pivot
+  chart pivot/R1/S1 levels) — the JS executed and computed values correctly with no sandbox APIs present.
+- **Correction on rebase (protocol 16 — reconciled before push, not left stale):** this entry originally
+  said the Architect's API contract hadn't landed. It landed in the same rebase, as ADR-0002 above —
+  written concurrently, not read by me before this entry was drafted. ADR-0002 also answers my placement
+  question: the served file is `tools/web/static/index.html` (copy the approved mockup in-place), not
+  `docs/design/`; my `docs/design/rolling-watchlist-dashboard.html` stands as the cleaned design-asset
+  source of record, not the served path.
+- Self-checked (gate ②, mechanical: byte-diff-verified copy, zero-console-error render). No CRITICAL
+  cross-document number/invariant here (protocol 17) — routine design-asset work, not escalation-worthy.
