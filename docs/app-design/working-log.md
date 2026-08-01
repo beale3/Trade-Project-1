@@ -390,6 +390,21 @@ confirmed each and folded in one genuine refinement it surfaced:
 - **DataFrame/Timestamp shaping** (watchlist, annotated, trades): already covered by the serializer rules
   (DataFrame→records, Timestamp→ISO8601, NaN→null).
 - No contract revision needed beyond the bars-alignment fields; replied directly to AI/ML (Lead copied).
+
+### [SDE1 · 2026-08-01] ADR-0001 co-sign — NN-6 (schema/freshness), design-review only, holding on P-1
+- Read ADR-0001 in full (PROPOSED). Its P-1 precondition confirms my HOLD is correct, not resolved — no
+  DDL/code until the Director clears D-TRADE-010 for Phase-1 build.
+- **Co-signed NN-6** (data-schema/freshness leg, my lane): a malformed or stale ingested row FAILS rather
+  than silently feeding the model. Concrete once §6.1's entities exist as real DDL.
+- **§6.1 entity contracts — no objection to the shape.** One design note to carry forward, not a blocker:
+  `validation_verdicts.reproduced_by_aiq` gating a `cleared` verdict (NN-3) is a write-once/append-only
+  invariant — enforce it in the DB (constraint/trigger + forced row-security), not just app logic, per my
+  own PROFILE lessons (a table-owning role bypasses an app-layer-only check silently).
+- **Flagging a sequencing gap for the Lead's wave-entry dispatch, not a blocker:** `helm/ingest/` is
+  co-owned SDE1·Data-Eng (ADR §4/§5), but **Data Engineer is not yet spawned** (PROJECT-CONFIG §3) —
+  nothing for me to do from HOLD, just don't dispatch lane A assuming a seat that isn't live.
+- Declined to co-sign NN-1..5/7-9 — not my lane (AI/ML, AIQ, Data-Eng, SecOps, FinOps, QA own those).
+- Reported once to the Lead — folded into the next report, not a standalone ping.
   Pushed the refined ADR-0002.
 
 ### [DevOps · 2026-08-01] D-TRADE-023 dashboard infra delivered (ADR-0002 §4, separate from HELM)
