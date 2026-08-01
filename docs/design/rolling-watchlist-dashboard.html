@@ -362,6 +362,15 @@
       phase: "supernova", aligned: true,
       s3: { pattern_price: [19.5, 20], risk_reward: [19.0, 20], ease_of_entry: [9.7, 10], past_performance: [9.3, 10] },
       patterns: ["bull_flag_breakout", "abcd_pattern", "round_number_breakout"],
+      simulatedTrades: {
+        enabled: true, numTrades: 3, winRatePct: 66.7, finalPnl: 142.0, pnlPerShare: 1.42,
+        pnlCurve: [0, 45, -20, 80, 142], halted: false, haltReason: null,
+        trades: [
+          { entryTime: "2026-07-21T13:31:00Z", exitTime: "2026-07-21T13:34:00Z", entryPrice: 5.10, exitPrice: 5.28, pnl: 45.0, reason: "target" },
+          { entryTime: "2026-07-21T13:40:00Z", exitTime: "2026-07-21T13:42:00Z", entryPrice: 5.35, exitPrice: 5.20, pnl: -65.0, reason: "stop" },
+          { entryTime: "2026-07-21T13:50:00Z", exitTime: "2026-07-21T13:58:00Z", entryPrice: 5.25, exitPrice: 5.60, pnl: 162.0, reason: "target" },
+        ],
+      },
     },
     {
       ticker: "HLKM", spikeDate: "2026-07-20", spikeGainPct: 34.1, holdingUp: true, retracementPct: 22.0,
@@ -425,6 +434,12 @@
   }
   function fmtPct(v, digits) { return (v >= 0 ? "+" : "") + v.toFixed(digits == null ? 1 : digits) + "%"; }
   function fmtUsd(v) { return "$" + v.toFixed(v < 10 ? 3 : 2); }
+  function fmtPnl(v) { return (v >= 0 ? "+$" : "-$") + Math.abs(v).toFixed(2); }
+  function fmtTime(iso) {
+    if (!iso) return "—";
+    const i = iso.indexOf("T");
+    return i >= 0 ? iso.slice(i + 1, i + 6) : iso;
+  }
 
   // ================= stat strip =================
   function renderStats() {
@@ -607,6 +622,71 @@
     }).join("") + '</div>';
   }
 
+  // ================= detail: trade-simulator results (D-TRADE-025) =================
+  // Illustrative here (this file has no backend) -- mirrors tools/web/static/index.html's
+  // real renderSimulator() exactly, reusing .tw-stats/.tw-stat and .tw-table, no new
+  // primitives. The served app also has a live ticker-input control (D-TRADE-024) not
+  // reproduced in this static design-asset copy, since there's nothing here for it to call.
+  function renderSimulator(d) {
+    const sim = d.simulatedTrades;
+    if (!sim || !sim.enabled) return "";
+
+    const stats = [
+      ["Trades", sim.numTrades, "entries this simulation"],
+      ["Win rate", sim.winRatePct.toFixed(1) + "%", "of " + sim.numTrades + " trades"],
+      ["Final P&L", fmtPnl(sim.finalPnl), fmtPnl(sim.pnlPerShare) + " / share"],
+      ["Status", sim.halted ? "Halted" : "Completed", sim.halted ? (sim.haltReason || "risk limit hit") : "ran to close"],
+    ];
+    const statsHtml = '<div class="tw-stats">' + stats.map(function (s) {
+      return '<div class="tw-stat"><div class="tw-stat-label">' + s[0] + '</div>' +
+        '<div class="tw-stat-value">' + s[1] + '</div>' +
+        '<div class="tw-stat-sub">' + s[2] + '</div></div>';
+    }).join("") + '</div>';
+
+    const haltBanner = sim.halted
+      ? '<div class="tw-chip tw-chip--bad" style="margin:0 0 14px;">Halted — ' + (sim.haltReason || "risk limit hit") + '</div>'
+      : "";
+
+    const curve = sim.pnlCurve || [];
+    let curveSvg = "";
+    if (curve.length > 1) {
+      const W = 900, H = 140, PAD = 10;
+      const lo = Math.min(0, Math.min.apply(null, curve)) * 1.05;
+      const hi = Math.max(0, Math.max.apply(null, curve)) * 1.05 || 1;
+      const x = function (i) { return PAD + (i / (curve.length - 1)) * (W - PAD * 2); };
+      const y = function (v) { return H - PAD - ((v - lo) / ((hi - lo) || 1)) * (H - PAD * 2); };
+      const linePath = curve.map(function (v, i) { return (i === 0 ? "M" : "L") + x(i).toFixed(1) + " " + y(v).toFixed(1); }).join(" ");
+      const areaPath = linePath + " L " + x(curve.length - 1).toFixed(1) + " " + y(0).toFixed(1) + " L " + x(0).toFixed(1) + " " + y(0).toFixed(1) + " Z";
+      const finalColor = sim.finalPnl >= 0 ? "var(--good)" : "var(--critical)";
+      curveSvg =
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" preserveAspectRatio="none" role="img" aria-label="Cumulative P&amp;L across the simulated session">' +
+        '<line x1="' + PAD + '" y1="' + y(0).toFixed(1) + '" x2="' + (W - PAD) + '" y2="' + y(0).toFixed(1) + '" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>' +
+        '<path d="' + areaPath + '" fill="' + finalColor + '" fill-opacity="0.12" stroke="none"/>' +
+        '<path d="' + linePath + '" fill="none" stroke="' + finalColor + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<circle cx="' + x(curve.length - 1).toFixed(1) + '" cy="' + y(curve[curve.length - 1]).toFixed(1) + '" r="4" fill="' + finalColor + '" stroke="var(--surface-raised)" stroke-width="1.5"/>' +
+        '</svg>';
+    }
+
+    const trades = sim.trades || [];
+    const tradesHtml = trades.length
+      ? '<div class="tw-table-scroll"><table class="tw-table"><thead><tr>' +
+        '<th>Entry</th><th>Exit</th><th>Entry $</th><th>Exit $</th><th>P&amp;L</th><th>Reason</th>' +
+        '</tr></thead><tbody>' +
+        trades.map(function (t) {
+          const pnlColor = t.pnl >= 0 ? "var(--good)" : "var(--critical)";
+          return '<tr><td class="tw-num">' + fmtTime(t.entryTime) + '</td>' +
+            '<td class="tw-num">' + fmtTime(t.exitTime) + '</td>' +
+            '<td class="tw-num">' + fmtUsd(t.entryPrice) + '</td>' +
+            '<td class="tw-num">' + fmtUsd(t.exitPrice) + '</td>' +
+            '<td class="tw-num" style="color:' + pnlColor + '">' + fmtPnl(t.pnl) + '</td>' +
+            '<td class="tw-mut">' + t.reason + '</td></tr>';
+        }).join("") + '</tbody></table></div>'
+      : '<div class="tw-mut" style="font-size:12.5px; margin-top:8px;">No trades triggered this simulation.</div>';
+
+    return '<div class="tw-chart-wrap"><h3 class="tw-detail-h">Simulated trades</h3>' +
+      statsHtml + haltBanner + curveSvg + tradesHtml + '</div>';
+  }
+
   // ================= detail: assemble =================
   function renderDetail(ticker) {
     const d = DATA.find(function (x) { return x.ticker === ticker; });
@@ -637,7 +717,8 @@
         '<div class="tw-detail-col"><h3 class="tw-detail-h">Sykes Sliding Scale (S3)</h3>' + renderS3(d) + '</div>' +
       '</div>' +
       '<div class="tw-phase-wrap"><h3 class="tw-detail-h">Pump-and-dump lifecycle phase</h3>' + renderPhase(d) + '</div>' +
-      '<div class="tw-chart-wrap"><h3 class="tw-detail-h">Intraday pivot / red-to-green alignment</h3>' + renderChart(d) + renderPatterns(d) + '</div>';
+      '<div class="tw-chart-wrap"><h3 class="tw-detail-h">Intraday pivot / red-to-green alignment</h3>' + renderChart(d) + renderPatterns(d) + '</div>' +
+      renderSimulator(d);
   }
 
   // ---------- theme toggle (light/dark; initial value already set pre-paint in <head>) ----------

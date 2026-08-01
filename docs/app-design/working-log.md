@@ -614,3 +614,38 @@ byte-identical to the approved mockup — verified by diffing my edit boundaries
   the `docs/design/` copy (design-system parity). Re-verified against the real backend: a 2-ticker scan
   (1 holding-up + 1 rolled-over) no longer throws; the rolled-over row renders `—` cleanly. Reporting once
   to the Lead.
+
+### [Designer · 2026-08-01] D-TRADE-024/025 delivered — ticker-input control + full trade-simulator panel
+Director-ruled build tasks (`adr_reference: ADR-0002`, protocol 10's approval leg satisfied in the
+decision row itself — no separate mockup round-trip required, per the Lead's dispatch).
+- **D-TRADE-024 — `#tw-scan-bar`:** a ticker text input (comma/space-split, uppercased, empty-input
+  validated → error state, not a silent no-op) + a "Simulate trades" checkbox + Scan button, replacing
+  `window.runScan()`'s previous no-caller state. `scanParams()` supplies the request body's non-ticker
+  fields from `tools/rolling_watchlist.py`'s own CLI defaults (verified against its `argparse` block:
+  period 3mo, lookbackDays 5, gainThreshold 20, pullbackThreshold 50, guardrail thresholds 10/2.0/2–20/
+  20M, intraday 5d/5m, simulate stopLoss 2.0/minRR 2.0/100 shares/giveback 15%) — v1 asks only for
+  tickers + the simulate toggle, per the Director's own scope note ("just tickers in, Scan"), not a full
+  settings form. Submit button disables during `scanState === "loading"` to prevent double-submit.
+- **D-TRADE-025 — `renderSimulator(d)`:** trade-by-trade log (entry/exit time+price, P&L, reason),
+  win-rate/final-P&L/P&L-per-share/trade-count stats, a halt banner when `halted`, and a cumulative-P&L
+  curve (SVG, same construction pattern as the existing intraday chart — line+area+zero-reference,
+  colored green/red off the sign of `finalPnl`). **No new CSS primitives** — reuses `.tw-stats`/`.tw-stat`
+  (same tiles as the top-level stat strip) and `.tw-table` (same table as the candidates list) verbatim;
+  the only genuinely new CSS is `#tw-scan-bar`'s own rules. Renders nothing when `simulatedTrades` is
+  null/disabled — opt-in per-scan (`simulate.enabled`), not a section that ships in a dead/placeholder
+  state (PROFILE lesson: a rail entry that dead-clicks is drift, not a shortcut — this isn't a deferred
+  surface, it's a conditional one, so an empty state isn't warranted; it simply doesn't render).
+- **Verified (not just claimed), all in-browser against `tools/web/static/index.html`:** empty-ticker
+  submit → error state, not silent. A real submit (mocked fetch) → captured request body matches the
+  §3 contract exactly, including `simulate.enabled` reflecting the checkbox. Simulator panel: rendered
+  correctly with a 3-trade winning fixture; a halted/losing fixture showed the halt banner with its
+  reason; a `simulatedTrades:null` fixture correctly showed **no** simulator section at all (not an empty
+  one). Zero console errors across every case.
+- **Mirrored to `docs/design/rolling-watchlist-dashboard.html`** for design-system parity: `renderSimulator()`
+  verbatim + an illustrative `simulatedTrades` example added to the GRVX mock candidate (that file's
+  default-selected ticker, so it's visible on load with zero interaction). **Did not** mirror the scan-bar
+  markup there — this file has no backend to call, and a decorative Scan button that does nothing would
+  be exactly the dead-click pattern my own PROFILE lessons warn against; a code comment notes the served
+  app has the real control instead.
+- Self-checked (gate ②: request-body inspection + rendered-output verification across 4 distinct
+  fixtures, not just code review). Reporting once to the Lead.

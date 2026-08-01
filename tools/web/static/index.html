@@ -126,6 +126,26 @@
   .tw-theme-toggle:hover { background: var(--surface-overlay); color: var(--text-primary); }
   .tw-theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  /* ---------- scan bar (D-TRADE-024) ---------- */
+  .tw-scan-bar { display: flex; align-items: center; gap: 12px; margin: 22px 0 26px; flex-wrap: wrap; }
+  .tw-scan-input {
+    flex: 1 1 260px; min-width: 220px; font-family: 'TradeMono', monospace; font-size: 13.5px;
+    padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface-raised); color: var(--text-primary);
+  }
+  .tw-scan-input::placeholder { color: var(--text-muted); }
+  .tw-scan-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .tw-scan-sim { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+  .tw-scan-sim input { accent-color: var(--accent); width: 15px; height: 15px; }
+  .tw-scan-submit {
+    font-family: 'TradeSlab', serif; font-weight: 700; font-size: 13.5px; letter-spacing: -0.01em;
+    padding: 11px 22px; border: none; border-radius: var(--radius); background: var(--accent);
+    color: #FFFFFF; cursor: pointer; white-space: nowrap;
+  }
+  .tw-scan-submit:hover { background: var(--accent-strong); }
+  .tw-scan-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+  .tw-scan-submit:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+
   /* ---------- stat strip ---------- */
   .tw-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 28px 0 32px; }
   .tw-stat {
@@ -261,6 +281,12 @@
       <button type="button" id="tw-theme-toggle" class="tw-theme-toggle" aria-label="Switch to dark theme"></button>
     </div>
 
+    <form class="tw-scan-bar" id="tw-scan-bar">
+      <input type="text" id="tw-scan-tickers" class="tw-scan-input" placeholder="Tickers — comma or space separated, e.g. NVXA GRVX" autocomplete="off" spellcheck="false" aria-label="Tickers to scan" />
+      <label class="tw-scan-sim"><input type="checkbox" id="tw-scan-simulate" /> Simulate trades</label>
+      <button type="submit" class="tw-scan-submit" id="tw-scan-submit">Scan</button>
+    </form>
+
     <div class="tw-stats" id="tw-stats"></div>
 
     <div class="tw-panel">
@@ -350,12 +376,15 @@
     d.s3Possible = c.s3.pattern_price[1] + c.s3.risk_reward[1] + c.s3.ease_of_entry[1] + c.s3.past_performance[1];
     d.intraday = c.intraday; // {bars,pivots,priorHigh,priorLow,priorClose,latestAligned,firstTriggerTime}
     d.priorClose = c.intraday.priorClose;
+    d.simulatedTrades = c.simulatedTrades || null; // D-TRADE-025 -- {enabled,numTrades,winRatePct,finalPnl,pnlPerShare,pnlCurve,halted,haltReason,trades}
     return d;
   }
 
   // ---------- POST /api/scan (ADR-0002 §3) ----------
   async function runScan(tickers, params) {
     scanState = "loading"; scanError = null; renderApp();
+    const submitBtn = document.getElementById("tw-scan-submit");
+    if (submitBtn) submitBtn.disabled = true;
     try {
       const body = Object.assign({ tickers: tickers }, params || {});
       const res = await fetch("/api/scan", {
@@ -370,9 +399,10 @@
     } catch (err) {
       scanState = "error"; scanError = err && err.message ? err.message : String(err);
     }
+    if (submitBtn) submitBtn.disabled = false;
     renderApp();
   }
-  window.runScan = runScan; // trigger point -- no ticker-input control in the approved mockup; see working-log
+  window.runScan = runScan; // still reachable programmatically -- the #tw-scan-bar form (D-TRADE-024) is the normal trigger now
 
   function renderApp() {
     const root = document.querySelector(".tw-root");
@@ -410,6 +440,12 @@
   }
   function fmtPct(v, digits) { return (v >= 0 ? "+" : "") + v.toFixed(digits == null ? 1 : digits) + "%"; }
   function fmtUsd(v) { return "$" + v.toFixed(v < 10 ? 3 : 2); }
+  function fmtPnl(v) { return (v >= 0 ? "+$" : "-$") + Math.abs(v).toFixed(2); }
+  function fmtTime(iso) {
+    if (!iso) return "—";
+    const i = iso.indexOf("T");
+    return i >= 0 ? iso.slice(i + 1, i + 6) : iso;
+  }
 
   // ================= stat strip =================
   function renderStats() {
@@ -591,6 +627,70 @@
     }).join("") + '</div>';
   }
 
+  // ================= detail: trade-simulator results (D-TRADE-025) =================
+  // Reuses the existing .tw-stats/.tw-stat tile pattern and .tw-table pattern -- no new
+  // primitives, matching the design system 1:1. Renders nothing when simulation wasn't
+  // requested for this scan (simulatedTrades null/disabled) -- opt-in, not a dead section.
+  function renderSimulator(d) {
+    const sim = d.simulatedTrades;
+    if (!sim || !sim.enabled) return "";
+
+    const stats = [
+      ["Trades", sim.numTrades, "entries this simulation"],
+      ["Win rate", sim.winRatePct.toFixed(1) + "%", "of " + sim.numTrades + " trades"],
+      ["Final P&L", fmtPnl(sim.finalPnl), fmtPnl(sim.pnlPerShare) + " / share"],
+      ["Status", sim.halted ? "Halted" : "Completed", sim.halted ? (sim.haltReason || "risk limit hit") : "ran to close"],
+    ];
+    const statsHtml = '<div class="tw-stats">' + stats.map(function (s) {
+      return '<div class="tw-stat"><div class="tw-stat-label">' + s[0] + '</div>' +
+        '<div class="tw-stat-value">' + s[1] + '</div>' +
+        '<div class="tw-stat-sub">' + s[2] + '</div></div>';
+    }).join("") + '</div>';
+
+    const haltBanner = sim.halted
+      ? '<div class="tw-chip tw-chip--bad" style="margin:0 0 14px;">Halted — ' + (sim.haltReason || "risk limit hit") + '</div>'
+      : "";
+
+    const curve = sim.pnlCurve || [];
+    let curveSvg = "";
+    if (curve.length > 1) {
+      const W = 900, H = 140, PAD = 10;
+      const lo = Math.min(0, Math.min.apply(null, curve)) * 1.05;
+      const hi = Math.max(0, Math.max.apply(null, curve)) * 1.05 || 1;
+      const x = function (i) { return PAD + (i / (curve.length - 1)) * (W - PAD * 2); };
+      const y = function (v) { return H - PAD - ((v - lo) / ((hi - lo) || 1)) * (H - PAD * 2); };
+      const linePath = curve.map(function (v, i) { return (i === 0 ? "M" : "L") + x(i).toFixed(1) + " " + y(v).toFixed(1); }).join(" ");
+      const areaPath = linePath + " L " + x(curve.length - 1).toFixed(1) + " " + y(0).toFixed(1) + " L " + x(0).toFixed(1) + " " + y(0).toFixed(1) + " Z";
+      const finalColor = sim.finalPnl >= 0 ? "var(--good)" : "var(--critical)";
+      curveSvg =
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" preserveAspectRatio="none" role="img" aria-label="Cumulative P&amp;L across the simulated session">' +
+        '<line x1="' + PAD + '" y1="' + y(0).toFixed(1) + '" x2="' + (W - PAD) + '" y2="' + y(0).toFixed(1) + '" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>' +
+        '<path d="' + areaPath + '" fill="' + finalColor + '" fill-opacity="0.12" stroke="none"/>' +
+        '<path d="' + linePath + '" fill="none" stroke="' + finalColor + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<circle cx="' + x(curve.length - 1).toFixed(1) + '" cy="' + y(curve[curve.length - 1]).toFixed(1) + '" r="4" fill="' + finalColor + '" stroke="var(--surface-raised)" stroke-width="1.5"/>' +
+        '</svg>';
+    }
+
+    const trades = sim.trades || [];
+    const tradesHtml = trades.length
+      ? '<div class="tw-table-scroll"><table class="tw-table"><thead><tr>' +
+        '<th>Entry</th><th>Exit</th><th>Entry $</th><th>Exit $</th><th>P&amp;L</th><th>Reason</th>' +
+        '</tr></thead><tbody>' +
+        trades.map(function (t) {
+          const pnlColor = t.pnl >= 0 ? "var(--good)" : "var(--critical)";
+          return '<tr><td class="tw-num">' + fmtTime(t.entryTime) + '</td>' +
+            '<td class="tw-num">' + fmtTime(t.exitTime) + '</td>' +
+            '<td class="tw-num">' + fmtUsd(t.entryPrice) + '</td>' +
+            '<td class="tw-num">' + fmtUsd(t.exitPrice) + '</td>' +
+            '<td class="tw-num" style="color:' + pnlColor + '">' + fmtPnl(t.pnl) + '</td>' +
+            '<td class="tw-mut">' + t.reason + '</td></tr>';
+        }).join("") + '</tbody></table></div>'
+      : '<div class="tw-mut" style="font-size:12.5px; margin-top:8px;">No trades triggered this simulation.</div>';
+
+    return '<div class="tw-chart-wrap"><h3 class="tw-detail-h">Simulated trades</h3>' +
+      statsHtml + haltBanner + curveSvg + tradesHtml + '</div>';
+  }
+
   // ================= detail: assemble =================
   function renderDetail(ticker) {
     const d = DATA.find(function (x) { return x.ticker === ticker; });
@@ -621,7 +721,8 @@
         '<div class="tw-detail-col"><h3 class="tw-detail-h">Sykes Sliding Scale (S3)</h3>' + renderS3(d) + '</div>' +
       '</div>' +
       '<div class="tw-phase-wrap"><h3 class="tw-detail-h">Pump-and-dump lifecycle phase</h3>' + renderPhase(d) + '</div>' +
-      '<div class="tw-chart-wrap"><h3 class="tw-detail-h">Intraday pivot / red-to-green alignment</h3>' + renderChart(d) + renderPatterns(d) + '</div>';
+      '<div class="tw-chart-wrap"><h3 class="tw-detail-h">Intraday pivot / red-to-green alignment</h3>' + renderChart(d) + renderPatterns(d) + '</div>' +
+      renderSimulator(d);
   }
 
   // ---------- theme toggle (light/dark; initial value already set pre-paint in <head>) ----------
@@ -643,7 +744,36 @@
     paint();
   }
 
+  // ---------- scan bar (D-TRADE-024) ----------
+  // Defaults match tools/rolling_watchlist.py's own CLI defaults (main()'s argparse) --
+  // v1 asks only for tickers + the simulate toggle, not a full settings form (per the
+  // Director's D-TRADE-024 scope: "just tickers in, Scan").
+  function scanParams(simulate) {
+    return {
+      period: "3mo", lookbackDays: 5, gainThreshold: 20.0, pullbackThreshold: 50.0,
+      guardrail: { minGainPct: 10.0, minRelVolume: 2.0, priceMin: 2.0, priceMax: 20.0, maxFloat: 20000000 },
+      intraday: { period: "5d", interval: "5m" },
+      simulate: {
+        enabled: !!simulate, stopLossPct: 2.0, minRiskReward: 2.0, sharesPerTrade: 100,
+        maxLossPerTrade: null, maxDailyLoss: null, profitGivebackPct: 15.0,
+      },
+    };
+  }
+  function initScanBar() {
+    const form = document.getElementById("tw-scan-bar");
+    if (!form) return;
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      const raw = document.getElementById("tw-scan-tickers").value;
+      const tickers = raw.split(/[\s,]+/).map(function (t) { return t.trim().toUpperCase(); }).filter(Boolean);
+      if (!tickers.length) { scanState = "error"; scanError = "enter at least one ticker"; renderApp(); return; }
+      const simulate = document.getElementById("tw-scan-simulate").checked;
+      runScan(tickers, scanParams(simulate));
+    });
+  }
+
   initThemeToggle();
+  initScanBar();
   renderApp(); // starts in the empty state -- call window.runScan(tickers, params) to fetch /api/scan
 })();
 </script>
