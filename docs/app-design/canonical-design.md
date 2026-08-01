@@ -44,6 +44,11 @@ must never read as decided (LL-31). Thin by design at founding (LL-33); it grows
   provider calls; every call writes an append-only spend-ledger row, passes the fail-closed governor and
   a $/day self-tally auto-kill (D-TRADE-008, B4 L4). This is a one-way-door / high-invariant surface:
   its invariant checklist is locked (impl + QA + SecOps + FinOps) before W1 build.
+  **Cost shape (D-TRADE-019, FinOps):** only **LLM tokens are true per-use variable COGS**; market-data
+  (flat sub) and EDGAR (free, *if* the key issuer is confirmed public) are $0-marginal — the `$/day`
+  auto-kill is effectively an LLM-token meter, but every provider call still routes through the
+  chokepoint and ledgers (rate/ToS governance, not just cost). Per-signal COGS is unmeasured until
+  AI/ML has a real token trace — caps start tight, widen on evidence.
 - **`<3.3>` Tenant isolation** (B2 pillar ②) — RLS + threaded request-context; proof = a gate leg that
   FAILS with RLS OFF. Applies if HELM is multi-tenant. ▸ NOT DECIDED (single- vs multi-tenant — decides:
   Architect at W1, off `<1.1>`).
