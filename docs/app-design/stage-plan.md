@@ -1,5 +1,11 @@
 # Stage plan — HELM (`trade`) · GREENFIELD (D-TRADE-002)
 
+> ⏸ **NO BUILD AUTHORIZED (D-TRADE-010).** This document is the *documented plan*, not a to-do list.
+> **No wave — including W0 — is an available action.** We are not building any code yet. Building
+> unblocks only after: product defined (`canonical-design <1.1>`) → B9 viability/blueprint (if run) →
+> an explicit Director **build-GO**. Until then, the waves below are reference, and no build role needs
+> spawning.
+
 Wave template = greenfield (§7). **Phase-gate between waves; parallelize only the disjoint-by-lane.** Each
 wave is bracketed by a **Wave-Entry Gate** (Lead authors plan → oversight reviews → **Director GO**) and a
 **QA phase-exit sign-off** before the next unblocks. The Lead never self-dispatches. **This document plans;
@@ -14,8 +20,10 @@ it does not build.**
   (scaffold green but INERT) until all four pass + a Director build-GO.
 
 ## Waves
-### W0 · Scaffold — *product-agnostic; can start once code lanes + DevOps are spawned + Director GOes*
-Skeleton + DB day-one + the gate green on an empty app. **Does NOT depend on the pending product locks.**
+### W0 · Scaffold — *NOT AUTHORIZED yet (D-TRADE-010); planned only*
+Skeleton + DB day-one + the gate green on an empty app. Product-agnostic, so when building is eventually
+authorized this is the first wave — but it is **not** a "start now" step. No code is built until the
+Director gives a build-GO.
 - DevOps: monorepo tree (`apps/api`, `apps/web`, `packages/{domain,db,contracts,config}`), local DB,
   gate harness (legs SKIP-visible), CI (secret-scan + dep-audit), import-boundary lint encoding the 4-lane
   cut, `.claude/settings.json` placed by the Director from the template.

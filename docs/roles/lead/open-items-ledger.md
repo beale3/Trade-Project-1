@@ -15,11 +15,10 @@ Open Director decisions, first-wave prep, and the Lead's standing practices. Sta
 | 8 | 🟡 **Product name** (rebrand `HELM`) | parked codename | any time |
 | 9 | 🟡 **Remote + isolation rule** | create `ShupeCapital/trade`; adopt kit-crosses/content-doesn't | Director creates remote (gh) |
 
-## B · First-wave prep (W0 scaffold — product-agnostic, does not need `<1.1>`)
-See `docs/app-design/stage-plan.md` §W0 and STEP 7 breakdown below. W0 can proceed the moment DevOps +
-the code lanes are spawned and the Director GOes the W0 Wave Plan — it is skeleton + DB day-one + gate
-green on an empty app, so it does not depend on the pending product decisions. **Everything W1+ waits on
-the locks above.**
+## B · First-wave prep (W0 scaffold — planned only; ⏸ NOT AUTHORIZED, D-TRADE-010)
+See `docs/app-design/stage-plan.md` §W0 and the §D breakdown below. **We are not building any code yet.**
+W0 is retained as the documented first wave for when a build-GO eventually lands; it is **not** a start-now
+step and needs no seat spawned. The actual near-term path is product definition → B9 (if run) → build-GO.
 
 ## C · Standing Lead practices (protocol references in the charter)
 - **Verify-don't-attest — including my own synthesis** (protocol 15 ④ / LL-34): re-derive each claim; a
@@ -33,10 +32,10 @@ the locks above.**
 - **Never self-dispatch a wave** — author the plan, oversight reviews, the Director says GO.
 - **Save a revert net before any governance change** (LL-28).
 
-## D · W0 first-wave breakdown (DRAFT — disjoint-by-file; do NOT dispatch until Director GOes the W0 Wave Plan)
-W0 is product-agnostic (skeleton + DB day-one + gate green on empty app) so it can run before the pending
-product/cost/roster locks resolve. Conflict-free by file (each task owns disjoint paths). The Lead never
-self-dispatches — this is the plan oversight reviews and the Director GOes.
+## D · W0 first-wave breakdown (DRAFT — reference only; ⏸ NOT AUTHORIZED, D-TRADE-010)
+Kept as the disjoint-by-file plan for when a build-GO eventually lands. **Not dispatchable now** — we are
+not building any code yet. When authorized, W0 is product-agnostic (skeleton + DB day-one + gate green on
+empty app). The Lead never self-dispatches; oversight reviews and the Director GOes.
 
 | Task | Owner | Write-paths (disjoint) | adr_ref | DoD |
 |---|---|---|---|---|

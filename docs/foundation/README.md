@@ -37,14 +37,17 @@ or override. Two are **LOCKS** needing an explicit "yes."
 5. **Approve each Wave-Entry GO** (the Lead authors the plan; oversight reviews; you say GO — the Lead
    never self-dispatches).
 
-## 3 · Spawn order (code lanes first so W0 can run, then oversight)
-1. **DevOps** (runs W0 scaffold) → **BE-API · BE-Data · FE-Web · Data-Eng** (code lanes).
+## 3 · Spawn order — *for reference; NO build role is spawned yet (D-TRADE-010)*
+We are **not building any code yet**, so no build/oversight seat needs a session at this point. This is
+the order for *when* work exists for a seat:
+1. **DevOps** (W0 scaffold) → **BE-API · BE-Data · FE-Web · Data-Eng** (code lanes) — only after a build-GO.
 2. **QA · GA · SecOps · FinOps · AIQ · Legal** (oversight — independent, → you).
 3. **Architect** on-demand (W1 spine ADR). **AI/ML** when the engine surface opens (post-design).
-4. **Gauntlet cluster** ONLY if you run B9.
+4. **Gauntlet cluster** — the *first* seats that could be spawned, and only **if you run B9** (needs the
+   product paragraph). SecOps' provider ToS-taint check is the other pre-build task.
 
-W0 (scaffold) is product-agnostic and can start as soon as DevOps + the code lanes are up and you GO its
-Wave Plan — it does not wait on decisions 1–7. **W1+ waits on the locks + the product paragraph.**
+**Building unblocks only after:** product defined (`<1.1>`) → B9 viability/blueprint (if run) → your
+explicit build-GO. Until then nothing is dispatched.
 
 ## 4 · What's where
 `PROJECT-CONFIG.md` (config of record) · `../AGENT-COORDINATION.md` (charter) · `../decisions-log.md`

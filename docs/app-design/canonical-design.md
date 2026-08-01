@@ -15,8 +15,12 @@ must never read as decided (LL-31). Thin by design at founding (LL-33); it grows
   through the single metered chokepoint `<3.2>` and is capped by a fail-closed governor.
 
 ## 2 · Domain / data
-- **`<2.1>` External providers — ▸ NOT DECIDED** (decides: Director; SecOps runs ToS-taint first).
-  *Recommendation:* SEC EDGAR API (key already held) + Polygon.io market data.
+- **`<2.1>` External providers — ▸ NOT DECIDED (full set)** (decides: Director; SecOps runs ToS-taint first).
+  **SEC EDGAR is an in-hand asset:** the Director already holds a working SEC API key (`..\Trade\`, a
+  stub repo — key gitignored, only its template committed). So EDGAR is the confirmed anchor provider;
+  the open question is the *rest* of the set. *Recommendation for the remainder:* Polygon.io market data.
+  **Key handling:** the real key NEVER enters this repo — it is installed to the secret store at B5
+  (`<4.1>`); SecOps runs the EDGAR ToS-as-taint check before anything builds on it.
 - **`<2.2>` Data ingestion (Data Engineer lane)** — EDGAR/market-data pull + normalization; shape
   designed after `<1.1>`/`<2.1>` land. ▸ NOT DECIDED (design pending).
 
