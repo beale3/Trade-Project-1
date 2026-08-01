@@ -13,3 +13,4 @@ sec_api_key.txt
 massive_api_key.txt
 *.pem
 .claude/settings.local.json
+watchlist_chart*.png
