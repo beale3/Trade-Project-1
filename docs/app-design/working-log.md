@@ -25,6 +25,28 @@ last**, remove the three markers (LL-54).
 
 <!-- append below this line -->
 
+### [FinOps · 2026-08-01] Spawned (D-TRADE-016) · provider cost model + governor spec drafted
+- Onboarded (charter · decisions · canonical-design · oracle-boundary FinOps row = ORACLE · PROFILE ·
+  supabase.md · gate-spec). Claimed the FinOps LIVE BOARD row (▶ live). Modeling-only phase — no chokepoint
+  exists yet (D-TRADE-010), so this is SPEC, not live governance.
+- **`docs/finops/cost-model.md`** — the four adopted providers priced (source + read-date 2026-08-01, every
+  figure tagged measured/estimated/unmeasured + basis). **Central finding:** only **LLM tokens** are true
+  per-use variable COGS; **Polygon/Massive** (flat unlimited sub) and **EDGAR** (free) are $0-marginal
+  standing floor; **Supabase** is a flat plan + slow-moving usage overage. ⇒ the governor's spend-meter is
+  effectively an LLM-token meter.
+- **`docs/finops/governor-spec.md`** — fail-closed governor (default = refuse), 3 cap layers, the `$/day`
+  self-tally **auto-kill** (D-TRADE-004), ledger invariants + billing-reconciliation oracle, each with a
+  reproducible negative control (builder ≠ judge). FinOps portion of the **chokepoint invariant checklist**
+  drafted with co-author sign-off slots (SDE1/BE-Data · QA · SecOps) — BE-Data owns/assembles it at the W1 lock.
+- **Surfaced to the Lead (dollars only; I do not rule these):** 🟠 market-data true cost is **quote-only**,
+  not the self-serve $199 — a commercial SaaS is Professional/Business tier + OPRA/UTP/NYSE exchange fees
+  (the FinOps half of SecOps's HIGH Polygon finding; real-time-vs-delayed is a real-$ lever on `<2.1>`).
+  🟡 "SEC key" issuer unconfirmed → EDGAR is $0 only if direct, not a reseller. 🟡 per-signal COGS is
+  unmeasured by construction (no engine) — caps arm tight, rise on measured evidence. 🟡 D-TRADE-004 still
+  🔒-pending.
+- DRAFT (gate ② GROUND). Not yet RECONCILED (GA/second seat) nor Director-locked on any dollar value.
+
+
 ### [Architect · 2026-08-01] Spawn + onboarding — HOLDING
 - **Principal Architect LIVE** (clone `Trade - Architect`, branch `main`, Fable5·Max — sole frontier
   seat). Onboarded in read-order: charter (protocols 1–19 · §4.5 legend · LIVE BOARD) → decisions-log
