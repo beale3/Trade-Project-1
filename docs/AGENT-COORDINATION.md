@@ -117,13 +117,13 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 | Principal Architect | — | ⏸ not spawned | on-demand: W1 spine ADR (after B9/design locks) |
 | QA | — | ⏸ not spawned | arm gate legs at W0; phase-exit sign-offs |
 | Governance & Audit | — | ⏸ not spawned | seed oracle-coverage audit; own RECONCILE gate |
-| SecOps | — | ⏸ not spawned | provider ToS-taint check (SEC EDGAR · Polygon) before any build |
+| SecOps | — | ⏸ **spawning (D-TRADE-015)** | ACTIVE: provider ToS-taint on SEC EDGAR · Polygon · Supabase + author key denylist (SEC key · Supabase service_role/DB pwd · Polygon) → report to Lead |
 | Backend-API | — | ⏸ not spawned | Lane 1 at W1 |
 | Backend-Data | — | ⏸ not spawned | Lane 2 + money-truth chokepoint at W1 |
 | Frontend-Web | — | ⏸ not spawned | Lane 3 client shell at W2 |
-| DevOps | — | ⏸ not spawned | W0 scaffold: tree, DB day-one, gate green on empty app |
-| AI/ML | — | ⏸ not spawned | scoring/gen engine (post-design) |
-| AI Quality | — | ⏸ not spawned | golden evals + grounding oracle for AI output |
+| DevOps | — | ⏸ **spawning (D-TRADE-015)** | infra-prep: capture DB baseline via read-only MCP · design gate harness + W0 DoD · HOLD on W0 scaffold pending build-GO |
+| AI/ML | — | ⏸ **spawning (D-TRADE-015)** | HOLD — no product `<1.1>` = no engine to design/build |
+| AI Quality | — | ⏸ **spawning (D-TRADE-015)** | HOLD — no AI output yet; may draft eval/ground-truth methodology only |
 | FinOps | — | ⏸ not spawned | per-unit COGS + fail-closed governor at chokepoint |
 | Legal & Privacy | — | ⏸ not spawned | SEC/financial-regulatory + PII bright-lines |
 | Data Engineer | — | ⏸ not spawned | EDGAR/market-data ingestion design |
