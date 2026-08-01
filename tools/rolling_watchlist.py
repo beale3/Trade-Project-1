@@ -293,7 +293,7 @@ def lookup_recent_catalyst(ticker: str, lookback_days: int = 4, api_key: str = N
         print(f"  [catalyst lookup skipped for {ticker}: requests is not installed]")
         return None
 
-    since = (pd.Timestamp.utcnow() - pd.Timedelta(days=lookback_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    since = (pd.Timestamp.now("UTC") - pd.Timedelta(days=lookback_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         resp = requests.get(
             "https://api.massive.com/v2/reference/news",
