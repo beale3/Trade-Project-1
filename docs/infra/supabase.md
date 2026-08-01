@@ -34,6 +34,11 @@ Director personally approves every prod secret; fresh per-env keys go **into the
   ```
 
 ## MCP connector (team-wide, read-only) — D-TRADE-014
+> ✅ **CONNECTED — Director-confirmed 2026-08-01.** Live in sessions launched inside the `Trade - Lead`
+> clone (the `.mcp.json` is project-scoped there). Not available to the Lead's umbrella-parent session.
+> First recommended use: a read-only baseline introspection (list schemas/tables) to record the DB's
+> starting state in this doc.
+
 The official **Supabase MCP server** is wired as a **project-scoped `.mcp.json`** at the repo root, so
 every clone inherits it. Config (committed, secret-free — token is `${SUPABASE_ACCESS_TOKEN}` from the
 environment): `npx -y @supabase/mcp-server-supabase@latest --read-only --project-ref=zyscsnhiymitpfdhjuci
