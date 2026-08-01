@@ -15,6 +15,10 @@ Open Director decisions, first-wave prep, and the Lead's standing practices. Sta
 | 8 | 🟡 **Product name** (rebrand `HELM`) | parked codename | any time |
 | 9 | 🟡 **Remote + isolation rule** | create `beale3/Trade-Project-1`; adopt kit-crosses/content-doesn't | ✅ remote live; isolation adopted |
 | 10 | 🔴 **Install dev toolchain** (D-TRADE-017) | Node LTS + pnpm + Docker Desktop + gh, on the agent-shell PATH | **blocks W0 build + DB-baseline capture** — Director installs |
+| 11 | 🟠 **Provider/tier decision** (D-TRADE-018) | Polygon/Massive Business tier, or EDGAR-only near-term | needs Legal `<4.3>` ruling first |
+| 12 | 🟡 **Confirm SEC key issuer** (D-TRADE-018) | assume reseller until confirmed | Director/Data-Eng |
+| 13 | 🔴 **Spawn Legal & Privacy** | rule `<4.3>` (regulated advice?) | now on the critical path — gates `<2.1>`/`<1.1>` lock |
+| 14 | 🟡 **DB baseline capture** | dashboard Table Editor paste, or a session where the connector truly introspects | blocked on toolchain (D-TRADE-017) for the MCP route |
 
 ## B · First-wave prep (W0 scaffold — planned only; ⏸ NOT AUTHORIZED, D-TRADE-010)
 See `docs/app-design/stage-plan.md` §W0 and the §D breakdown below. **We are not building any code yet.**
