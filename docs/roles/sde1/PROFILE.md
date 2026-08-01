@@ -1,14 +1,33 @@
 # Role profile — Backend · Data & Domain (core spine · Opus 4.8 · High (Director-locked))
 
-> 🔒 **PIVOT NOTE (D-TRADE-020, 2026-08-01):** this profile (copied from `roles/be-data`) predates the pivot and describes a SaaS money-truth-chokepoint mandate that no longer applies. **canonical-design.md `<3.2>`/`<3.3>` and your oracle-boundary row WIN on conflict** (protocol 13a) — you build data-ingestion + Supabase storage for scan/backtest history, not a metered billing chokepoint. Read those first.
+> 🔒 **RE-AUTHORED (D-TRADE-020/022, 2026-08-01 — protocol 19: re-authored, not patched alongside the
+> superseded text).** The prior SaaS money-truth-chokepoint/RLS/tenant mandate below is **deleted**, not
+> parked — it described a multi-tenant product this project no longer is (`<1.2>` single user, no
+> distribution). **canonical-design.md `<3.2>`/`<3.5>` and ADR-0001 §4-5 lane A WIN on any future conflict**
+> (protocol 13a).
 
 ## Mandate
-Lane 2: the framework-free domain modules + DB adapter + **migrations — sole migration author, forward-only.** OLTP schema, any money-truth ledger (append-only + transactional + idempotent), the write-once record classes, tenant column + row-level security on every row from day one (a single-user tool without them is a rewrite to productise, not a migration). **The chokepoint import-check is the strongest oracle in the kit** — provider SDKs importable only from the chokepoint.
+**Lane A** (with Data Engineer, ADR-0001 §4-5): `helm/ingest/` — provider adapters (Massive, SEC-API.io),
+**point-in-time** pulls only; the **only** module a provider SDK/host may appear in (leg T boundary, NN-7).
+`helm/storage/` — **sole owner**: result persistence, **file-first** (CSV/parquet, matching the studies'
+own `cv_results*.csv` pattern) with Supabase (`zyscsnhiymitpfdhjuci`) as an optional **read-only** reference
+store this phase (a Supabase **write** path is a later, separately Director-gated step — not on the
+Phase-1 critical path, ADR-0001 §7). Durable entities (contract, not final DDL — this is your lane to turn
+into DDL): `scan_runs`, `signals`, `validation_runs`, `validation_verdicts`, `spend_ledger` (ADR-0001 §6.1).
+**Co-own** `helm/spend/` (the spend-guard wrapper around every `ingest` call, `<3.2>`) with FinOps — FinOps
+sets cap values, you wire the wrapper. **No money-truth ledger, no tenant column, no row-level security** —
+single-user tool, `<3.3>` is explicitly N/A, not deferred.
 
 ## Oracle-boundary split (protocol 14)
-- **Certified (mechanical):** migrations apply clean · the cross-tenant negative control FAILS with security disabled and passes with it on · no provider import outside the chokepoint · write-once tables refuse update/delete · every armed check named in the schema spec passes, **verified by QA against the specification rather than against the migrations.**
-- **HUMAN + escalates:** schema-design judgment → Architect (ADR); a migration that would rewrite history → Director.
-- **Judged by:** QA verifies against the spec (not the migrations — the migrations are the thing under test); GA audits.
+- **Certified (mechanical, PARTIAL):** ingested market/options rows conform to schema + freshness bounds —
+  a malformed or stale row FAILS rather than silently feeding the model (NN-6, a planted stale/malformed
+  row must turn the leg RED) · no provider SDK/host import outside `helm/ingest/` (NN-7, leg T) · a
+  screener component's `_gates` flag may be `True` only if a matching `cleared` verdict record exists
+  (NN-4, shared with DevOps).
+- **HUMAN + escalates:** schema-design judgment → Architect (ADR-0001 already sets the entity contract;
+  DDL specifics are yours to propose, not self-ratify) · any decision to open the Supabase write path →
+  Director (D-TRADE-014 posture).
+- **Judged by:** QA re-runs reproducibility end-to-end (NN-9); GA audits leg coverage.
 
 ## Lessons block
 - **Enforce in the DATABASE, not only the access layer.** Revoke + trigger + forced row-security; a table-owning role bypasses row-security silently, and without forcing it the negative control passes for the wrong reason.
