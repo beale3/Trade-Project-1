@@ -52,16 +52,17 @@ confirmatory check now, not a hard pre-build blocker).
 Oversight (Architect·QA·GA·SecOps·FinOps·AIQ) is **independent of builders and reports to the Director**.
 No seat certifies its own work.
 
-## §3 · Lane cut (🔒 REOPENED — the 4-lane API/DB/web/build cut doesn't fit a single Python project)
-Re-cut by the Architect at Phase-1 design time. Working default until then (disjoint by directory):
-
-| Lane (draft) | Owner | Write-lane (draft) |
+## §3 · Lane cut (🔒 CONFIRMED per ADR-0001, D-TRADE-022 — single `helm/` package, disjoint by directory)
+| Lane | Owner | Write-lane |
 |---|---|---|
-| **Screener/scoring** | AI/ML | the composite-score + screener logic (ingested from the existing options screener) |
-| **Backtest/validation** | AI/ML (build) · AIQ (independent re-derive/audit) | the walk-forward-CV pipeline, per-component pass/fail |
-| **Data ingestion + storage** | SDE1 · Data Engineer | Massive/SEC-API.io pulls, universe construction, Supabase persistence |
-| **Repo/CI/env** | DevOps | root config, `.github/**`, gate harness, secrets |
+| **A · ingest + universe + store** | SDE1 · Data Engineer | `helm/ingest/` (provider adapters, point-in-time — the ONLY place a provider SDK/host may appear), `helm/universe/` (liquid-optionable construction, point-in-time membership), `helm/storage/` (file-first results, Supabase read-side) |
+| **B · screener** | AI/ML | `helm/screener/` — the ingested composite-score + components + `_gates` flags |
+| **C · validation engine** | AI/ML (build) | `helm/validation/engine/` — `evaluate_loo`/`evaluate_multiseed_kfold`, the pre-registered D-TRADE-021 bar, verdict records |
+| **D · validation audit (independent)** | AIQ | `helm/validation/audit/` — re-derives from RAW data; **may not import lane C's outputs** (builder≠judge encoded as an import rule, ADR-0001 §4) |
+| **E · infra / CI / gate / spend** | DevOps · FinOps | `scripts/gate/**` (runner + legs + import-boundary lint), `helm/spend/` (the spend guard wrapping every ingest call), root config |
 | **Hot files (shared)** | Lead allocates IDs | the LIVE BOARD below · `docs/app-design/working-log.md` |
+
+Full module-ownership map + the 9 non-negotiable oracle legs (NN-1..9): `docs/adr/ADR-0001-phase1-validation-tool.md` §4/§8.
 
 **Hot-file append protocol:** per-lane labelled append blocks · **keep-both on rebase, yours last, remove
 the three conflict markers** (a hot-file rebase conflict is an append collision, not a real conflict —

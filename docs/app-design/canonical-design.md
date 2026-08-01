@@ -85,12 +85,28 @@ must never read as decided (LL-31).
   baseline OOS under BOTH LOO-CV and 5-fold CV (≥30 seeds), **≥90% of seeds agreeing**; **NOT CLEARED**
   otherwise; **VOID** on any leakage/contamination finding regardless. Matches the short-interest
   study's own successful precedent exactly — not a new invention.
-- **`<3.5>` Stack — ▸ NOT DECIDED, reopened.** The kit default (Node/TS · Fastify · Postgres/Supabase ·
-  React/Vite) was scoped for a SaaS. This is a **Python quant-research tool** — the existing screener,
-  backtest engine, and all 4 studies' analysis scripts are Python (pandas/numpy/scipy). Recommend:
-  **Python for the analysis/backtest/screener core**; Supabase (already connected) retained as the
-  durable store for scan history/signals/backtest results (a real, useful role, not a SaaS OLTP). Node/
-  Fastify/React likely drop entirely — no web frontend is needed for "a Python script/tool I can run."
+- **`<3.5>` Stack — 🔒 CONFIRMED per ADR-0001 (Architect), Lead-ratified 2026-08-01 (D-TRADE-022).**
+  **Python core; Node/Fastify/React dropped entirely** (N/A, not deferred — no web/API surface in
+  `<1.1>`). Single package `helm/`, disjoint-by-directory: `helm/ingest` · `helm/universe` ·
+  `helm/screener` · `helm/validation/{engine,audit}` · `helm/storage` · `helm/spend`. Full module
+  ownership map + import-boundary rules: `docs/adr/ADR-0001-phase1-validation-tool.md` §3-4. Supabase
+  (`zyscsnhiymitpfdhjuci`) retained **read-only** this phase — results write to files first (CSV/parquet,
+  matching the 4 studies' own pattern); a Supabase write path is a later, separately-gated step, off the
+  Phase-1 critical path. D-TRADE-017's Node/Docker absence does not bite a Python-only Phase 1.
+- **`<3.6>` The directional-correctness label + validation contract — 🔒 CONFIRMED per ADR-0001,
+  Lead-ratified (D-TRADE-022).** Label = the underlying's realized move over the option's DTE window,
+  evaluated for directional correctness (call⇒up, put⇒down) — **explicitly not option P&L** (`<1.4>`).
+  **Two-tier metric form** (Architect + AI/ML independently converged, ADR-0001 OP-1): (a) continuous
+  forward-underlying-return regression, directly comparable to the 4 equity studies; (b) a
+  **volatility-scaled directional-correctness binary computed on OHLCV alone** as the Phase-1 success
+  criterion — deliberately independent of options-chain/IV data, so the label doesn't block on the
+  still-unconfirmed data availability (de-risks ADR-0001 R-3). Horizons: the screener's real ~25/35/45
+  DTE band, with 1w/1m kept as continuity references to the studies (OP-2). Invariant: every feature and
+  label at `t` uses only data timestamped `≤ t`, joined point-in-time exactly as the short-interest
+  study did (no lookahead) — NN-1, the single most safety-critical non-negotiable in ADR-0001 §8.
+  **Component list (OP-4, provisional pending the screener artifact, P-2):** trend, momentum, breakout,
+  volume, + IV-rank (IV-rank defaults `gates=False` if historical IV proves unavailable — the same
+  no-data-behind-it treatment the float study already established as precedent).
 
 ## 4 · Compliance / risk (bright-lines → armed gates, D-TRADE-006)
 - **`<4.1>` No secret in repo/logs** — provider keys live in the secret store only (B5).

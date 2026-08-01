@@ -24,8 +24,23 @@ broad build starts.
 - 4 completed equity studies (`C:\Users\beale\{regime,catalyst,short-interest,float}-study\`) — the
   proven walk-forward-CV / ships-only-if-it-clears methodology this phase re-applies
 
-**P1-0 · Design ADR (Architect)** — module boundaries (screener / backtest / data-ingestion / infra),
-`<3.5>` stack confirmation, re-cut lanes (§3 draft in the charter). Wave-entry gate: Director GO.
+**P1-0 · Design ADR (Architect) — ✅ DELIVERED** (`docs/adr/ADR-0001-phase1-validation-tool.md`, status
+PROPOSED, D-TRADE-022 ratified stack/lanes/label-form). Module layout, `<3.5>`/`<3.6>` confirmed, 9
+non-negotiable oracle legs (`docs/gate/oracle-boundary.md`). **Design is done; build dispatch still
+needs the 5 hard preconditions below** — none of them is the Architect's or the Lead's to waive.
+
+**🔴 Preconditions to build dispatch (ADR-0001 §9 — HARD, checked before any wave-entry GO):**
+| # | Precondition | Status | Owner |
+|---|---|---|---|
+| P-1 | D-TRADE-010 re-scope — Director confirms Phase-1 quant-research work is outside its intent | 🟡 **open — Director** | Director |
+| P-2 | Locate + deliver the options-screener + 0DTE-backtest-engine ZIPs (confirmed absent from this machine — they exist only in the claude.ai Project sandbox) | 🟡 **open — Director** | Director |
+| P-3 | Historical options-chain/IV data availability at the Massive tier in use — gates the IV-rank component only (de-risked from gating the whole label, per the OHLCV-only design) | 🟡 open | DevOps/Data-Eng discovery |
+| P-4 | The CV clearance bar is **already ratified** (D-TRADE-021) — narrowed to ratifying the directional-correctness label FORM (ADR OP-1), which D-TRADE-021 didn't fix | 🟢 mostly resolved — Architect+AI/ML+AIQ converged, Lead-ratified as D-TRADE-022 | Lead (done) |
+| P-5 | B5 secret approval before any live-key use | 🟡 open, not urgent | Director |
+
+**Only P-1 and P-2 are genuinely blocking and Director-only** — everything else the team has resolved
+or is actively working. **Design/planning work proceeds regardless of P-1/P-2**; no seat writes
+production pipeline code until P-1 clears.
 
 **P1-1 · Universe construction (Data Engineer)** — build/maintain the liquid-optionable large/mid-cap
 list (S&P 500/1500 or Russell 1000-class, real options chains, tight spreads); confirm historical

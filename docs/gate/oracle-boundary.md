@@ -36,3 +36,21 @@ Phase 2) · all severity and boundary-honesty calls. Every one of these **escala
 **Seeded GA coverage-audit job (unchanged):** on every rule-set change and on staleness, GA audits this
 table for coverage, soundness, and boundary-honesty — including confirming the AI/ML↔AIQ builder≠judge
 split is actually being exercised, not just documented.
+
+## The 9 concrete Phase-1 legs (ADR-0001 §8, D-TRADE-022 — supersedes the generic rows above where they overlap)
+Each is a fail-closed assertion + its negative control; full text and rationale live in
+`docs/adr/ADR-0001-phase1-validation-tool.md` §8 (reference by id, don't re-describe — protocol 13b).
+**NN-1..4 are CRITICAL** (they define what "cleared" means) → frontier-depth review + protocol-17
+recurring validation.
+
+| Leg | One-line assertion | Owner |
+|---|---|---|
+| **NN-1** | No look-ahead — every feature/label at `t` uses only data `≤ t`, joined point-in-time | AIQ re-derivation + DevOps leakage assert |
+| **NN-2** | The ratified bar (D-TRADE-021) governs, pinned to a commit before any run | AI/ML runs · AIQ verifies pre-registration · GA audits |
+| **NN-3** | Builder≠judge — AIQ re-derives from RAW, never from AI/ML's summary; `cleared` requires `reproduced_by_aiq=TRUE` | AIQ · GA audits independence |
+| **NN-4** | Gate-flag conformance — a `_gates=True` flag requires a matching `cleared` verdict record | SDE1/DevOps conformance leg |
+| **NN-5** | Universe integrity — a name without a real, liquid, point-in-time options chain is excluded, not imputed | Data Engineer |
+| **NN-6** | Data schema/freshness — a malformed or stale ingested row FAILS rather than silently feeding the model | SDE1 |
+| **NN-7** | No secret / provider taint — keys in the secret store only; provider SDK/host only under `helm/ingest/` | SecOps authors · DevOps wires |
+| **NN-8** | Spend guard — a call that would breach the daily cap is BLOCKED | FinOps |
+| **NN-9** | Reproducibility — QA re-runs each component's CV end-to-end and the numbers reproduce | QA |
