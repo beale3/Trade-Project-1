@@ -246,3 +246,54 @@ last**, remove the three markers (LL-54).
   history needs a paid add-on (Data-Eng/DevOps) · 🟡 confirm the in-hand key is actually SEC-API.io + its
   tier (Director/Data-Eng) — resolves the $49–55/mo + overage line from `unmeasured` to `measured`.
 - DRAFT, self-checked (gate ②). Reported once to the Lead (protocol 15).
+
+### [Architect · 2026-08-01] Phase-1 design ADR authored — `docs/adr/ADR-0001-phase1-validation-tool.md`
+Dispatched by Lead (D-TRADE-020 pivot). Re-read in order: charter §1/§2/§3 (revised) · decisions
+016–020 · canonical `<1.1>..<4.3>` (re-authored) · my oracle-boundary row (PARTIAL, re-scoped) · PROFILE ·
+stage-plan · PROJECT-CONFIG §2–4. Grounded in the **real artifacts** (LL-39): short-interest FINDINGS +
+`run_analysis.py` (the CV harness) + `rolling_watchlist (3).py` (the `_gates`-flag screener idiom).
+- **Organizing claim:** the scanner already guards each component with a `_gates` flag whose default *is*
+  its study verdict (`short_interest_gates=True` cleared · `catalyst_gates=False` null · `float_gates=False`
+  no-data). **Phase 1 = run the studies' walk-forward-CV harness on each *options*-screener component and
+  set its gate flag from the verdict** — "ships only the components that work" becomes mechanical (`<1.1>`).
+- **`<3.5>` CONFIRMED (recommend Lead absorb):** Python core; **drop Node/Fastify/React** entirely;
+  Supabase retained **read-only** this phase (results written **file-first** like the studies' `cv_results*.csv`
+  — defers the Supabase-write/D-TRADE-014 question OFF the critical path). D-TRADE-017 Node blocker doesn't bite.
+- **Lane re-cut CONFIRMED** (charter §3 draft → absorb): A ingest+universe+store (SDE1·Data-Eng) · B screener
+  (AI/ML) · C validation-engine (AI/ML) · D validation-**audit** (AIQ, *independent* — may not import C's
+  outputs = builder≠judge encoded as an import rule) · E infra/CI/gate/spend (DevOps·FinOps).
+- **9 non-negotiables → oracle legs** (each with a negative control): NN-1 no-lookahead · NN-2 pre-registered
+  bar frozen-before-run (BOTH LOO ∧ ≥50% of 30-seed 5-fold beat naive OOS) · NN-3 AIQ re-derives from RAW
+  (builder≠judge) · NN-4 gate-flag conformance (a `True` flag needs a `cleared` verdict) · NN-5 universe
+  integrity · NN-6 schema/freshness · NN-7 leg K/T · NN-8 spend guard · NN-9 QA reproducibility. NN-1..4 =
+  CRITICAL (frontier A6 + protocol-17 AIQ validation).
+- **The one genuinely new contract:** the **directional-correctness label** over the option's DTE window
+  (underlying move, NOT P&L — `<1.1>`/`<1.4>`); harness reuses `evaluate_loo`/`evaluate_multiseed_kfold`
+  verbatim, only target+horizons change. Metric FORM is an open point (OP-1, Director+AI/ML+AIQ ratify).
+- **HARD preconditions to build dispatch (none mine to waive):** P-1 Director re-scopes D-TRADE-010 ·
+  P-2 locate+read the two ZIPs (screener, 0DTE engine — location TBD) · P-3 provider + **historical
+  options-chain/IV availability** discovery (gates whether IV-rank is testable at all) · P-4 Director
+  ratifies the pre-registered bar · P-5 B5 secrets. Co-sign slots: AI/ML·AIQ·SDE1·Data-Eng·DevOps·FinOps·QA·SecOps.
+- **Blockers surfaced to Lead (protocol 11):** (i) the two ZIPs' location — component decomposition binds
+  against source; (ii) D-TRADE-010 re-scope is Director-pending; (iii) historical options-chain/IV
+  availability unknown — the single biggest Phase-1 data risk (R-3). ADR = PROPOSED, awaiting co-sign + GO.
+- **Reconciled on rebase to D-TRADE-021 (protocol 16 — the ratified decision governs over my draft):** the
+  Lead ratified AIQ's clearance bar (LOO ∧ **≥90% of ≥30 seeds** beat naive OOS, VOID on any leakage/
+  contamination) into canonical `<3.4>` while I was drafting. My ADR NN-2 originally read the studies' older
+  **≥50%** verdict threshold [`run_analysis.py:127`] — corrected in ADR-0001 to cite **D-TRADE-021 / `<3.4>`**
+  as the governing bar (the catalyst-68%-coin-flip is exactly why ≥90%, not ≥50%). Consequently P-4 is
+  **narrowed**: the CV-agreement bar is already ratified (D-TRADE-021); what still needs a Director/AI-ML/AIQ
+  ruling is only the **directional-correctness label FORM** (OP-1) — the DTE-window target, which D-TRADE-021
+  did not fix. Also aligned module name `helm/store` → **`helm/storage`** to match DevOps's in-flight
+  harness draft (anti-churn). No other substance changed.
+- **Convergence with AI/ML + FinOps (protocol 15/16 — reconciled, not re-reported):** on the same rebase I
+  read AI/ML's and FinOps's pivot entries. **(1)** AI/ML **independently hit my P-2 blocker** — the screener
+  + 0DTE ZIPs are not locatable on this host (searched Downloads incl. every `files*.zip`, Desktop,
+  Documents, `..\Trade\`, all 4 study dirs). Two oversight seats corroborate; the Lead consolidates — I do
+  **not** re-ping separately. **(2)** AI/ML independently proposed my OP-1 two-tier target and resolved OP-3
+  the better way: the directional-correctness binary is **volatility-scaled on OHLCV alone**, so the *label*
+  no longer depends on the unconfirmed options-chain/IV data — this **de-risks R-3** (ADR OP-1/OP-3/R-3
+  updated to adopt the OHLCV-only label as recommended primary; options/IV dependency now scoped to the
+  IV-rank *component* only). **(3)** AI/ML's survivorship / point-in-time-universe-membership flag is already
+  carried by NN-1 + NN-5; cross-referenced. FinOps's measured SEC-API.io $49/mo GB-overage feeds NN-8's
+  spend guard (track GB/month, not just call count) — noted, no structural change.
