@@ -1,12 +1,23 @@
 MASSIVE_API_KEY=
 
+# ============================================================================
+# DO NOT PASTE YOUR REAL KEY INTO THIS FILE. This ".template" file is
+# committed to git and tracked in the repo -- anything you put here is
+# NOT private. (This has happened twice already -- if you're reading this
+# because you're about to paste a key, STOP and follow the steps below instead.)
+# ============================================================================
+#
 # Instructions:
-# 1. Paste your Massive (formerly Polygon.io) API key after the "=" above (no quotes, no spaces).
-# 2. Save a copy of this file as "massive_api_key.txt" (drop the ".template" suffix) in the same folder.
-# 3. massive_api_key.txt is gitignored, so the real key never gets committed.
+# 1. COPY this file to a NEW file named "massive_api_key.txt" (drop the
+#    ".template" suffix) in this SAME folder.
+# 2. Paste your real Massive API key into THAT NEW FILE, after the "=" on
+#    its first line (no quotes, no spaces).
+# 3. Leave THIS file (massive_api_key.txt.template) untouched, with an
+#    empty value after "=" -- it's the example everyone else sees.
+# 4. massive_api_key.txt (the new file, step 1) is gitignored, so the real
+#    key never gets committed. This file (the .template) is NOT gitignored
+#    on purpose, so a real key pasted here WILL be tracked by git.
 #
 # Note: this is the SAME key used elsewhere for Massive lookups (news/catalyst, short-interest,
-# market/options data) -- rolling_watchlist (3).py reads it from the MASSIVE_API_KEY environment
-# variable. If the new data pull is a genuinely different Massive account/tier (not just a new
-# endpoint on the existing account), rename this file/variable before use so it doesn't collide
-# with the existing key.
+# market/options data) -- tools/rolling_watchlist.py reads it from the MASSIVE_API_KEY environment
+# variable, or from massive_api_key.txt if the env var isn't set.
