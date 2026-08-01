@@ -23,6 +23,30 @@ last**, remove the three markers (LL-54).
   in-hand anchor provider; the key stays out of this repo and goes to the secret store at B5.
 - No other content in `..\Trade\` (no design, no code) — it is purely the key holder.
 
+### [Lead · 2026-08-01] AI/ML's screener-artifact blocker — independently confirmed, escalated
+- AI/ML correctly refused to reconstruct the options screener from the canonical doc's prose (LL-45 —
+  would be inventing the very artifact it's meant to validate) and reported the ZIP files as unlocatable
+  on this host after an exhaustive search.
+- **Independently re-verified from the Lead session** (Downloads: every `files (N).zip` opened and
+  identified by content — none are the options screener or the 0DTE backtest engine, all are earlier
+  exploratory artifacts from July 4–6/25: a `stocksim` scaffold, `ibkr_guardrail_scanner.py` /
+  `day_trade_toolkit.py`, catalyst-CV verification scripts, chart PNG/CSV pairs; also checked Desktop/
+  Documents/OneDrive — nothing). Also read `momentum_scan_playbook.md` (Jul 29) — the equity/guardrail
+  playbook, not options-related.
+- **Conclusion: the options screener + 0DTE backtest engine genuinely are NOT on this machine.** They
+  exist only inside the "Build A Stock Chart Algorithm" claude.ai Project's conversation/sandbox and were
+  never downloaded locally — the same outputs-folder-vs-local-disk confusion already documented earlier
+  in this research (the "s3_smoke_test_claude_code_prompt.md" episode).
+- **Escalated to the Director** (only they have access to that claude.ai Project) — see report.
+- **Data-Eng flag (AI/ML, absorbed):** Phase 1's multi-year backtest over a liquid-optionable S&P/Russell-
+  class universe needs **point-in-time universe membership** (which names were actually in the index on
+  each historical date) to avoid survivorship bias — unlike the 4 equity studies' static cohort, which
+  never faced a rolling-index question. Recorded for Data-Eng to pick up on spawn.
+- **PROFILE.md staleness (AI/ML flag):** 7 role profiles (ai-ml, aiq, sde1, finops, secops, design,
+  architect) predated the pivot with no pointer to the re-scoped canonical text. Fixed — each now has a
+  pivot-note header directing to the winning canonical-design/oracle-boundary text (protocol 13a already
+  made this non-hazardous, but the pointer closes the rough edge).
+
 <!-- append below this line -->
 
 ### [FinOps · 2026-08-01] Spawned (D-TRADE-016) · provider cost model + governor spec drafted

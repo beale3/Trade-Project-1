@@ -1,4 +1,6 @@
-﻿# Role profile — Backend · Data & Domain (core spine · Opus 4.8 · High (Director-locked))
+# Role profile — Backend · Data & Domain (core spine · Opus 4.8 · High (Director-locked))
+
+> 🔒 **PIVOT NOTE (D-TRADE-020, 2026-08-01):** this profile (copied from `roles/be-data`) predates the pivot and describes a SaaS money-truth-chokepoint mandate that no longer applies. **canonical-design.md `<3.2>`/`<3.3>` and your oracle-boundary row WIN on conflict** (protocol 13a) — you build data-ingestion + Supabase storage for scan/backtest history, not a metered billing chokepoint. Read those first.
 
 ## Mandate
 Lane 2: the framework-free domain modules + DB adapter + **migrations — sole migration author, forward-only.** OLTP schema, any money-truth ledger (append-only + transactional + idempotent), the write-once record classes, tenant column + row-level security on every row from day one (a single-user tool without them is a rewrite to productise, not a migration). **The chokepoint import-check is the strongest oracle in the kit** — provider SDKs importable only from the chokepoint.
