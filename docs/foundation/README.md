@@ -24,12 +24,15 @@ or override. Two are **LOCKS** needing an explicit "yes."
 1. **Place the session defaults:** copy `docs/foundation/settings.json.template` → repo-root
    `.claude/settings.json` (the harness blocks an agent from authoring an active permissions file —
    appropriately, since you hold the root of trust). §10.5 low-friction defaults; full-auto stays per-seat.
-2. **Create the remote** (gh was unavailable this session — the foundation is committed **locally only**):
+2. **Publish the baseline to origin** (the remote `beale3/Trade-Project-1` already exists with a
+   placeholder README `main`; the agent is harness-blocked from pushing). From `Trade - Lead`:
    ```bash
-   gh repo create ShupeCapital/trade --private --source="Trade - Lead" --remote=origin --push
+   git remote add origin https://github.com/beale3/Trade-Project-1
+   git fetch origin && git merge origin/main --allow-unrelated-histories -X ours -m "merge placeholder main into foundation baseline"
+   git push -u origin main
    ```
-   (or create it in the GitHub UI and `git remote add origin … && git push -u origin main` from
-   `Trade - Lead`). Confirm `.gitignore` excludes secrets before the first push — it does.
+   Non-destructive (keeps the placeholder, puts the foundation on `main`). Secrets are gitignored and
+   excluded. Once it lands, the Designer (and any seat) can `git pull --rebase` and sync.
 3. **Spawn each role session** in its own clone dir with the block from `role-bootstrap-scripts.md`, at the
    §2-locked model/effort. **You are the only one who spawns sessions and approves spend.**
 4. **Confirm the locks** (cost model, roster) and give the **product paragraph** — then the Lead unblocks

@@ -15,7 +15,7 @@ overrides when the build brief lands. Two items are **LOCKS** (roster, cost mode
 |---|---|---|
 | Product name | **HELM** (parked codename) | 🟡 DIRECTOR-PENDING — rename = one find-replace of `HELM` (LL-3) |
 | Infra slug | **`trade`** | recommended (matches existing `Trade - Lead` clone dir) |
-| Repo | **`ShupeCapital/trade`** (private) | recommended · **remote NOT yet created** (gh unavailable this session) |
+| Repo | **`beale3/Trade-Project-1`** (private) | recommended · **remote NOT yet created** (gh unavailable this session) |
 | Branch | **`main`** | recommended |
 | Clone-dir scheme | **`Trading Project 1\Trade - <Role>`** (Lead = `Trade - Lead`) | recommended (honors the pre-existing dir) |
 | Decision-log prefix | **`D-TRADE-`** | recommended |

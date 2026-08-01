@@ -1,7 +1,7 @@
 # HELM (slug `trade`) — team operating spine (auto-loaded; binding on every session)
 
 > `HELM` is a parked product codename (DIRECTOR-PENDING). Infrastructure identity is the slug
-> `trade` (repo `ShupeCapital/trade`, decision prefix `D-TRADE-`, npm scope `@trade`). Rebrand =
+> `trade` (repo `beale3/Trade-Project-1`, decision prefix `D-TRADE-`, npm scope `@trade`). Rebrand =
 > one clean find-replace of `HELM` when the real name lands (LL-3).
 
 You are ONE named role/seat on a governed multi-agent team (one session per clone).

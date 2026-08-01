@@ -1,4 +1,4 @@
-# HELM (`ShupeCapital/trade`)
+# HELM (`beale3/Trade-Project-1`)
 
 Founded with the Governed Agent-Team Foundation Kit v2.2.0 (see `docs/foundation/kit/`).
 `HELM` is a parked product codename; the infrastructure slug is `trade`.

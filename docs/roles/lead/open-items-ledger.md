@@ -13,7 +13,7 @@ Open Director decisions, first-wave prep, and the Lead's standing practices. Sta
 | 6 | 🟡 **B7 (CX-heavy?)** | off unless product is CX-heavy | pending |
 | 7 | 🟡 **Stack Python-lane** (D-TRADE-003) | Node/TS only unless quant-heavy | reopen before W1 |
 | 8 | 🟡 **Product name** (rebrand `HELM`) | parked codename | any time |
-| 9 | 🟡 **Remote + isolation rule** | create `ShupeCapital/trade`; adopt kit-crosses/content-doesn't | Director creates remote (gh) |
+| 9 | 🟡 **Remote + isolation rule** | create `beale3/Trade-Project-1`; adopt kit-crosses/content-doesn't | Director creates remote (gh) |
 
 ## B · First-wave prep (W0 scaffold — planned only; ⏸ NOT AUTHORIZED, D-TRADE-010)
 See `docs/app-design/stage-plan.md` §W0 and the §D breakdown below. **We are not building any code yet.**

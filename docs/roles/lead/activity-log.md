@@ -18,7 +18,7 @@ local tree ≠ a fetchable handoff — LL-14). All truth lives in the repo, neve
 ## State as of 2026-08-01 (founding complete)
 - **Phase:** FOUNDATION ONLY — no code build / no wave dispatch authorized (D-TRADE-010).
 - **Repo:** local git only (commits through `63a9427`); **no remote** (gh unavailable → Director creates
-  `ShupeCapital/trade` and pushes; README §2).
+  `beale3/Trade-Project-1` and pushes; README §2).
 - **Kit:** improved to **v2.3.0** (LL-69/70/71), committed to the canonical stand-in `Software Dev\Foundation
   Kit` (`1df25ed`) and synced into `docs/foundation/kit/`.
 - **Decisions:** `D-TRADE-001…011` (see decisions-log). 011 = Design Lead seated.

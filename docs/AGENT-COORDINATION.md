@@ -11,7 +11,7 @@ Read order (repo WINS on conflict): **this file** → `docs/decisions-log.md` �
 > experiment), it is recorded verbatim in `PROJECT-CONFIG.md §6` and here.
 
 > **NAME.** `HELM` is a parked product codename (DIRECTOR-PENDING). Infra identity is the slug `trade`
-> (repo `ShupeCapital/trade` · prefix `D-TRADE-` · scope `@trade`). Rebrand = one find-replace of `HELM`.
+> (repo `beale3/Trade-Project-1` · prefix `D-TRADE-` · scope `@trade`). Rebrand = one find-replace of `HELM`.
 
 ---
 
