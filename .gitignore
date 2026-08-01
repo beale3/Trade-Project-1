@@ -8,6 +8,7 @@ build/
 *.log
 *api-key*
 *api_key*
+!*.template
 sec_api_key.txt
 massive_api_key.txt
 *.pem
