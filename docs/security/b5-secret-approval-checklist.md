@@ -33,13 +33,16 @@ second slow approval round. Batch it.* Current known set:
 | S2 | DB password / `DATABASE_URL` | Supabase | B5 CRITICAL | migration runner + server data layer only | `packages/db` |
 | S3 | Personal Access Token | Supabase MCP | B5 HIGH | **read-only**, `--project-ref=zyscsnhiymitpfdhjuci` (D-TRADE-014) | `.mcp.json` via process env only |
 | S4 | anon / publishable key | Supabase | LOW (RLS-enforced) | client-side OK; out of git | `apps/web` runtime + `.env` |
-| S5 | Polygon / Massive API key | Polygon/Massive | B5 HIGH (billed) | **Business tier** if commercial (see ToS review); server-only | data-layer ingestion / money-truth |
-| S6 | SEC / EDGAR API key | SEC or reseller | B5 HIGH | server-only; **confirm issuer first** | Data-Eng ingestion module |
+| S5 | Massive (Polygon) API key | Massive | B5 HIGH (billed) | personal/individual tier — matches `<1.2>` (2026-08-01 pivot; was Business-tier-required, now re-scoped LOW-MEDIUM taint); server-only | data-layer ingestion |
+| S6 | SEC-API.io key | SEC-API.io | B5 (LOW taint, still a real secret) | personal-tier subscription — confirmed 2026-08-01; server-only | Data-Eng ingestion module |
 
 - [ ] Inventory reviewed against the design — **no secret surfaces later** without re-entering this gate.
-- [ ] **Open blockers cleared before install:** S5 tier (individual key is disqualifying for a commercial
-      build — ToS review), S6 issuer confirmation. A secret whose *acceptability* is unresolved is **not**
-      installed.
+- [x] ~~Open blockers: S5 tier, S6 issuer confirmation~~ — **CLEARED 2026-08-01** (D-TRADE-020 pivot +
+      SecOps confirmation, `docs/security/tos-taint-review.md`). Residual, non-blocking: Director may
+      optionally verify the exact Massive plan name on the account dashboard.
+- [ ] **Before installing S6:** the Director should **rotate** the SEC-API.io token first — a live value
+      was found exposed in plaintext outside this repo (`float-study/log_pull.txt`); install the *rotated*
+      value, not the current one, so the exposed value never becomes the one live in the secret store.
 
 ## Step 2 — Per-secret approval (repeat for each S#)
 For every secret in the inventory:
@@ -64,8 +67,8 @@ For every secret in the inventory:
 | S2 DB password | ☐ | ☐ | ☐ | ☐ | |
 | S3 MCP PAT | ☐ | ☐ | ☐ | ☐ | |
 | S4 anon key | ☐ | ☐ | ☐ | ☐ | |
-| S5 Polygon/Massive | ☐ | ☐ | ☐ | ☐ | |
-| S6 SEC/EDGAR | ☐ | ☐ | ☐ | ☐ | |
+| S5 Massive/Polygon | ☐ | ☐ | ☐ | ☐ | |
+| S6 SEC-API.io (rotate first) | ☐ | ☐ | ☐ | ☐ | |
 
 ## Step 4 — Standing controls (remain true after sign-off)
 - [ ] **Write access stays closed** on Supabase MCP — opening write is a **later Director-gated change** that

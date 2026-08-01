@@ -681,3 +681,33 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   placeholder; the boundary is now fully known so a concrete number is possible.
 - **Only Massive's tier remains open** on the provider-confirm item (SecOps/Data-Eng). Self-check only
   (routine, protocol 17). Reported once to the Lead.
+
+### [SecOps · 2026-08-01] D-TRADE-020 re-scoped confirm task — provider tier + SEC-key identity CLOSED, new credential-exposure finding
+- **Re-read on dispatch-freshness:** pulled, read the re-authored canonical-design.md §1-5, my re-scoped
+  oracle-boundary row (ORACLE, scope narrowed — "is the personal-tier account actually compliant" is now
+  light-confirm, not the prior commercial-tier gate), stage-plan.md before acting.
+- **Massive/Polygon tier — re-scoped LOW-MEDIUM (was HIGH).** No API-level "my plan" endpoint exists
+  (checked `search_endpoints` — confirmed absent), so exact plan name is Director-dashboard-only. Gathered
+  entitlement evidence instead (2 cheap read-only calls via the connected Massive MCP, zero secret
+  handling): real-time NBBO → `NOT_ENTITLED`; single-ticker snapshot's current-day fields all zero while
+  prior-day EOD fields populate normally → both are the signature of a non-real-time, delayed/EOD self-serve
+  tier, corroborating (not proving) the individual/personal-tier read the Director's pivot assumes. The
+  commercial-use incompatibilities from D-TRADE-018 don't apply once `<1.2>` is personal-use-only. Not a
+  blocker; Director may glance at the account dashboard to fully close the exact plan name.
+- **SEC key identity — CONFIRMED, first-hand (verify-don't-attest, LL — did not take the Lead's note on
+  faith).** Read the actual calling code: `cadence_check.py`, `pull_all_float.py`, `test_structure_check.py`
+  in `C:\Users\beale\float-study\` all load `..\Trade\sec_api_key.txt` and pass it as `token` to
+  `https://api.sec-api.io/float`. **The key is SEC-API.io, not direct EDGAR** — re-authored the Provider-1
+  section of `tos-taint-review.md` in place (LL-19: re-author, don't patch beside stale text) rather than
+  leaving the old "assumes direct EDGAR" verdict standing. SEC-API.io's own pricing page volunteers that
+  redistribution is Enterprise-only — both self-serve tiers ($49/$199) are personal/internal-use, matching
+  `<1.2>` → **LOW taint.** Flagged to FinOps: this is a paid subscription, not $0.00 EDGAR (D-TRADE-019
+  needs correcting).
+- **🔴 New finding, unplanned:** while tracing the calling code, found a live SEC-API.io token in plaintext
+  in `C:\Users\beale\float-study\log_pull.txt` (4 occurrences, DNS-failure exception tracebacks) — outside
+  this repo, so leg K can't see it; a personal-machine hygiene gap. **Did not repeat the value anywhere.**
+  Recommended to the Director: rotate the token, scrub the log, install the *rotated* value at B5 (added a
+  gating checkbox to `b5-secret-approval-checklist.md` S6).
+- Updated `docs/security/{tos-taint-review,key-denylist,b5-secret-approval-checklist}.md` in place (my
+  write-lane). Reported once to the Lead (protocol 15) with all four items (2 closed, 1 unchanged-open,
+  1 new). No blocker on my own task — surfaced the exposure as an urgent flag, not a stall.

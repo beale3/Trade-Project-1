@@ -2,6 +2,16 @@
 
 **Author:** SecOps (SecurityOps Lead) · **Date read/authored:** 2026-08-01 · **Task:** first pre-build
 ToS-taint review under D-TRADE-010 (allowed foundation work — no code build).
+
+> **2026-08-01 — UPDATE (D-TRADE-020 personal-tool pivot; Lead's re-scoped confirm task).** Two things
+> changed since the original review below: (1) the Director's product pivot **de-risks** the Polygon/
+> Massive HIGH finding — see the new verdict note in Provider 2; (2) **I confirmed, first-hand, that the
+> in-hand key is a SEC-API.io token, not direct public EDGAR** — Provider 1 below is **re-authored** (not
+> patched-beside) to reflect this; the direct-EDGAR fair-access facts are kept only as background context,
+> not as the operative taint verdict. **A new credential-exposure finding surfaced during this
+> confirmation** — see the flag at the end of Provider 1. Method unchanged: LL-58/62 citation discipline;
+> verify-don't-attest (I did not take the Lead's SEC-API.io note on faith — I found the three scripts that
+> load the key and call `api.sec-api.io` myself, in `C:\Users\beale\float-study\`).
 **Method (binding on this doc):**
 - A constraint the vendor **VOLUNTEERS** (what it says it CANNOT / WILL NOT do, or forbids *you* from
   doing) **outweighs any capability it ADVERTISES** (protocol 16 / LL-62). This review reads the
@@ -20,56 +30,117 @@ mechanically confinable) · **LOW** (operational-only; data itself is unencumber
 
 ---
 
-## Provider 1 · SEC EDGAR — taint: **LOW (data)** / operational-compliance HARD
+## Provider 1 · SEC-API.io (the actual in-hand key) — taint: **LOW** (personal-use reseller tier)
+
+> **Re-authored 2026-08-01** — the original version of this section assumed the in-hand key was for
+> direct public EDGAR. That assumption was wrong; corrected below (LL-19: re-author, don't patch beside
+> stale text). The prior open item ("confirm which service the key authenticates") is now **CLOSED**.
+
+**Identity — CONFIRMED first-hand, not by citation of the Lead's note (verify-don't-attest):** I read
+`C:\Users\beale\float-study\cadence_check.py`, `pull_all_float.py`, and `test_structure_check.py` — all
+three load `C:\Users\beale\Software Dev\Trade\sec_api_key.txt` and pass its contents as the `token` param
+to `https://api.sec-api.io/float`. **The in-hand key is a SEC-API.io token — a paid commercial reseller
+built on top of EDGAR data, not direct/free public EDGAR access.** I did not read or copy the key value
+itself (B5); identity was established from the *code that calls it*, not the secret.
 
 **Sources (read 2026-08-01):**
-- SEC.gov — "Accessing EDGAR Data" (fair-access section):
-  `https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data` · **page Last-Modified:
-  Fri, 31 Jul 2026 21:31:25 GMT** (HTTP header, captured at read).
-- SEC.gov Webmaster FAQ / Internet Security Policy (cross-referenced from the page above).
-- **Live confirmation of the policy:** an undeclared automated fetch of these SEC pages returned **HTTP 403**;
-  the same request with a **declared User-Agent** (`ShupeCapital HELM SecOps … bealearthur@gmail.com`)
-  returned **200**. The fair-access gate is real and enforced at the edge — this is not a paper policy.
+- SEC-API.io pricing page — `https://sec-api.io/pricing` (tier/usage/redistribution table).
+- `C:\Users\beale\float-study\FLOAT_STUDY_PHASE1_FINDINGS.md` §0 (prior first-party research on the same
+  question, corroborates: *"SEC-API.io doesn't expose an account/plan-info endpoint … [to] check this
+  directly"* — same limitation I independently hit trying to confirm Massive's tier, see Provider 2).
+- SEC.gov fair-access facts (kept as background — SEC-API.io's underlying data is still EDGAR filings,
+  and the direct-EDGAR facts below remain true of the *source*, just not of *this key's* access path):
+  `https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data` (Last-Modified: Fri,
+  31 Jul 2026 21:31:25 GMT); live-confirmed 10 req/s cap + mandatory declared User-Agent + no undeclared
+  bots (undeclared fetch → 403, declared UA → 200); filings themselves are public-domain U.S. government
+  works, no redistribution restriction *on the underlying filing content*.
 
-**What EDGAR VOLUNTEERS (verbatim):**
-- *"Anyone can access and download this information for free"* → EDGAR filings are **public-domain U.S.
-  government works**. **No IP / redistribution / display / derivative-works restriction on the data itself.**
-  (This is the crucial contrast with Polygon below.)
-- *"Current max request rate: 10 requests/second."*
-- *"The SEC does not allow botnets or automated tools to crawl the site. Any request that has been identified
-  as part of a botnet or an automated tool outside of the acceptable policy will be managed to ensure fair
-  access for all users."*
-- *"Please declare your user agent in request headers:  Sample … User-Agent: Sample Company Name
-  AdminContact@<sample company domain>.com"*
-- *"SEC reserves the right to limit request rates to preserve fair access for all users."*
-- Enforcement (SEC published behaviour): exceeding the rate or using an undeclared tool → the originating
-  IP(s) are throttled/blocked; access resumes after the rate stays under threshold (~10 min).
+**What SEC-API.io VOLUNTEERS (verbatim, pricing page):**
+- Tier usage column: **"Personal & Startups: `Personal. For startups: business internal.`"** ·
+  **"Business Internal Use: `Business internal only.`"** · **"Enterprise & Institutions: `Business internal
+  + redistribution and reselling.`"**
+- *"If you're looking for a redistribution license, multiple API keys per account, priority level 1
+  support, or unlimited data volume, please contact us"* — redistribution is an **Enterprise-only**
+  add-on; **neither** self-serve tier ($49–55/mo Personal, $199–239/mo Business-Internal) includes it.
+- Rate limits scale by tier (Query API: 20 req/s Personal → 40 req/s Business-Internal → custom
+  Enterprise); a Terms of Service page exists at `/policies/terms-of-service` (JS-rendered; substantive
+  clauses not machine-readable via WebFetch — noted as a residual gap, not chased further given the
+  Lead's "light confirmatory check" scope).
 
-**Taint verdict — LOW data-taint, HARD operational constraint.** Filings are freely redistributable, so
-EDGAR *reduces* product risk versus market-data vendors. But three volunteered constraints are HARD and
-must bind the ingestion design **before** anything is built on the in-hand key (`<2.1>`):
-1. every EDGAR request carries a **declared User-Agent** identifying ShupeCapital + an admin email;
-2. **global rate ≤ 10 req/s** (regardless of machine count — a fleet does not multiply the budget);
-3. all EDGAR/`sec.gov` egress lives in **one sanctioned Data-Eng ingestion module** (so the UA + rate
-   discipline is single-sourced, not re-implemented per caller).
-Token/credential failure must be **loud + fail-closed** — an EDGAR job that is rate-blocked stops and says
-so, never silently under-ingests.
+**Taint verdict — LOW, matching Massive's pattern.** Whichever self-serve tier is active (Personal or
+Business-Internal — **exact tier still UNCONFIRMED**, same limitation the float study hit: SEC-API.io
+exposes no plan-info endpoint, and I will not guess), **both sub-Enterprise tiers explicitly exclude
+redistribution** — the vendor's own tier-gating volunteers that personal/internal use is the compliant,
+paid-for lane, and reselling requires a contract neither tier holds. This is compatible with `<1.2>`
+(personal use only, no distribution). **Cost note for FinOps (D-TRADE-019 reframe):** this is a **paid
+personal-tier subscription ($49–239/mo)**, not the $0.00-marginal free EDGAR FinOps's cost-model assumed —
+flagging for FinOps to correct, not ruling on the dollar figure myself.
 
-> **Note on "SEC API key":** the Director holds a key in `..\Trade\sec_api_key.txt` (77 bytes, gitignored,
-> never committed — good hygiene). EDGAR's own fair-access endpoint is **UA-based, not key-based**, so a
-> 77-byte key most likely belongs to a **third-party EDGAR API** (e.g. an `sec-api.io`-class reseller). If
-> so, **that reseller's ToS governs the data** and must be reviewed before build (a reseller commonly adds
-> redistribution/query-cap terms that public EDGAR does not). **BLOCKER-CANDIDATE for the Director/Data-Eng:
-> confirm which service the key authenticates** — I did not read the key (B5) and cannot infer its issuer
-> from the byte count. Verdict above assumes direct public EDGAR; a reseller re-opens the taint question.
-
-**Leg T rule (SEC/EDGAR):** all calls to `*.sec.gov` / the EDGAR host (and any third-party EDGAR reseller
-host, once identified) are permitted **only** from the sanctioned Data-Eng ingestion module; a declared
-User-Agent is mandatory; an EDGAR host call from any other module, or with a missing/undeclared UA, **FAILS**.
+**Leg T rule (SEC-API.io):** the SEC-API.io key and all calls to `api.sec-api.io` are permitted **only**
+from the sanctioned Data-Eng ingestion module; a call to that host from any other module **FAILS**. (The
+direct-EDGAR UA/rate discipline above is retained as a **secondary** rule only if a future build ever adds
+*direct* `sec.gov` calls alongside SEC-API.io — not currently in play.)
 
 ---
 
-## Provider 2 · Polygon.io / Massive — taint: **HIGH** 🟠 (headline finding — Director + Legal decision required)
+### 🔴 Credential-exposure finding (surfaced during this confirmation — flag to Director, not mine to fix)
+While tracing which scripts call the key (to establish identity above), I found that
+**`C:\Users\beale\float-study\log_pull.txt` contains a live SEC-API.io token value in plaintext**, 4
+occurrences, inside failed-DNS-resolution exception tracebacks (`requests` couldn't resolve `api.sec-api.io`
+at pull time, so the exception text — which includes the full request URL with the `token=` query param —
+got written to the log verbatim). **I am not repeating the value here or anywhere else** (B5 discipline
+applies even to values I encounter incidentally, not just ones I'm handed).
+- **Scope:** local filesystem only, `C:\Users\beale\float-study\`, **outside this git repo** — leg K
+  (which scans this repo's tracked files) does not and cannot see it; this is a personal-machine hygiene
+  gap, not a repo violation.
+- **Why it matters (my mandate — key/credential security, not scoped only to the repo):** a plaintext
+  token sitting in a log file is a real, live secret at rest with no access control beyond the filesystem
+  — "real credentials at n=1 are still real credentials" (SecOps lessons block).
+- **Recommendation to the Director (I don't hold B5 authority to act on this myself):** (1) treat the
+  SEC-API.io token as exposed and **rotate it**; (2) delete or redact the `token=` value from
+  `log_pull.txt` (and check other study folders' logs for the same pattern — I only found it in
+  float-study; regime/catalyst/short-interest do not reference SEC-API.io at all, confirmed by search).
+
+---
+
+## Provider 2 · Polygon.io / Massive — taint: **re-scoped LOW-MEDIUM** (was HIGH; personal-tool pivot de-risks it — see update below)
+
+> **2026-08-01 UPDATE (D-TRADE-020 pivot + Lead's re-scoped confirm task).** The HIGH verdict below was
+> **scoped to commercial/SaaS use** (canonical `<2.1>`, per the Lead). `<1.1>`/`<1.2>` now lock HELM as
+> **personal use only, no distribution** — which is *exactly* the individual/"Non-Professional" tier's own
+> definition (§3 below: *"any natural person who receives market data solely for their own personal,
+> non-business use"*). The four incompatibility counts I found (commercial use, Professional status,
+> redistribution, "investment strategy" derivative works) **do not apply to a tool the Director alone runs
+> for the Director's own trading decisions.** The original research (verbatim ToS text, the rebrand/dual-host
+> fact, the OPRA/UTP/NYSE schedules) **stays valid** — only the applicability verdict changes.
+>
+> **What I confirmed for the Lead's re-scoped task ("is the account actually on that tier") — via the live
+> Massive MCP connector, read-only, zero secret handling:**
+> - No self-serve "my plan/subscription" endpoint exists in Massive's API (`search_endpoints` returned no
+>   account/entitlement lookup) — **mechanical tier confirmation is not obtainable via the API itself**, same
+>   limitation SEC-API.io has (see Provider 1). This is a real boundary, not an oversight on my part.
+> - **Technical entitlement evidence gathered (2 cheap, single-ticker calls):** `/v2/last/nbbo/AAPL`
+>   (real-time NBBO) returned **`NOT_ENTITLED`**; `/v2/snapshot/…/AAPL` returned populated **previous-day**
+>   EOD fields but **all-zero current-day/intraday** fields. Both are the signature of a **non-real-time,
+>   delayed/EOD-class self-serve tier** — i.e., **not** a real-time Developer/Advanced tier and not a
+>   business/enterprise contract (which would carry real-time entitlement). This is genuine corroboration,
+>   not proof of the exact plan name.
+> - **What remains HUMAN-only:** the account's literal plan name / billing type (individual vs any
+>   business paperwork) lives on the Massive account dashboard, reachable only by the Director's own login
+>   — no API surface exposes it. **Recommendation: a 30-second Director glance at massive.com → Account →
+>   Billing** would fully close this; the entitlement evidence above already substantially corroborates the
+>   individual-tier read and I do not consider this a blocker to Phase 1 start.
+> - **Verdict: re-scoped to LOW-MEDIUM.** LOW on the applicability question (personal use matches the
+>   individual tier's own definition); MEDIUM residual only because the *exact* plan name is
+>   Director-confirm-only, not because any incompatibility was found. **`<4.3>`** (is this regulated
+>   advice/a licensable strategy) stays the Director/Legal's light-touch call per the canonical re-scope —
+>   not reopened by me.
+
+<details><summary>Original HIGH-taint research (commercial-use framing) — kept for its verbatim ToS text and citations; verdict above supersedes the headline call below</summary>
+
+**(Historical framing note: the analysis and quotes below were written when `<1.1>` was an undecided
+commercial-SaaS strawman. The ToS text, rebrand facts, and exchange-agreement findings are still accurate
+and still inform leg T; only the "HIGH taint, build-blocking" framing is superseded by the update above.)**
 
 **Sources (read 2026-08-01):**
 - **Polygon.io, Inc. Market Data Terms of Service — "Last Updated: October 9, 2024"** — full PDF read
@@ -136,15 +207,14 @@ constraint outweighs the advertised "comprehensive market-data API"** (LL-62).
 - **"Which providers are acceptable" is my HUMAN-escalate column** — I do **not** rule Polygon in or out.
   I surface the terms so the Director decides `<2.1>` with the constraint in hand.
 
-**Recommendation to the Director (react, don't obey):** before Polygon/Massive is confirmed in `<2.1>`,
-resolve, in this order — (a) **tier:** only the **Business** tier can support a commercial SaaS; the
-individual key in hand (if any) is disqualifying for build; (b) **derivative-works/advice question** →
-route "are HELM's signals a licensable investment strategy?" to **Legal → Director** (`<4.3>`); (c)
-**real-time vs delayed:** real-time equities/options drag in OPRA/UTP/NYSE agreements + **professional-tier
-fees** → price to **FinOps** (D-TRADE-004, real dollars); delayed/EOD or reference data materially shrinks
-the SRO surface; (d) **fallback:** if the near-term need is *filings/fundamentals*, **public EDGAR (LOW
-taint, Provider 1) covers it with none of these constraints** — consider deferring market-data licensing
-until a feature actually needs quotes.
+**Recommendation to the Director (superseded by the pivot — kept for record only):** ~~before Polygon/
+Massive is confirmed in `<2.1>`, resolve, in this order — (a) tier: only the Business tier can support a
+commercial SaaS…~~ **No longer operative** — see the update at the top of this section. The one part that
+survives the pivot: real-time-vs-delayed remains a real cost/entitlement fact (confirmed above: this
+account is delayed-tier, not real-time), and options-chain-data availability at this tier is still an open
+**technical** (not taint) question for DevOps/Data-Eng per canonical `<2.1>`.
+
+</details>
 
 **Leg T rule (Polygon/Massive):** the Polygon/Massive SDK/client **and its API key** are usable **only**
 from the sanctioned server-side data layer (the money-truth/ingestion module, Lane 2) — **never** in
@@ -203,25 +273,32 @@ Supabase credential permitted client-side. A `service_role` import or reference 
 
 ---
 
-## Cross-provider summary (for the Lead's consolidation)
+## Cross-provider summary (for the Lead's consolidation) — updated 2026-08-01 post-pivot
 
 | Provider | Entity/host state | Volunteered constraint that dominates | Taint | Decision owner |
 |---|---|---|---|---|
-| SEC EDGAR | stable; UA-based, no key for public EDGAR | 10 req/s cap · declared UA · no undeclared bots · **data is public-domain (redistributable)** | **LOW** (data) / HARD (ops) | Data-Eng design; **confirm the "SEC key" issuer** → Director |
-| Polygon / Massive | **rebrand in transit** (polygon.io→massive; both API hosts live) | individual license = **non-commercial, Non-Professional, display-only, no redistribution, no "investment strategy" derivative works**; Business tier still bars derivative works unlicensed; real-time drags in OPRA/UTP/NYSE | **HIGH** 🟠 | **Director** (provider/tier) + **Legal** (`<4.3>` derivative/advice) |
-| Supabase | stable; already adopted | **customer bears all credential-security risk**; PHI/cardholder-data lines; no uptime warranty | **MEDIUM** | mechanical (leg K/T + B5); PHI/card line → **Legal** |
+| **SEC-API.io** (confirmed identity of the in-hand key) | stable; no plan-info API | redistribution is **Enterprise-only**; both self-serve tiers ($49/$199) are internal/personal-use only — matches `<1.2>` | **LOW** | closed by me; exact sub-tier is a Director-optional glance, not a blocker |
+| Polygon / Massive | rebrand complete (polygon.io→massive; both hosts live); **entitlement-confirmed delayed/non-real-time tier** | individual "Non-Professional" tier = personal/non-business use, matches `<1.2>` exactly; real-time/exchange-fee/derivative-works constraints only bite under commercial use, which is now off the table | **LOW-MEDIUM** (was HIGH — commercial-use scoping only) | closed by me for applicability; exact plan-name is Director-optional glance |
+| Supabase | stable; already adopted | **customer bears all credential-security risk**; PHI/cardholder-data lines; no uptime warranty | **MEDIUM** | mechanical (leg K/T + B5); PHI/card line → **Legal** (unchanged by pivot) |
 
 **Bright-line propagation (D-TRADE-006):** this review authors the **leg T sanctioned-module rules** and
 feeds the **leg K key patterns** (see `key-denylist.md`). Legs arm at their build wave (leg K/T static at
 **W0**, egress at **W1**) — SKIP-visible until then (gate-spec). **DevOps wires; GA audits coverage; QA
 re-runs the planted negative controls** (builder ≠ judge).
 
-**Escalations flagged to the Lead (protocol 15 — the Lead consolidates & escalates SEV to Director; I do not
-go around the Lead):**
-1. 🟠 **Polygon/Massive HIGH taint** — the strawman `<1.1>` is incompatible with the individual license and
-   needs a Director provider/tier decision + a Legal `<4.3>` derivative-works/advice ruling **before** `<2.1>`
-   or any build. (SEV2-candidate; GA/Lead set final severity.)
-2. 🟡 **"SEC API key" issuer unconfirmed** — 77-byte key ≠ public EDGAR's UA model; likely a third-party
-   reseller whose ToS would re-open the EDGAR taint. Director/Data-Eng to confirm; I did not read the key (B5).
-3. 🟡 **Supabase data-classification lines** (PHI/BAA, cardholder-data/approval) — route to Legal if HELM's
-   data model will ever touch them (billing may).
+**Escalations flagged to the Lead (protocol 15 — the Lead consolidates & escalates; I do not go around the
+Lead) — updated post-pivot:**
+1. ✅ **CLOSED — Polygon/Massive taint re-scoped LOW-MEDIUM.** The D-TRADE-020 personal-tool pivot resolves
+   the commercial-use incompatibility that drove the original HIGH verdict; entitlement checks (real-time
+   NBBO refused, intraday snapshot fields zeroed) corroborate a non-commercial delayed-tier account. Residual:
+   Director may optionally glance at the account dashboard to confirm the exact plan name — not a blocker.
+2. ✅ **CLOSED — "SEC API key" issuer CONFIRMED = SEC-API.io**, first-hand (found the calling code myself,
+   did not read the key). Re-scoped LOW; redistribution is Enterprise-only on that provider too, matching
+   `<1.2>`. FinOps should reprice this as a paid $49–239/mo subscription, not $0.00 EDGAR.
+3. 🟡 **STILL OPEN — Supabase data-classification lines** (PHI/BAA, cardholder-data/approval) — route to
+   Legal if HELM's data model will ever touch them; unaffected by the pivot.
+4. 🔴 **NEW — credential exposure found during this confirmation.** A live SEC-API.io token appears in
+   plaintext in `C:\Users\beale\float-study\log_pull.txt` (4 occurrences, DNS-failure exception tracebacks).
+   Outside this repo, so leg K cannot see it — a personal-machine hygiene gap, not a repo violation. **I did
+   not repeat the value anywhere.** Recommend: Director rotates the token + scrubs that log file. See the
+   flag inline in Provider 1 above for full detail.

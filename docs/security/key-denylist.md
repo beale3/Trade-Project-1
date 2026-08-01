@@ -39,7 +39,7 @@ secret.
 | K3 | **Supabase Personal Access Token (MCP)** | `sbp_<hex>` | **HIGH — one-project blast radius (D-TRADE-014)** |
 | K4 | **Supabase anon / publishable key** | legacy JWT `eyJ…` `"role":"anon"`; new `sb_publishable_…` | **LOW — RLS-enforced, client-facing; still keep out of git** |
 | K5 | **Polygon / Massive API key** | ~32-char alnum (`aB3xK9…`); also `?apiKey=` / `?apikey=` on `api.polygon.io` / `api.massive.com` | **HIGH — billed provider (money-truth)** |
-| K6 | **SEC / third-party EDGAR API key** | issuer TBD (77-byte file, `..\Trade\sec_api_key.txt`); public EDGAR is UA-based, no key | **HIGH — billed if a reseller** |
+| K6 | **SEC-API.io key** | `..\Trade\sec_api_key.txt`; identity CONFIRMED 2026-08-01 (calls `api.sec-api.io`, `token=` param) | **LOW taint / still B5 — paid personal-tier subscription** |
 | K0 | **Generic backstop** | tracked `.env*` (non-example); high-entropy assignment to a `*KEY*/*SECRET*/*TOKEN*/*PASSWORD*` var | — |
 
 ---
@@ -99,14 +99,20 @@ secret.
   - POSITIVE (→RED): `https://api.massive.com/v2/aggs?apiKey=aB3xK9fakeKEYfakeKEY0000`
   - GREEN: `.env.example` line `POLYGON_API_KEY=` (empty).
 
-### K6 — SEC / third-party EDGAR API key  🟠 HIGH (if a reseller)
-- **Pattern:** assignment to `SEC_API_KEY|SEC_API_TOKEN|EDGAR_API_KEY` with a ≥20-char value — RED. Once the
-  Director/Data-Eng **confirms the key's issuer** (open item in `tos-taint-review.md`), add that issuer's
-  concrete token prefix/format here (e.g. an `sec-api.io` token shape) for a tighter match.
+### K6 — SEC-API.io key  🟢 LOW-taint provider, still B5-secret (identity CONFIRMED 2026-08-01 — see `tos-taint-review.md` Provider 1)
+- **Pattern a (env-name):** assignment to `SEC_API_KEY|SEC_API_TOKEN|EDGAR_API_KEY` with a ≥20-char value —
+  RED (SEC-API.io tokens observed as 64-char lowercase-hex; pattern stays permissive to cover rotation).
+- **Pattern b (in-URL token, the confirmed live host):** `api\.sec-api\.io/[^\s"']*[?&]token=[A-Za-z0-9_-]{20,}`
+  — RED. This is the exact param name/host confirmed live in `float-study`'s scripts (`token=` on
+  `https://api.sec-api.io/float`) — tightened from a name-only guess to a confirmed host+param match.
 - **Negative controls:**
   - POSITIVE (→RED): `SEC_API_KEY=fakeSECkey0123456789abcdef0123`
+  - POSITIVE (→RED): `https://api.sec-api.io/float?ticker=AAPL&token=fake0123456789abcdef0123456789ab`
   - GREEN: `.env.example` line `SEC_API_KEY=` (empty), and the existing gitignored `sec_api_key.txt` (already
     ignored; leg K asserts it is **not** tracked).
+- **Note:** a real token value was found exposed in plaintext OUTSIDE this repo
+  (`C:\Users\beale\float-study\log_pull.txt`) — see the credential-exposure flag in `tos-taint-review.md`.
+  Leg K cannot reach untracked, out-of-repo files; that exposure is closed by rotation, not by this leg.
 
 ### K0 — Generic backstop  ⚙️
 - **Pattern a (tracked env file):** any tracked path matching `**/.env` or `**/.env.*` **except**
