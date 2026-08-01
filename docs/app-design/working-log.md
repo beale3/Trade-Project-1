@@ -108,3 +108,28 @@ last**, remove the three markers (LL-54).
   not self-approve; agent never handles values.
 - Reported once to the Lead (protocol 15). Escalations flagged for the Lead to consolidate/route to
   Director: Polygon HIGH taint (SEV2-candidate), SEC-key issuer, Supabase data-class lines.
+
+### [AIQ · 2026-08-01] D-TRADE-020 pivot absorbed — re-scoped to independent CV/backtest audit (HOLD)
+- **Pivot absorbed.** `git pull --rebase` → origin @ `47f6e60`. Re-read canonical-design.md §1–4 (full
+  re-author), my `oracle-boundary.md` row (VERIFIER, already re-scoped by the Lead: "independently
+  re-derives each CV result from raw data · catch-matching against the pre-registered bar · voids on any
+  seed-sensitivity or contamination finding"), and stage-plan.md P1-3.
+- **Mandate re-scope, in one line:** from "judge generative-AI output for anti-fabrication/grounding" to
+  **"independently re-derive and audit every screener-component CV result before it's called cleared"**
+  — builder ≠ judge on classical-statistics CV discipline (AI/ML), not LLM output. My PROFILE.md's
+  lessons block (LL-40/41/42/43/44/47) maps almost unchanged onto the new duty; only the subject changes
+  (a backtest result, not a generated document).
+- **Re-authored `docs/eval/methodology-draft.md` wholesale (LL-19 — re-author, not patch alongside dead
+  framing)**, replacing the generative-AI/LLM-grounding version entirely with an independent
+  backtest-audit protocol: pre-registered bar (beat naive OOS under BOTH LOO **and** 5-fold; ≥90%-of-≥30-
+  seeds robustness sweep — recommended, flagged for Lead/Director ratification, not self-ruled) ·
+  re-derive-from-raw-data, never from AI/ML's summary (LL-34) · catch-match not tier-match (LL-42) ·
+  fresh-draw vs fit-to-test on any retune (LL-43) · void-on-contamination (LL-47). Referenced the Lead's
+  cited template `catalyst-study/CATALYST_STUDY_FINDINGS.md` addendum directly: a nominal 1-day LOO "win"
+  (+0.04% RMSE, OOS R² still negative) died completely under 5-fold (0/3), and a 50-seed sweep showed the
+  apparent win was a coin flip (68/24/6% across horizons) — below the ≥90% bar. That is the exact failure
+  mode my re-derivation sequence is built to catch.
+- **Nothing to audit yet, verified**: `git log`/tree at `47f6e60` shows no P1-2 (screener ingestion) or
+  P1-3 (validation engine) code committed. HOLDING is correct, same posture as before, now against real
+  near-term work instead of an undecided product.
+- Reported once to the Lead (protocol 15).

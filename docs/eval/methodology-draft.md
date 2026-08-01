@@ -1,121 +1,84 @@
-# AI-output evaluation methodology — DRAFT PROPOSAL (AIQ)
+# Independent backtest-audit protocol (AIQ) — re-scoped under D-TRADE-020
 
-> **Status: METHODOLOGY ONLY — not an eval set.** Authored under D-TRADE-010 (no build) while product
-> `<1.1>` is `▸ NOT DECIDED` and **no AI/ML engine output exists to grade**. This file defines the *shape*
-> of the eval — the rubric contract, the blind/write-once protocol, the catch-matching reason-vocabulary,
-> and the freeze discipline — so that a golden set can be *instantiated cleanly the day there is a product
-> plus an engine*. It fabricates **no** golden items, no thresholds, and no accuracy numbers (LL-43/LL-44).
-> Owner: AI Quality (VERIFIER tier, `docs/gate/oracle-boundary.md`). For the **Lead to absorb**; the
-> Director ratifies the rubric before any labelling (PROFILE §Oracle-boundary split).
+> **RE-AUTHORED, not patched (LL-19 / protocol 19).** The prior version of this file was a golden-eval /
+> anti-fabrication-grounding methodology for a **generative-AI signal engine** — that engine was deleted
+> from scope by D-TRADE-020 (canonical `<3.4>` re-author). It does not describe HELM. This is a full
+> replacement, not an addendum. If a future pivot ever reintroduces generative AI output, that framing
+> gets a fresh elicitation, not a resurrection of the old text.
 >
-> **INSTANTIATION IS BLOCKED ON:** `<1.1>` product paragraph · `<3.4>` engine shape + first sealed outputs
-> · reason-vocabulary co-authored with AI/ML · Director rubric ratification · a named blind ground-truth
-> expert. Until all five land, this stays a proposal.
+> **Status: ACTIVE PROTOCOL, pre-registered before any result exists.** Not a golden set — there is no
+> fixed grading corpus to freeze here. This is the re-derivation + audit method that fires the moment
+> AI/ML delivers a first CV result (stage-plan **P1-3**). Verified 2026-08-01: **no AI/ML backtest code is
+> committed to this repo yet** (P1-2/P1-3 unstarted) → nothing to audit → HOLDING, same posture as before,
+> now against real near-term work instead of an undecided product.
 
 ---
 
-## 0 · Why this exists now (and what it must not become)
-The eval seat's honest number is worth nothing if the method is improvised after the outputs are seen.
-Every failure mode the lessons register warns about — grading a stale commit (LL-41), a post-hoc story
-told as a prediction (LL-44), a right-answer/wrong-reason coincidence scored as a catch (LL-42), a
-fit-to-test figure quoted as accuracy (LL-43), a contaminated grader (LL-47) — is a method defect, not a
-data defect. So the method is fixed **before** the first output exists. This draft is that fixing.
+## 0 · Scope (per D-TRADE-020 / canonical `<3.4>` / stage-plan P1-3)
+AI/ML builds a **walk-forward-CV backtest pipeline** — classical statistics/quant research, not
+generative AI — testing each options-screener component (trend / momentum / breakout / volume / IV-rank)
+for **directional correctness** of the underlying within the option's ~25–45 DTE window, against a
+liquid-optionable universe. My mandate re-scopes from "judge generative-AI output for
+anti-fabrication/grounding" to **independently re-derive and audit every CV result before a component is
+called "cleared"** — builder ≠ judge, now on classical-statistics CV discipline, not LLM output.
 
-What it must **not** become: an eval set. There is no `<1.1>`, so there is no task the engine performs,
-so any "golden item" written today would encode my guess at the product, not the product. Building it now
-would be exactly the fabrication the charter forbids. Held is a state, not a failure.
+**Reference discipline** (Lead-cited template): `C:\Users\beale\catalyst-study\CATALYST_STUDY_FINDINGS.md`
+addendum — a nominal "beats naive" LOO-CV result at the 1-day horizon (+0.04% RMSE improvement, OOS R²
+still negative) **evaporated entirely** under 5-fold CV on the same data (0/3 horizons beat naive). A
+follow-up 50-seed sweep showed the apparent 1-day "win" was a **coin flip** (68% / 24% / 6% of seeds beat
+naive across the three horizons) — below the ≥90%-of-seeds robustness bar the short-interest study had
+already set as precedent. **That is the standard AI/ML's results must clear before I call anything
+cleared**, and it is exactly the failure mode a tier-only or single-resampling check would miss.
 
-## 1 · Scope split (mirrors my oracle-boundary row · VERIFIER)
-- **CERTIFIED (mechanical, fail-closed):** golden-eval pass/fail on a **frozen** set at a **pinned commit**;
-  the anti-fabrication grounding leg (every output cites a real source-of-record that resolves); a
-  catch-matching grade against a shared reason-vocabulary. These emit a per-run certificate naming the
-  commit hash, the set id, and the seal digest.
-- **HUMAN + escalates (no oracle — Director holds root of trust):** *is the eval set representative* of the
-  product's real distribution; what a given accuracy number *means* for the ship decision; rubric design
-  itself. Model-name identifications go **direct to the Director** (the repo bars model IDs).
-- **Admission test I must pass for any leg I claim as certified (LL-49):** a seat other than me can produce
-  a reproducible **negative control** — "show me the input this green would reject." Any leg without a live
-  negative control is demoted to HUMAN. GA audits this (independence + coverage + boundary-honesty).
+## 1 · "Independently re-derive" means from raw data (LL-34) — never from AI/ML's summary
+I do not audit by reading AI/ML's report and checking its arithmetic. I **re-run the CV from raw data**,
+in my own script, against the same pre-registered bar. A component is not "cleared" until my from-scratch
+re-derivation reproduces AI/ML's headline result (or shows it doesn't survive).
 
-## 2 · The freeze-before-measure protocol (LL-41)
-1. AI/ML declares an engine build at a single **commit hash**. Nothing grades an un-pinned engine.
-2. Engine outputs for the eval inputs are generated and **sealed** (content-addressed digest) **before any
-   label exists**. The seal is committed; the digest is the artifact that travels with every later claim.
-3. Every validation record names the hash **and** the seal digest. A record without both is void — it may
-   silently be grading a stale commit.
-4. Re-running later requires a *new* hash + *new* seal; a grade never carries across an engine change
-   unlabelled.
+## 2 · Pre-registration — write-once, before I open AI/ML's result (LL-44)
+Before touching any AI/ML output, I commit: the exact bar a component must clear, the resampling schemes
+required, and the seed-sensitivity threshold. **Recommended bar (for Lead/Director ratification — not
+self-declared binding):**
+- Beats a naive out-of-sample baseline under **BOTH** LOO-CV **AND** 5-fold CV (matching stage-plan P1-3's
+  explicit "LOO + 5-fold" requirement) — a result surviving only one scheme is **not cleared**
+  (catalyst-study precedent, §0 above).
+- **Seed-sensitivity sweep**, N ≥ 30 seeds, on whichever CV scheme is more fold-sensitive (typically
+  5-fold): clears only if it beats naive on **≥90% of seeds** — the exact bar the short-interest and
+  catalyst studies already used. A single-seed or single-scheme "win" is not evidence.
+- No lookahead / no data leakage in the feature or label construction (this is "anti-fabrication
+  grounding," re-mapped from LLM-citation-checking to classical-stats leakage-checking per `<3.4>`).
 
-## 3 · Ground-truth rubric contract (LL-40 · PROFILE mandate)
-- **Rubric agreed FIRST, in writing, before a single label is drawn.** The rubric is the criterion the
-  label is *against*; writing it after seeing outputs lets the outputs write the rubric.
-- **Accuracy and consistency are separate claims, stated separately, always (LL-40).** Two distinct
-  columns, two distinct certificates. Never a blended "quality" score.
-  - *Accuracy* = engine output vs **external blind ground truth**, on lanes the engine has **never seen**.
-  - *Consistency* = engine vs itself / vs format+grounding invariants (repeatability, schema-validity,
-    citation-resolves). Consistency green is **not** accuracy evidence.
-- **Ground truth is a domain expert (often the Director), BLIND and WRITE-ONCE (LL-40).** The expert labels
-  without seeing the engine's answer or the fresh/held split; labels are committed write-once; a relabel is
-  a new, dated record, never an overwrite.
-- **Independent second classifier on a DIFFERENT model (PROFILE).** Two independent label passes; the
-  builder's own model never sits on both sides. Inter-rater disagreement is surfaced, not averaged away.
+## 3 · Re-derivation + audit sequence, per screener component
+1. **Freeze-and-pin (LL-41).** AI/ML's result is graded at a named commit hash; my audit record names it.
+2. **Re-derive from raw data (LL-34).** Rebuild the feature, the CV split, the metric independently — I
+   may reuse a fixed, already-inspected data-loading utility, but the CV logic and metric computation are
+   mine, not copied from AI/ML's report.
+3. **Cross-check both resampling schemes.** LOO AND 5-fold. Passing one and not the other = not cleared.
+4. **Seed-sensitivity sweep** per §2 — ≥90% of ≥30 seeds beat naive, or it does not clear.
+5. **Leakage/lookahead check** — no forward-looking data in the feature/label window.
+6. **Catch-match, not tier-match (LL-42).** Agreeing with AI/ML on clear/no-clear is not enough if the
+   *reason* differs — e.g. AI/ML clears it off one lucky seed, I show it's a coin flip: that is a
+   coincidental agreement, not a catch-match, and the component does **not** clear.
+7. **Fresh draw vs. fit-to-test (LL-43).** If a component fails and AI/ML retunes it, the retuned result
+   is fit-to-test by construction against whatever informed the retune — labelled as such, never quoted as
+   the honest number. Only a resampling draw / seed range / holdout period untouched by the retune counts.
+8. **Void on contamination (LL-47).** If I see AI/ML's number or reasoning before completing my
+   independent re-derivation, that check is contaminated — noted, and either re-run blind or the
+   compromised independence is flagged explicitly, never silently trusted.
 
-## 4 · Pre-registration — write-once, before the run (LL-44)
-- Predictions (expected pass/fail, expected catch tier per item, thresholds) are **pre-registered and
-  committed BEFORE the run**. A confirmed pre-registration is a prediction; a post-hoc match is a story.
-- The pre-registration file is write-once. The run reads it; the run never edits it.
-- GA confirms the pre-registration commit precedes the run commit in history.
+## 4 · Verdict format
+Each component gets exactly one of: **CLEARED** (survives LOO + 5-fold + seed-sweep, independently
+re-derived) · **NOT CLEARED** (fails any leg) · **VOID** (contamination / non-reproducible). No partial
+credit — matches the existing 4-study precedent (short-interest kept; regime, catalyst, float dropped).
 
-## 5 · Catch-matching, not tier-matching (LL-42)
-- A grade is **catch-matched**: right answer **for the right reason**, against a **shared reason-vocabulary
-  co-authored with AI/ML BEFORE the run**. Right answer + wrong reason = coincidental agreement and does
-  **not** score as a catch. A tier-only grade will pass fixes that are wrong.
-- A validation that finds a fix "fires" must also check it fires **for the right reason** (PROFILE lessons):
-  fired-as-designed includes catch-correctness, not just the output tier.
-- **Reason-vocabulary — placeholder skeleton (to be co-authored with AI/ML once `<3.4>` engine + `<1.1>`
-  exist; these are structural buckets, NOT product claims):**
-  | code | reason class (why an output is right/wrong) |
-  |---|---|
-  | `R-GROUND` | grounded in / contradicted by the cited source-of-record |
-  | `R-FABRICATE` | asserts a fact with no resolvable source (anti-fabrication core) |
-  | `R-STALE` | cites a real but out-of-window / superseded source |
-  | `R-MISREAD` | source is real & current but the output misreads it |
-  | `R-SCOPE` | answer is out of the task's declared scope |
-  | `R-FORMAT` | schema/format invariant violated |
-  > Codes are the *frame*; their product-specific content is filled with the builder at instantiation. The
-  > grade records the code, so a right-tier/wrong-code case is visible as the coincidence it is.
+## 5 · What stays HUMAN (oracle-boundary row, re-scoped)
+Per `docs/gate/oracle-boundary.md`: **"is the pre-registered bar itself the right bar"** (e.g., is
+≥90%-of-30-seeds the correct robustness threshold, is directional-correctness-within-DTE the right success
+metric) is a judgment call — **HUMAN, escalates to the Lead/Director**. I certify mechanically whether a
+component DID or DID NOT clear a stated bar; I do not certify that the bar itself is correct. §2's
+recommended bar is exactly that kind of recommendation, not a ruling.
 
-## 6 · Fresh draw vs same-set re-seal (LL-43)
-- **The honest accuracy number is a FRESH DRAW the fix never saw.** It is the only figure quoted as accuracy.
-- **The same-set re-seal is a CONFIRMATION, never the number.** It proves the fix fired and nothing
-  regressed; it is fit-to-test by construction. It is **labelled `fit-to-test (confirmation only)`** and
-  **never travels unlabelled**, never quoted as accuracy.
-- Every reported figure carries its provenance tag: `fresh-draw` | `fit-to-test` | `consistency-only`.
-
-## 7 · Void-on-contamination (LL-47)
-- Before trusting any grade, **audit blindness**: did the grader/expert see what it had to be blind to
-  (the engine's answer, the fresh/held split, the pre-registration)? 
-- On any contamination: **VOID the run without sentiment and re-draw fresh.** A grader that has seen what it
-  must be blind to yields a grade worse than none. GA is notified; the void is logged.
-
-## 8 · Builder ≠ judge (structural — protocol 14 / PROFILE)
-- AI/ML authors the engine's rule-set; **AIQ builds the oracle and JUDGES**; GA audits AIQ's independence;
-  QA re-runs the frozen set on phase exit. No self-validation is ever accepted as validation, and the same
-  session's two modes never stand in for independence (an optimistic ceiling).
-
-## 9 · Anti-fabrication grounding leg (certified)
-- Mechanical assertion: **every engine output that states a fact resolves to a real source-of-record**
-  (e.g. an EDGAR filing / market-data record per `<2.1>`, once providers land). An unresolvable or absent
-  citation **FAILS** the leg. Negative control: plant an output citing a non-existent accession → leg fails.
-
-## 10 · Open items / dependencies before instantiation
-| # | needs | from | blocks |
-|---|---|---|---|
-| 1 | product paragraph `<1.1>` | Director | the whole eval task exists off this |
-| 2 | engine shape `<3.4>` + first sealed outputs at a pinned hash | AI/ML | freeze protocol (§2), grounding leg (§9) |
-| 3 | reason-vocabulary co-authored | AIQ + AI/ML | catch-matching (§5) |
-| 4 | rubric ratified before labelling | Director | ground-truth contract (§3) |
-| 5 | named blind ground-truth expert (often Director), write-once | Director | accuracy grade (§3, §6) |
-| 6 | providers `<2.1>` (EDGAR anchor + rest) | Director/SecOps | source-of-record for grounding (§9) |
-
-**Until items 1–2 land, AIQ HOLDS. This draft is the pre-registered method, not a measurement.**
+## 6 · Status
+**HOLDING.** No AI/ML CV result exists in-repo yet (verified against `git log`/tree at commit `47f6e60` —
+P1-2 screener ingestion and P1-3 validation engine are both unstarted). This protocol is pre-registered
+and ready to fire the moment AI/ML delivers a first CV result on any screener component.
