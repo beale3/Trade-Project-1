@@ -297,3 +297,20 @@ stage-plan · PROJECT-CONFIG §2–4. Grounded in the **real artifacts** (LL-39)
   IV-rank *component* only). **(3)** AI/ML's survivorship / point-in-time-universe-membership flag is already
   carried by NN-1 + NN-5; cross-referenced. FinOps's measured SEC-API.io $49/mo GB-overage feeds NN-8's
   spend guard (track GB/month, not just call count) — noted, no structural change.
+
+### [DevOps · 2026-08-01] ADR-0001 co-sign + module-layout alignment (design-review, still holding on P-1)
+- Read `docs/adr/ADR-0001-phase1-validation-tool.md` (Architect, PROPOSED). Its own **P-1 precondition
+  confirms my existing hold was correct, not resolved** — "no seat writes production code until P-1
+  clears" (Director must still confirm Phase-1 build is outside D-TRADE-010's intent).
+- **Co-signed (§H of harness-design.md):** NN-7 (leg K/T, incl. the two ADR-0001 §4 import-boundary rules —
+  `helm/screener` can't import a provider SDK directly; `helm/validation/audit` can't import
+  `helm/validation/engine`'s outputs, the mechanical backbone of builder≠judge) + NN-8 (spend guard) +
+  Lane E's gate-legs/import-boundary non-negotiable. Declined to co-sign NN-1..6/9 — not my lane (AI/ML,
+  AIQ, SDE1, Data-Eng, QA own those).
+- **Re-aligned module names to the ADR's confirmed layout** (§4): `helm/ingest/` (single sanctioned module
+  for all provider adapters, not per-provider files as I'd drafted), `helm/storage/` (ADR confirms my
+  earlier guess), `helm/spend/` (the guard wrapper — new to my design, now incorporated in §E).
+- Every leg I'm co-signing already has a concrete design + negative control (§B–§E) — the co-sign adds no
+  new design debt; only P-1 + wave-entry GO stand between it and armed.
+- Reported once to the Lead (protocol 15), folded into the next report rather than a standalone ping —
+  routine confirmation, not a new blocker.

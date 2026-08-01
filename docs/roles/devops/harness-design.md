@@ -5,16 +5,19 @@
 > the SaaS-scale money-truth chokepoint) **no longer describes HELM** and is deleted below, not parked —
 > `<3.5>` drops Node/Fastify/React entirely; there is no service, no web surface, no multi-tenant DB.
 >
-> **Still DESIGN, not build.** Per `stage-plan.md`'s own flag: D-TRADE-010 (no-build) is the Director's
-> ruling; the Lead's reading that Phase-1 script/scaffold work "plausibly falls outside its intent" is an
-> explicit **recommendation pending Director confirmation, not decided** — and a Wave-Entry Gate (Architect's
-> P1-0 design ADR + Director GO) still applies regardless. **I hold on creating actual repo/CI files
-> (`pyproject.toml`, `.github/workflows/*`, `scripts/gate/*`) until one of those two lands** — this document
-> makes that a one-shot action the moment either does. See §F.
+> **Still DESIGN, not build.** The Architect's `ADR-0001-phase1-validation-tool.md` landed 2026-08-01
+> (Status: PROPOSED) — its own **P-1 precondition confirms my hold was correct, not resolved**: *"No-build
+> stands until the Director explicitly confirms Phase-1 quant-research build is outside D-TRADE-010's
+> intent... no seat writes production code until P-1 clears."* **I hold on creating actual repo/CI files
+> (`pyproject.toml`, `.github/workflows/*`, `scripts/gate/*`) until P-1 clears** — this document is a
+> one-shot execution plan for the moment it does. What I *can* and do here: **co-sign the ADR's
+> non-negotiables** (§12 requires it before wave-entry GO) and **re-align this design's module names to the
+> now-Architect-confirmed layout** (§4 of the ADR) — both design-review actions, not build. See §F/§H.
 
 Author: DevOps seat (clone `Trade - DevOps`). Reviewers on Phase-1 GO: Lead (infra tradeoffs) · QA
 (re-runs the harness + every CV script) · GA (leg-coverage audit) · SecOps (owns leg K/T rule content,
-already authored — I wire it, not re-derive it) · FinOps (owns the spend-guard cap values).
+already authored — I wire it, not re-derive it) · FinOps (owns the spend-guard cap values) · **Architect
+(ADR-0001 owner — module boundaries, lane cut, the 9 non-negotiables I wire as legs)**.
 
 ---
 
@@ -90,16 +93,25 @@ not re-derive it** (builder ≠ judge — SecOps authors, DevOps wires, GA audit
 - **Confirmed 2026-08-01 (unchanged):** `.gitignore` blocks `.env`/`.env.*` (`!.env.example` only);
   `.env.example` is placeholders-only. ✅
 
-## §D · Leg T — provider-taint, static (adapting SecOps's rule to the Python module layout)
+## §D · Leg T — provider-taint, static (CONFIRMED module layout — ADR-0001 §4)
 SecOps's rule (`tos-taint-review.md`) is written in `apps/web` / "Lane 2" terms from the superseded SaaS
-cut — the **substance** (a provider SDK/credential confined to one sanctioned module) still applies; only
-the concrete module names change under `<3.5>`'s Python layout (final names await Architect's P1-0 ADR):
+cut — the **substance** (a provider SDK/credential confined to one sanctioned module) still applies. The
+Architect's ADR-0001 §4 now **confirms** the concrete module names (my earlier per-provider draft below is
+superseded by the single-module rule the ADR states explicitly):
 
-| Provider | Sanctioned module (draft, Architect confirms at P1-0) | Leg T assertion |
+| Provider | Sanctioned module (ADR-0001 §4, confirmed) | Leg T assertion |
 |---|---|---|
-| Massive/Polygon (`api.polygon.io` **and** `api.massive.com` — both hosts, per SecOps's rebrand finding) | the data-ingestion module (e.g. `helm/ingest/market_data.py`) | an import of the Massive/Polygon client, or a literal call to either host, **outside** that module FAILS |
-| SEC-API.io / EDGAR | the data-ingestion module (e.g. `helm/ingest/filings.py`) | likewise confined |
-| Supabase (`@supabase-py`/`postgrest`, service_role/`DATABASE_URL`) | the storage module (e.g. `helm/storage/supabase_client.py`) | a service_role reference outside that module FAILS; **no `apps/web` carve-out needed — there is no web surface**, so the confinement is simpler than the original SaaS design (one sanctioned module per provider, not "server-only vs. client bundle") |
+| Massive/Polygon (`api.polygon.io` **and** `api.massive.com` — both hosts, per SecOps's rebrand finding) | `helm/ingest/` — **the ONLY place any provider SDK/host may appear** (ADR-0001 §4, verbatim) | an import of the Massive/Polygon client, or a literal call to either host, **outside** `helm/ingest/` FAILS |
+| SEC-API.io / EDGAR | `helm/ingest/` (same module — ADR-0001 does not split providers into separate files, one sanctioned package for all provider adapters) | likewise confined |
+| Supabase (`@supabase-py`/`postgrest`, service_role/`DATABASE_URL`) | `helm/storage/` (ADR-0001 §4 — "name aligns with DevOps's in-flight harness draft," confirming my earlier guess) | a service_role reference outside `helm/storage/` FAILS; **no `apps/web` carve-out needed — there is no web surface** |
+
+**Two additional import-boundary rules from ADR-0001 §4 (mine to wire as gate legs, Lane E):**
+1. `helm/screener/` (AI/ML's lane) **may not import a provider SDK directly** — only through the
+   `helm/ingest/` adapter interface. A direct provider import in `helm/screener/` FAILS.
+2. `helm/validation/audit/` (AIQ's lane) **may not import `helm/validation/engine`'s outputs** — it
+   re-derives from raw data. This is builder≠judge (NN-3) encoded as an import rule, not just a review
+   norm — a leg that detects an `audit` → `engine`-results import FAILS. This is the harness's most
+   important non-negotiable to get right: it is the mechanical backbone of the whole CV-audit split.
 
 **Negative control:** plant a Massive/Polygon import in, e.g., a top-level analysis script outside the
 ingestion module → leg RED. Same fixture doubles as the harness done-bar (§B.2).
@@ -117,6 +129,10 @@ not need them to be built and tested.
 - **Cap expression, not a baked number (LL-61):** `min(quota_calls, $_ceiling)` — "whichever bites first."
   SEC-API.io's measured 50 GB/mo → $0.30/GB overage (`cost-model.md` §2.3) is the one **real, current**
   overage line; Massive's paid tiers are flat, so its cap matters mainly on the free/basic rate limit.
+- **Module home — CONFIRMED by ADR-0001 §4:** `helm/spend/` — "the spend-guard wrapper around every
+  `ingest` call" (owned FinOps · SDE1, DevOps wires the leg). Every call in `helm/ingest/` routes through
+  the `helm/spend/` check first — this doubles as an import-boundary leg (an `ingest` provider call not
+  wrapped by `helm/spend/` is a gap, not just a style issue).
 - **State/storage — explicitly left to DevOps/SDE1 by the spec (§4), decided here:** a **flat JSON file**
   (e.g. `.gate/spend-tally.json`, gitignored — it's runtime state, not config) for Phase 1, keyed by
   `(provider, UTC date) → {calls, est_$}`. Chosen over a Supabase table row because it needs **zero new
@@ -135,15 +151,15 @@ not need them to be built and tested.
 
 ---
 
-## §F · Phase-1 DoD (from stage-plan P1-4) — ready-to-execute, HELD pending Wave-Entry Gate
-Restated with validated values baked (§A). **My reading: NOT yet dispatchable** — see the banner at top.
-Ready to execute the moment either (a) Architect's P1-0 design ADR + Director GO lands, or (b) the Lead/
-Director explicitly confirms light scaffold-writing is in-bounds under the current D-TRADE-010 reading.
+## §F · Phase-1 DoD (from stage-plan P1-4) — ready-to-execute, HELD on ADR-0001's own P-1
+Restated with validated values baked (§A) and confirmed module names (ADR-0001 §4). **My reading: NOT yet
+dispatchable** — see the banner at top. Ready to execute the moment **P-1 clears** (Director confirms
+Phase-1 build is outside D-TRADE-010's intent) **and** wave-entry GO lands (§12, all co-signs + Director GO).
 
 | Task | Owner | DoD (concrete) |
 |---|---|---|
 | P1-4a install ruff/mypy/pytest | DevOps | `pip install ruff mypy pytest` (or pin in `pyproject.toml`'s dev deps); $0, no PATH friction expected (unlike Node/Docker) |
-| P1-4b repo scaffold | DevOps | `pyproject.toml` (deps = the already-confirmed pandas/numpy/scipy/yfinance/matplotlib/requests + ruff/mypy/pytest), a package layout **per Architect's P1-0 module-boundary ADR** (draft: `helm/{ingest,screener,validate,storage}` — final names await P1-0) |
+| P1-4b repo scaffold | DevOps | `pyproject.toml` (deps = the already-confirmed pandas/numpy/scipy/yfinance/matplotlib/requests + ruff/mypy/pytest), package layout **CONFIRMED by ADR-0001 §4:** `helm/{ingest,universe,screener,validation/{engine,audit},storage,spend}` |
 | P1-4c gate harness | DevOps | `scripts/gate/run.py` + `scripts/gate/legs/*.py`; exits 0 on the scaffold tree; **a planted violation makes it FAIL** (LL-48 done-bar) |
 | P1-4d leg K wiring | DevOps ← SecOps spec (already authored) | SecOps's 7 patterns encoded; each of the 7 negative controls shown to bite |
 | P1-4e leg T wiring | DevOps ← SecOps rule (adapted, §D) | planted cross-module provider import → RED |
@@ -154,11 +170,12 @@ Director explicitly confirms light scaffold-writing is in-bounds under the curre
 (CV-reproducibility) and leg G remain SKIP until P1-3/P1-ingestion respectively; QA phase-exit re-run.
 
 ## §G · Open items / flags surfaced to the Lead (this report)
-1. 🟡 **Authorization ambiguity (holding on it, not guessing past it).** stage-plan.md itself flags
-   D-TRADE-010's applicability to Phase-1 script/scaffold work as the Lead's *recommendation*, not a
-   Director ruling, and still requires the Wave-Entry Gate (Architect P1-0 ADR + Director GO). I am
-   holding on creating actual files (`pyproject.toml`, `scripts/gate/**`) until one of those two lands —
-   this document is the one-shot plan for when it does.
+1. 🟡 **Authorization — now precisely scoped by ADR-0001's own P-1, not just my reading.** ADR-0001
+   (PROPOSED) states directly: *"No-build stands until the Director explicitly confirms Phase-1
+   quant-research build is outside D-TRADE-010's intent... no seat writes production code until P-1
+   clears."* This is no longer just my inference from stage-plan's hedge — the Architect's own precondition
+   confirms it. I hold on creating actual files (`pyproject.toml`, `scripts/gate/**`) until P-1 clears
+   **and** the ADR's wave-entry GO (§12: all co-signs + Director) lands.
 2. 🟢 **RESOLVED — FinOps re-authored `governor-spec.md` at personal scale** (`ab23303`); leg G's wiring
    plan is now fully specified against it (§E), including the storage choice (flat JSON tally file).
    Cap **values** remain Director-locked pending `<2.1>` tier confirmations, but the mechanism doesn't
@@ -168,3 +185,28 @@ Director explicitly confirms light scaffold-writing is in-bounds under the curre
    superseded for Phase 1, not just claimed superseded. Only `ruff`/`mypy`/`pytest` need a trivial install.
 4. 🟡 **DB baseline still open** — unchanged from my last report; Lead is routing capture to the Director/
    an interactive Lead-clone session. No action needed from me.
+
+---
+
+## §H · DevOps co-sign — ADR-0001 §12 (design-review action, not build)
+Per ADR-0001 §12, DevOps is a required co-signer before wave-entry GO. This is a review action (confirming
+I will carry these as legs once P-1 clears), not code — consistent with the hold above.
+
+- **I co-sign carrying, as gate legs once armed:**
+  - **NN-7** (no secret in repo / provider taint) — leg K (§C, SecOps's spec, ready to wire verbatim) + leg
+    T (§D, now module-confirmed) + the two additional import-boundary rules (`screener`→provider-SDK,
+    `audit`→`engine`-outputs) ADR-0001 §4 adds beyond the original NN-7 text.
+  - **NN-8** (spend guard block-on-breach) — leg G (§E, wired against FinOps's confirmed spec).
+  - **Lane E's "gate legs + import-boundary" non-negotiable (§12)** — the runner itself (§B), exit-code
+    honesty, and the done-bar (§B.2).
+- **I do NOT co-sign, and flag as not mine to carry:** NN-1 (no-lookahead, AIQ/DevOps-leakage-assert per
+  the table — the *leakage assertion* is AIQ's re-derivation, not a DevOps leg; I wire the import-boundary
+  half only, already counted under NN-7 above), NN-2/NN-3 (AI/ML·AIQ's CV-bar/re-derivation), NN-4
+  (gate-flag conformance — jointly SDE1/DevOps per the ADR table; I will wire the conformance check but the
+  correctness of the `_gates`↔verdict mapping is SDE1's domain to define), NN-5/NN-6 (Data-Eng/SDE1), NN-9
+  (QA reproducibility).
+- **Readiness note:** every leg I'm co-signing already has a concrete design (§B–§E) and a stated negative
+  control — none are placeholders. The only thing standing between this co-sign and an armed leg is P-1 +
+  wave-entry GO, not further design work on my end.
+
+**DevOps ▸ co-signed 2026-08-01 (design-review, pre-P-1)**
