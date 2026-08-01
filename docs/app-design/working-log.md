@@ -552,3 +552,12 @@ byte-identical to the approved mockup — verified by diffing my edit boundaries
 - Cleaned up: killed both throwaway server processes, deleted the scratchpad harness script (not
   committed — synthetic-data test infra only, not shippable code).
 - Reported once to the Lead + messaged Designer directly (protocol 11) with the exact repro.
+
+### [DevOps · 2026-08-01] Formal smoke-check re-run against AI/ML's real app.py (D-TRADE-023)
+- `git pull --rebase` picked up AI/ML's backend (`47db31c`/`2ca539a`) and Designer's frontend wiring
+  (`841c2ed`). Ran `scripts/smoke_rolling_watchlist_web.py` for the record (the Lead's ask — AI/ML had
+  already run it manually with the same result; this is the formal DevOps-owned re-run).
+- **PASS:** `/api/health` up, `ok=true`, `massiveKeyPresent=false` (no live key installed in this
+  session — expected, B5: the agent never handles the key value). Confirmed clean teardown — port 5000
+  free again after the check, no lingering process.
+- Reported once to the Lead.
