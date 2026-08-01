@@ -159,4 +159,35 @@ sent 4 concrete assignments (Architect, Designer, DevOps, AI/ML) — see "In-fli
 reported back when this handoff was written.** Director then requested this durable handoff + a clone
 prompt, ending the session.
 
+### [Lead · 2026-08-01] Session resumed — handoff verified, D-TRADE-023 status absorbed
+- Fresh Lead session resumed from this handoff. Verified per protocol 13a: `git pull --rebase` clean,
+  local HEAD matched `origin/main` at the handoff hash before reading anything. Read this log,
+  canonical-design.md, the open-items-ledger, AGENT-COORDINATION §LIVE BOARD, and ADR-0001 in full before
+  acting. Claiming the Program Lead board row for this session.
+- **Checked for the 4 dispatched seats' reports (Architect/Designer/DevOps/AI-ML) via repo state +
+  cross-session events, not just the static handoff text** — real activity landed after the handoff was
+  written:
+  - **Architect delivered the pacing item** — `f99967d`, `docs/adr/ADR-0002-rolling-watchlist-web-ui.md`
+    (PROPOSED): Flask, adapt-the-approved-mockup-in-place, the full `/api/scan` contract, `tools/web/`
+    layout, 3 disjoint build tasks (AI/ML backend · Designer frontend wiring · DevOps flask/run-entry/key
+    env). Also messaged the 3 waiting seats directly (protocol 11) and updated its own board row.
+  - **AI/ML** sent the Architect real return-shape grounding from `rolling_watchlist.py` before the
+    contract landed (peer-to-peer, protocol 11) and was standing by on both D-TRADE-023 and the HELM
+    Phase-1 (P-1/P-2) holds when last observed — now unblocked on D-TRADE-023 by the ADR-0002 contract.
+  - **DevOps** was mid-task (checking installed web-framework packages, had pushed a prep note ahead of
+    the contract) — not yet reported complete.
+  - **Designer** verified the adapted mockup rendering standalone in-browser (stat strip, table, Guardrail
+    #1, S3 breakdown, phase stepper, pivot chart — zero console errors) and was moving to commit — not yet
+    reported complete.
+  - No new decisions-log entries or canonical-doc conflicts landed in this window; nothing here needed
+    Lead absorption into canonical-design.md beyond what's already true (ADR-0002 is Architect's own
+    write-lane, doesn't touch `<x.y>` statements).
+- **Per protocol 15, holding — not consolidating a final report yet.** D-TRADE-023 is not complete: DevOps
+  and Designer are both still actively building against the now-landed contract. Next Lead action:
+  re-check for their completion reports, then present ONE consolidated status (not four separate relays).
+- **P-1 (D-TRADE-010 re-scope) and P-2 (screener ZIPs) remain exactly as the outgoing session left them —
+  still Director-pending, not treated as settled.** No HELM Phase-1 production code has been authorized or
+  written in this window; ADR-0002/D-TRADE-023 build activity is the equity side-tool, explicitly scoped
+  separate from HELM Phase-1 (D-TRADE-023's own instance-scope ruling).
+
 <!-- append new entries below -->
