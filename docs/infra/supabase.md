@@ -67,6 +67,30 @@ environment): `npx -y @supabase/mcp-server-supabase@latest --read-only --project
 > the config; **you enable it interactively** per the steps above. Once enabled, spawned seats in this repo
 > inherit the same `.mcp.json`.
 
+## DB Baseline (pre-W0 — is the DB empty or populated?)
+We must know the DB's starting state **before** W0 designs day-one migrations. Attempted 2026-08-01 via the
+read-only MCP connector (D-TRADE-014).
+
+| Field | Result (2026-08-01) |
+|---|---|
+| Schemas / tables | **UNKNOWN — baseline NOT captured** (blocked, see below) |
+| Host reachability | ✅ alive (`/auth/v1/health` responds; REST → 401 = needs apikey) |
+| Capture method | read-only Supabase MCP connector (introspect schemas/tables) — the only agent-safe route (direct DB / service_role require a SECRET the agent must never handle) |
+
+**🔴 BLOCKED — two compounding causes:**
+1. **Connector not enabled in-session.** `SUPABASE_ACCESS_TOKEN` is unset and no `supabase` MCP tool is
+   exposed to this session. Per D-TRADE-014 the Director enables it interactively (create PAT → set env var
+   → `/mcp` approve); this non-interactive session cannot run that OAuth/enable flow.
+2. **Node/`npx` absent on this host.** `.mcp.json` launches the server via `npx -y
+   @supabase/mcp-server-supabase@latest`; with no Node installed the connector cannot start **even with a
+   token**. Node LTS must be installed first (W0-0 in `docs/roles/devops/harness-design.md §E`).
+
+**To capture once enabled** (Director, interactively, on a host with Node): set `SUPABASE_ACCESS_TOKEN`,
+`/mcp` approve `supabase`, then ask Claude to *list schemas and tables for project `zyscsnhiymitpfdhjuci`*.
+Record the schema/table list (or "empty") back into this table. The connector is `--read-only` so this
+cannot mutate the DB. (Alternatively a human may read it directly from the Supabase dashboard → Table editor
+and paste the list here — no secret required for a screenshot of table names.)
+
 ## Governance
 - **SecOps:** run the Supabase **ToS-as-taint** check + own the key denylist; the provider SDK/host is
   usable only from its sanctioned module (gate leg T). Provider credentials referenced only there (B4 L2).
