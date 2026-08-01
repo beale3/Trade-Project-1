@@ -345,7 +345,7 @@ mockup HTML (structure + its `const DATA` consumer). `docs/adr/ADR-0002-rolling-
   deferred). OP-B the intraday chart is the one cross-seat interface point — Designer + AI/ML confirm the
   bar-array shape against the mockup's D3 code together before wiring the chart. Tier = STANDARD.
 - Reporting to the Lead + a direct pointer to each of the 3 waiting seats (protocol 11).
-=======
+
 ### [Designer · 2026-08-01] Rolling Watchlist dashboard — mockup isolated from sandbox chrome (D-TRADE-023)
 Re-activated by the Lead: `tools/rolling_watchlist.py` ships as a browser dashboard, reusing the
 Director-already-approved "Rolling Watchlist" claude.ai mockup (stat strip · watchlist table · Guardrail #1
@@ -375,3 +375,19 @@ approved visual design is preserved exactly, not redesigned.
   source of record, not the served path.
 - Self-checked (gate ②, mechanical: byte-diff-verified copy, zero-console-error render). No CRITICAL
   cross-document number/invariant here (protocol 17) — routine design-asset work, not escalation-worthy.
+
+### [Architect · 2026-08-01] ADR-0002 refined vs AI/ML's pre-wiring grounding (contract confirmed, OP-B resolved)
+AI/ML came online, read `tools/rolling_watchlist.py` in full, and sent technical grounding + design forks
+BEFORE wiring (exactly the right sequencing — protocol 11). All forks were already decided in ADR-0002; I
+confirmed each and folded in one genuine refinement it surfaced:
+- **Intraday chart:** client-rendered from DATA, **not** the `plot_intraday_alignment()` PNG — now stated
+  explicitly. Extended `intraday.bars` to fully serialize `annotated` (per-bar `abovePivot`/`aligned`/
+  `alignedTrigger`) so the D3 chart can shade aligned bars + mark the trigger. **This resolves OP-B
+  concretely** — the bar-array shape is now fixed, not a mid-build guess.
+- **`classify_pnd_phase`:** latest value only (`.iloc[-1]`) for the stepper — confirmed, no per-day history.
+- **`scan_all_patterns`:** reduced to the recent-window fired-key list (the `tw-pattern-chips`), not the
+  per-bar DataFrame — confirmed in the provenance note.
+- **DataFrame/Timestamp shaping** (watchlist, annotated, trades): already covered by the serializer rules
+  (DataFrame→records, Timestamp→ISO8601, NaN→null).
+- No contract revision needed beyond the bars-alignment fields; replied directly to AI/ML (Lead copied).
+  Pushed the refined ADR-0002.

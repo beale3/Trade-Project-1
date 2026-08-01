@@ -84,10 +84,11 @@ serving layer). `tools/rolling_watchlist.py` is imported, never modified.
     "s3": { "pattern_price":[16.5,20], "risk_reward":[15.5,20], "ease_of_entry":[8.8,10],
             "past_performance":[8.5,10], "scorePct":84.4, "rating":"Good", "isPartial":true },
     "patterns": ["micro_pullback","opening_range_breakout"],
-    "intraday": { "bars":[{"t":"<ISO8601>","open":..,"high":..,"low":..,"close":..,"volume":..}, …],
+    "intraday": { "bars":[{"t":"<ISO8601>","open":..,"high":..,"low":..,"close":..,"volume":..,
+                            "abovePivot":true,"aligned":true,"alignedTrigger":false}, …],
                   "pivots":{"pivot":..,"r1":..,"s1":..,"r2":..,"s2":..},
                   "priorHigh":..,"priorLow":..,"priorClose":..,
-                  "latestAligned":true,"firstTriggerTime":"<ISO8601|null>" },
+                  "latestAligned":true,"firstTriggerTime":"<ISO8601|null>","numTriggerBars":2 },
     "simulatedTrades": { "enabled":true,"numTrades":3,"winRatePct":66.7,"finalPnl":142.0,
                          "pnlPerShare":1.42,"pnlCurve":[…],"halted":false,"haltReason":null,
                          "trades":[{"entryTime":"<ISO8601>","exitTime":"<ISO8601>","entryPrice":..,
@@ -95,8 +96,16 @@ serving layer). `tools/rolling_watchlist.py` is imported, never modified.
   ```
   Field provenance (serializer maps these): `guardrail` ← `scan_guardrail_criteria`; `s3` ← `compute_s3_score`
   (`component_scores`+`component_max` → the `[earned,max]` pairs; `score_pct`/`rating`/`is_partial` top-level);
-  `phase` ← `classify_pnd_phase` (latest); `intraday` ← `analyze_intraday_alignment` (`levels`+`annotated`→bars)
-  + `load_intraday` + the prior daily bar; `simulatedTrades` ← `simulate_day_trades` (null when `enabled:false`).
+  `phase` ← `classify_pnd_phase` **latest value only** (`.iloc[-1]` — the stepper highlights the current
+  phase; no per-day history in the contract); `patterns` ← `scan_all_patterns` reduced to **the list of
+  pattern keys fired in the recent window** (`.iloc[-N:].any()` per column, matching `main()`'s
+  `recent_pattern_fired` and the mockup's `tw-pattern-chips`) — **not** the per-bar DataFrame; `intraday.bars`
+  ← `analyze_intraday_alignment`'s `annotated` DataFrame fully serialized to records (OHLCV + the per-bar
+  `above_pivot`/`aligned`/`aligned_trigger` booleans → `abovePivot`/`aligned`/`alignedTrigger`, so the D3
+  chart can shade aligned bars + mark the trigger), plus `levels`→`pivots`, `load_intraday`, and the prior
+  daily bar; `simulatedTrades` ← `simulate_day_trades` (null when `enabled:false`). **The chart is
+  client-rendered from this data — `plot_intraday_alignment()`'s server-side matplotlib PNG path is NOT
+  used** (D3 in the approved mockup already renders it).
 
 **Serialization non-negotiables** (serialize.py): NaN/None → `null`; pandas Timestamp → ISO8601 string;
 DataFrame → array of records; return raw floats (the frontend already formats). **Security (leg K/T):** the
@@ -115,10 +124,11 @@ from the client and no provider call leaves `tools/rolling_watchlist.py`.
 - **OP-A · long scans block the request** (N tickers × Massive latency = seconds→minutes). v1 = synchronous
   with a frontend loading state (one user, acceptable). If annoying, a later job model (`POST`→run_id, `GET`
   poll) — flagged, not built now.
-- **OP-B · the intraday chart is the one place the contract meets real bars.** The mockup synthesizes
-  prior-day H/L/C + intraday; the real backend supplies them from `load_intraday` + the prior daily bar.
-  **Designer + AI/ML confirm the exact bar-array shape against the mockup's D3 code together** before wiring
-  the chart (the single cross-seat interface point).
+- **OP-B · the intraday chart — RESOLVED in §3** (was the one place the contract meets real bars; AI/ML
+  surfaced it pre-wiring). `intraday.bars` now fully serializes `annotated` (OHLCV + per-bar
+  `abovePivot`/`aligned`/`alignedTrigger`) + `pivots` + prior-day H/L/C, so the D3 chart renders faithfully
+  from data (no PNG). Designer + AI/ML still do a quick shape-check against the mockup's D3 accessor names
+  when wiring the chart, but the contract fields are now fixed — not an open guess.
 - **Non-goals:** no auth, no multi-user, no remote deploy — localhost personal tool (D-TRADE-023 personal
   framing). No change to `tools/rolling_watchlist.py`'s logic.
 - **Complexity tier: STANDARD** — a thin read-only serving layer over an existing library; no schema, no
