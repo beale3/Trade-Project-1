@@ -391,3 +391,22 @@ confirmed each and folded in one genuine refinement it surfaced:
   (DataFrame→records, Timestamp→ISO8601, NaN→null).
 - No contract revision needed beyond the bars-alignment fields; replied directly to AI/ML (Lead copied).
   Pushed the refined ADR-0002.
+
+### [DevOps · 2026-08-01] D-TRADE-023 dashboard infra delivered (ADR-0002 §4, separate from HELM)
+- Read `docs/adr/ADR-0002-rolling-watchlist-web-ui.md` (Architect, PROPOSED) — Flask (not FastAPI),
+  the approved mockup adapted in-place, `tools/web/{app.py,scan_service.py,serialize.py,static/,README.md}`
+  layout, the `/api/health` + `/api/scan` contract. Scoped to the equity-side tool only; does not reopen
+  HELM's no-web-surface framing. No D-TRADE-010-style freeze applies — this tool is live and already
+  receiving commits, so unlike HELM I built directly rather than holding.
+- **Delivered my three §4 tasks:** `flask==3.1.3` installed + pinned in `tools/requirements.txt`
+  (alongside the tool's previously-uncaptured numpy/pandas/matplotlib deps); `.claude/launch.json`'s
+  `rolling-watchlist-web-ui` entry running the Architect's exact command; `scripts/
+  smoke_rolling_watchlist_web.py` (boots the server, polls `/api/health`, asserts `ok=true` +
+  `massiveKeyPresent` is boolean — never logs the key itself, leg K discipline — then stops it; verified
+  it SKIPs cleanly with exit 2 right now since `app.py` doesn't exist yet); `tools/web/README.md` (run
+  steps + the server-only Massive-key contract, matching `_resolve_massive_api_key()`).
+- Updated my board row to show both statuses at once (HELM holding, D-TRADE-023 active) rather than
+  letting one overwrite the other's visibility.
+- Messaged AI/ML directly (protocol 11) — their `app.py`/`scan_service.py`/`serialize.py` land against
+  this infra; the smoke check + launch.json target `tools/web/app.py` exactly as ADR-0002 specifies.
+- Reported once to the Lead.
