@@ -122,7 +122,7 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 | Backend-Data = **SDE1** | — | ⏸ **spawning (D-TRADE-016)** | Lane 2 (data/domain + money-truth chokepoint). HOLD on build; may review DB baseline with DevOps |
 | Frontend-Web | — | ⏸ not spawned | Lane 3 client shell at W2 |
 | DevOps | — | ⏸ **spawning (D-TRADE-015)** | infra-prep: capture DB baseline via read-only MCP · design gate harness + W0 DoD · HOLD on W0 scaffold pending build-GO |
-| AI/ML | — | ⏸ **spawning (D-TRADE-015)** | HOLD — no product `<1.1>` = no engine to design/build |
+| AI/ML | ▶ **LIVE** (owns clone `Trade - AI-ML`) | ▶ **live** · ⏸ **HOLDING** | **HOLD for assignment** — D-TRADE-010 (no build) + `<1.1>` NOT DECIDED → no signal engine to design/build yet; will NOT invent one against an undefined product (LL-45). "Held is a state, not a failure." Onboarded (charter · decisions · canonical-design `<3.4>` · oracle-boundary AI/ML row = HUMAN, AIQ builds+judges · PROFILE). First work once `<1.1>` lands: the engine's GROUNDING CONTRACT (what source-of-record each signal must cite), co-designed with AIQ (oracle) + Data-Eng (source data) |
 | AI Quality | — | ⏸ **spawning (D-TRADE-015)** | HOLD — no AI output yet; may draft eval/ground-truth methodology only |
 | FinOps | — | ⏸ **spawning (D-TRADE-016)** | cost-model the adopted providers (Supabase/Polygon/SEC/LLM) — real dollars; design the fail-closed governor + $/day auto-kill |
 | Legal & Privacy | — | ⏸ not spawned | SEC/financial-regulatory + PII bright-lines |
