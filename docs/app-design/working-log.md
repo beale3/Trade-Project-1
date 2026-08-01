@@ -561,3 +561,56 @@ byte-identical to the approved mockup — verified by diffing my edit boundaries
   session — expected, B5: the agent never handles the key value). Confirmed clean teardown — port 5000
   free again after the check, no lingering process.
 - Reported once to the Lead.
+
+### [Designer · 2026-08-01] Integration-tested against the real backend; found + fixed a live bug; Director-directed palette redesign + theme toggle
+- **Integration test (not just fixture):** ran `flask --app tools/web/app run` locally against the real
+  `tools/web/app.py`/`scan_service.py`/`serialize.py` AI/ML delivered. `/api/health` correct
+  (`massiveKeyPresent:false` — no key configured in this session, degrades as designed). Ran a real
+  `/api/scan` against 2 tickers: 0 candidates came back (correct — no market-data key means no price
+  data, not a UI defect).
+- **Found + fixed a real bug via that test:** a genuine 0-candidate result produced `Avg. S3 score: NaN%`.
+  Root cause: `renderStats()` (untouched from the approved mockup — its mock `DATA` was never empty, so
+  this path never ran) recomputed `candidatesScanned`/`holdingUp`/`alignedNow`/`avgS3Pct` client-side from
+  `DATA.length`, instead of reading the server's own precomputed `stats` object (§3's `stats:
+  {candidatesScanned,holdingUp,alignedNow,avgS3Pct}`, which I had wired to `DATA` but never actually
+  consumed). Fixed both problems at once: `renderStats()` now reads `SCAN_STATS` (server-authoritative,
+  same single-source-of-truth principle as `mapCandidate()`), with a `—` fallback when `avgS3Pct` is
+  null. Re-verified against the real backend: renders `—` cleanly, zero console errors.
+- **Director-directed redesign, mid-task, in this same session (taste — HUMAN + Director-approver,
+  oracle-boundary row; this is exactly that approval, live):** (1) palette → mostly-white background,
+  green accent + a second green "good" tone; kept `--warning`/`--critical` (amber/red) unchanged —
+  greening error/positive-status colors alike would destroy the chip semantics the whole design leans on
+  (Fails-core / Rolled-over chips need to read as "bad," not match "good"). Applied identically to both
+  `tools/web/static/index.html` (served) and `docs/design/rolling-watchlist-dashboard.html` (design-asset
+  record) — docs-in-sync, one palette. (2) Added a light/dark theme toggle: pre-paint `<script>` in
+  `<head>` reads `localStorage`/system preference before first paint (no flash), a `.tw-theme-toggle`
+  button wired to the CSS's existing (previously dead) `:root[data-theme]` attribute selectors — those
+  selectors were already in the approved mockup's CSS, unused; wiring a real control to them is
+  activating existing design, not inventing new surface. Dark theme's accent/good also shifted to
+  green (lighter, for dark-background contrast) for brand consistency across both modes, now that both
+  are reachable by an explicit control rather than just OS preference.
+- **Verified (not just claimed):** light theme — `getComputedStyle` confirms `--surface:#FFFFFF`;
+  full re-population (6-candidate fixture) confirmed every section still renders (stat strip, table,
+  guardrail, S3, phase stepper, chart with trigger marker) — nothing was reduced. Dark theme — clicked the
+  toggle live, confirmed `--surface` flips to `#0F1712` via computed style and a screenshot (one earlier
+  screenshot was a stale capture — a tooling artifact, not a real bug; a second screenshot after a 1s wait
+  showed the correct dark render). Toggled back to light, re-confirmed. Zero console errors throughout.
+- **Mid-task correction (protocol 15):** the Director saw an in-progress empty-state screen (mid-wiring,
+  before this session's integration test populated real data) and asked what happened to the graphs —
+  explained the empty-state-is-correct-post-wiring reasoning directly and re-populated the live preview
+  with illustrative data on the spot so nothing read as regressed. No code change needed for that one;
+  communication gap, not a defect.
+- Self-checked (gate ②: computed-style + rendered-output verification, not just code review).
+- **Reconciled on rebase (protocol 16) against AI/ML's entry directly above:** their 🔴 finding — a
+  rolled-over (`holdingUp:false`) candidate's real `relVol:null` crashes `renderTable()`'s unconditional
+  `d.relVol.toFixed(1)` (`TypeError: Cannot read properties of null`) — is real, correctly root-caused
+  (the real `scan_guardrail_criteria` never runs on non-holding tickers, so `null` is honest; the
+  *approved mockup's own* synthetic DATA fabricated a `relVol` number for its skip rows, masking this),
+  and **not something my earlier fixture testing exercised** (my fixtures always gave skip-row candidates
+  a `relVol` value too, mirroring the mockup's own shape — same blind spot). **Fixed now, this commit:**
+  guarded both call sites AI/ML named — `renderTable()` and the latent (currently unreachable)
+  `renderGuardrail()` one — `d.relVol != null ? d.relVol.toFixed(1) + "x" : "—"`, matching the table's
+  existing null-handling pattern for float/catalyst. Applied to both `tools/web/static/index.html` and
+  the `docs/design/` copy (design-system parity). Re-verified against the real backend: a 2-ticker scan
+  (1 holding-up + 1 rolled-over) no longer throws; the rolled-over row renders `—` cleanly. Reporting once
+  to the Lead.
