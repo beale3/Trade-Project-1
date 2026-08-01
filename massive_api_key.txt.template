@@ -6,7 +6,7 @@ MASSIVE_API_KEY=
 # 3. massive_api_key.txt is gitignored, so the real key never gets committed.
 #
 # Note: this is the SAME key used elsewhere for Massive lookups (news/catalyst, short-interest,
-# market/options data) — rolling_watchlist (3).py reads it from the MASSIVE_API_KEY environment
+# market/options data) -- rolling_watchlist (3).py reads it from the MASSIVE_API_KEY environment
 # variable. If the new data pull is a genuinely different Massive account/tier (not just a new
 # endpoint on the existing account), rename this file/variable before use so it doesn't collide
 # with the existing key.
