@@ -425,3 +425,37 @@ confirmed each and folded in one genuine refinement it surfaced:
 - Messaged AI/ML directly (protocol 11) — their `app.py`/`scan_service.py`/`serialize.py` land against
   this infra; the smoke check + launch.json target `tools/web/app.py` exactly as ADR-0002 specifies.
 - Reported once to the Lead.
+
+### [AI/ML · 2026-08-01] D-TRADE-023 backend delivered — `tools/web/{app,scan_service,serialize}.py`
+- Read `tools/rolling_watchlist.py` in full before wiring anything (all 1367 lines — `main()` at line
+  1172 is the reference pipeline); read ADR-0002 in full (Flask, the §3 contract, module layout) before
+  writing a line of the API layer, so nothing got built against a guess.
+- **`scan_service.py`** mirrors `main()`'s loop exactly (same functions, same call order, same
+  hardcoded `catalyst_gates=False`/`short_interest_gates=True`/`pattern_lookback_bars=6` main() itself
+  uses) but returns raw per-candidate dicts instead of printing. One correction to my own first read of
+  the contract: candidates are built by iterating `scan_rollover_watchlist`'s own output rows (only
+  tickers with a qualifying spike), not literally every requested ticker — confirmed against the
+  mockup's `DATA` array (all 6 example rows have real spike data; `stats.candidatesScanned`'s subtitle
+  "≥20% gain, ≥2x rel. volume" only makes sense as the spike-qualifying count) before committing to that
+  shape, rather than assuming.
+- **`serialize.py`** is the only place DataFrame/Timestamp/NaN → JSON happens, per ADR-0002 §2.3.
+  `intraday.bars` shaped from `analyze_intraday_alignment`'s underlying OHLCV data; `s3`'s four
+  component keys stay snake_case (`pattern_price`/`risk_reward`/…) matching the contract's own example
+  verbatim, not camelCased like everything else — the contract governs over "be consistently camelCase."
+- **Verified, not just written:** DevOps's `scripts/smoke_rolling_watchlist_web.py` passes against the
+  real app under `flask --app tools/web/app run` (`PASS: /api/health up, ok=true,
+  massiveKeyPresent=False` — no live key in this session, degrades exactly as designed). A synthetic-
+  data smoke test (throwaway, not committed) exercises the full holding-up candidate path — guardrail,
+  s3, phase, intraday bars, patterns, simulatedTrades — end-to-end and confirms the response survives
+  `json.dumps` with zero NaN/Timestamp/DataFrame leakage.
+- **🟡 Finding surfaced to Designer + Lead (protocol 11, before either of us wires the chart/fetch):**
+  the mockup's current JS **re-derives** three things client-side that ADR-0002 §3's contract already
+  sends pre-computed — guardrail pass/fail (hardcoded 10.0/2.0/2–20/3.0 thresholds, `DATA.forEach` block)
+  · S3 total/rating (summed from component pairs) · the entire intraday chart series (`buildSeries`
+  synthesizes a fake 40-point path via `mulberry32(hashSeed(ticker))`, not real bars). If left as-is,
+  the client's hardcoded thresholds would silently diverge from the server's real, request-configurable
+  ones (protocol 16 — two sources of truth for the same fact). Recommending the derivation block + the
+  synthetic `buildSeries` path be replaced with direct consumption of the server's `guardrail`/`s3`/
+  `intraday` objects, not just the `DATA` literal swapped for a fetch. Not my file to edit (Designer's
+  write-lane) — flagged, not patched around.
+- Reported once to the Lead + messaged the Designer directly with the exact shape (protocol 11).
