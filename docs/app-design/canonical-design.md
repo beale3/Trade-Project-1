@@ -81,6 +81,10 @@ must never read as decided (LL-31).
   studies' existing "ships only if it clears CV" discipline, now structurally enforced by a second seat
   instead of one session self-checking). "Anti-fabrication grounding" (AIQ's kit mandate) maps to: no
   lookahead bias, no data leakage, a component doesn't ship on a fit-to-test number (LL-43).
+  **The clearance bar (D-TRADE-021, ratified):** a component is **CLEARED** only if it beats naive
+  baseline OOS under BOTH LOO-CV and 5-fold CV (≥30 seeds), **≥90% of seeds agreeing**; **NOT CLEARED**
+  otherwise; **VOID** on any leakage/contamination finding regardless. Matches the short-interest
+  study's own successful precedent exactly — not a new invention.
 - **`<3.5>` Stack — ▸ NOT DECIDED, reopened.** The kit default (Node/TS · Fastify · Postgres/Supabase ·
   React/Vite) was scoped for a SaaS. This is a **Python quant-research tool** — the existing screener,
   backtest engine, and all 4 studies' analysis scripts are Python (pandas/numpy/scipy). Recommend:
