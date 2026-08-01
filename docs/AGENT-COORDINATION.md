@@ -114,7 +114,7 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 | Seat | Session | Status | Next-up |
 |---|---|---|---|
 | **Program Lead** | ▶ **LIVE — this session** (set title `HELM (trade) — Program Lead`; owns clone `Trade - Lead`) | ✅ founded · ▶ **active Lead** | run the delivery pipeline; **await Director locks + product `<1.1>`**; assign by message to verified-ACTIVE seats; never self-dispatch |
-| Principal Architect | — | ⏸ **spawning (D-TRADE-016)** · **Fable 5·Max** | HOLD — nothing to architect until product `<1.1>` + a build path; then the W1 spine A0 ADR |
+| Principal Architect | ▶ **LIVE — this session** (owns clone `Trade - Architect`) | ▶ **live** · ⏸ **HOLDING** · **Fable 5·Max** · onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE · stage-plan · gate-spec) | HOLD — nothing to architect until product `<1.1>` lands + a build path/GO (D-TRADE-010); then the **W1 CORE-SPINE A0 ADR** (transport · request-context/tenant · auth · DB adapter · money-truth chokepoint `<3.2>`, its invariant checklist locking with QA+SecOps+FinOps). "Held is a state, not a failure." |
 | QA | — | ⏸ not spawned | arm gate legs at W0; phase-exit sign-offs |
 | Governance & Audit | — | ⏸ not spawned | seed oracle-coverage audit; own RECONCILE gate |
 | SecOps | — | ⏸ **spawning (D-TRADE-015)** | ACTIVE: provider ToS-taint on SEC EDGAR · Polygon · Supabase + author key denylist (SEC key · Supabase service_role/DB pwd · Polygon) → report to Lead |

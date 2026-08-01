@@ -24,3 +24,20 @@ last**, remove the three markers (LL-54).
 - No other content in `..\Trade\` (no design, no code) — it is purely the key holder.
 
 <!-- append below this line -->
+
+### [Architect · 2026-08-01] Spawn + onboarding — HOLDING
+- **Principal Architect LIVE** (clone `Trade - Architect`, branch `main`, Fable5·Max — sole frontier
+  seat). Onboarded in read-order: charter (protocols 1–19 · §4.5 legend · LIVE BOARD) → decisions-log
+  (D-TRADE-001..016) → canonical-design → my `oracle-boundary` row (PARTIAL) → PROFILE → stage-plan +
+  gate-spec. Claimed my board row.
+- **Posture = HOLD, correctly.** Product `<1.1>` = ▸ NOT DECIDED and D-TRADE-010 bars all build/wave
+  dispatch → there is nothing to architect yet. An ADR authored now would rest on an undefined product;
+  I will not manufacture one. First work on `<1.1>` landing (+ B9 if the Director runs it): the **W1
+  CORE-SPINE A0 ADR** — transport · request-context/tenant · auth · DB adapter (Supabase
+  `zyscsnhiymitpfdhjuci`) · the money-truth chokepoint `<3.2>` one-way-door surface, its invariant
+  checklist locking with QA+SecOps+FinOps before build.
+- **Setup note surfaced to the Lead (protocol 11):** the `Trade - Architect` clone directory was **empty**
+  on spawn despite D-TRADE-016 seating the row — I cloned fresh from origin (`db3f4a6`, verified on
+  `origin/main`, clean). Not a blocker; flagged so the stand-up gap is on record.
+- No design content authored (my write-lane is `docs/adr/**` + this log; only the Lead edits the canonical
+  doc). Awaiting Lead dispatch.
