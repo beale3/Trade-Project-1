@@ -1,20 +1,20 @@
 # Provider cost model — HELM (`trade`)
 
-**Owner:** FinOps (FinancialOps Lead) · **Authored:** 2026-08-01 · **Task:** pre-build provider cost model
-(D-TRADE-016 FinOps light pre-build work; allowed under D-TRADE-010 — *modeling only, not governing live
-spend*: no metered chokepoint exists yet). **Cost model of record:** BILLED PER-USE (D-TRADE-004,
-🔒-pending Director LOCK).
+**Owner:** FinOps (FinancialOps Lead) · **Authored:** 2026-08-01 · **Revised:** 2026-08-01 (D-TRADE-020
+pivot — `<1.1>` locked: HELM is a **personal trading-signal tool**, one user, no SaaS/GTM surface. This is
+a **targeted revision, not a full rewrite** — the underlying provider prices haven't changed, only their
+*classification and applicability* have; sections superseded by the pivot are re-authored in place per
+protocol 19, not left standing alongside the new framing (LL-19).
+
+**Cost model of record:** BILLED PER-USE (D-TRADE-004), **at personal scale** — governed by a lightweight
+**spend guard** (`governor-spec.md`, re-authored), not a SaaS-grade metered chokepoint.
 
 **Phase honesty (read this first).** This is a **model + parameter frame**, not a price sheet to decide on.
-No engine, no chokepoint, and no product `<1.1>` exist yet, so the two numbers that actually set per-unit
-COGS — *tokens per signal* and *the chosen model's token rates* — are **unmeasured by construction**. What
-this doc fixes is the **shape** of the cost (which providers are variable-per-use vs standing floor, and the
-exact expression each COGS takes) so the governor (`governor-spec.md`) can *meter and cap* the moment the
-chokepoint arms at W1.
-
-**Status:** DRAFT — gate ② (GROUND) only. NOT yet RECONCILED (gate ③, GA/second seat) or Director-locked
-(gate ⑤). Every dollar *cap/target* below is a **recommendation flagged for Director lock** — pricing and
-unit-economics viability are HUMAN and escalate (my oracle-boundary row; profile mandate).
+**Post-pivot reality check:** the validation engine `<3.4>` is **classical statistics** (walk-forward CV),
+not generative AI — so **Phase 1 has no LLM spend at all**. Every provider actually in scope (Massive,
+SEC-API.io, Supabase) is a **flat subscription or quota-based tier**, not a metered-per-call bill. The open
+dollar questions are now about **which tier** applies (personal vs. commercial — largely resolved by the
+pivot) and **whether an add-on (options-chain history) is needed**, not about a per-call meter.
 
 ---
 
@@ -36,57 +36,44 @@ unit-economics viability are HUMAN and escalate (my oracle-boundary row; profile
 
 ---
 
-## §1 · Central finding — variable-per-use COGS vs standing infra floor
+## §1 · Central finding (revised post-pivot) — nothing left in scope is truly per-call metered
 
-D-TRADE-004 says "billed per-use," but of the four adopted providers **only one is actually billed per call.**
-Getting this split right is the whole point of the model: the fail-closed governor must veto the *variable*
-spend, and the *floor* must be surfaced as a fixed monthly line — conflating them either lets real spend run
-(floor treated as the cap) or throttles free calls (floor metered as if per-use).
+**Pre-pivot finding (superseded, kept here only for traceability — LL-19):** the original model identified
+LLM tokens as the one true per-use COGS among four providers. **That finding's subject is gone**: `<3.4>`
+is classical statistics, not generative AI, so **Phase 1 makes zero LLM calls.** Re-derived from scratch for
+the actual Phase-1 provider set:
 
 | Provider | Marginal cost of one more API call | Classification | Governed by |
 |---|---|---|---|
-| **LLM (signal engine)** | **> 0 — priced per token, every call** | **VARIABLE per-use COGS** | the fail-closed governor (`governor-spec.md`) — the meter moves here |
-| **Polygon / Massive** | **$0 within the plan's rate limit** (flat sub, "unlimited API calls" on paid) | **standing floor** (a subscription) | budgeting, not the per-call governor |
-| **SEC EDGAR (direct)** | **$0** (free public data, rate-limited not priced) | **standing floor = $0** | rate-limit discipline (SecOps leg T), not $ |
-| **Supabase** | **≈ $0 per call**; cost accrues to slow-moving *usage* (storage, egress, MAU) | **standing floor + usage overage** | budgeting + an overage watch, not the per-call governor |
+| **Massive (personal tier)** | **$0 within the tier's included quota**; unconfirmed whether historical options-chain data is a paid add-on (`<2.1>`, open) | **standing floor** (flat sub) + a possible new floor line pending confirmation | the spend guard's *quota* watch (`governor-spec.md`), not a $ meter |
+| **SEC-API.io** (likely real identity of the in-hand key, `<2.1>` — reframed from the earlier "free direct EDGAR" assumption) | **$0 within its subscription tier's query cap**, if any | **standing floor** (a paid personal subscription, not free) | the spend guard's quota watch |
+| **Supabase** | **≈ $0 per call**; cost accrues to slow-moving *usage* (storage, egress) | **standing floor + usage overage** | a periodic overage glance, not a per-call check |
+| **LLM (Phase 1)** | **N/A — not called in Phase 1** (`<3.4>` is classical stats). Kept as a Phase-2-contingent line only; do not budget for it now | **out of scope** | re-open only if a future phase reintroduces generative AI |
 
-**Consequence for the governor:** the per-use spend meter is, in practice, an **LLM-token meter** (plus any
-*future* genuinely-per-call provider). Every billed-provider call still routes through the money-truth
-chokepoint `<3.2>` and writes a spend-ledger row — for reconciliation, rate-limit governance and ToS-taint
-(D-TRADE-008) — but a Polygon/EDGAR call adds a `$0.00` ledger row and does **not** move the `$/day`
-auto-kill tally. **This is the LL-15 point at provider scale: govern the measured per-unit COGS, not the
-headline "cost of market data."**
+**Consequence for the guard:** there is currently **no confirmed genuinely-per-call-billed provider** in
+Phase 1's scope. The spend guard (`governor-spec.md`) is therefore mostly a **quota/count tripwire** (catch
+a bug before it either trips overage billing or a rate-limit ban), not a dollar meter in continuous motion —
+a materially lighter job than the pre-pivot model assumed, consistent with the oracle-boundary re-scope
+(ORACLE → PARTIAL).
 
 ---
 
 ## §2 · Per-provider cost model
 
-### 2.1 · LLM (the AI/ML signal engine `<3.4>`) — the only true per-use COGS
+### 2.1 · LLM — OUT OF SCOPE for Phase 1 (superseded — kept only as a Phase-2-contingent note)
 
-Model **unchosen** (blocked on product `<1.1>` + D-TRADE-010 no-build; a Python/ML lane is also still open,
-D-TRADE-003). No literal model IDs are recorded here (protocol 4). The COGS is therefore given as an
-**expression over parameters**, not a number:
+**Pre-pivot content deleted, not parked (protocol 19 / LL-19):** the prior draft modeled `COGS_per_signal`
+as a token-rate expression on the assumption `<3.4>` was a generative-AI engine. **`<3.4>` is now locked as
+classical statistics** (walk-forward CV, regression) — there is no model, no prompt, no token spend to
+model. **Do not carry the old `R_in`/`R_out` estimates forward into any Phase-1 cap** — they describe a
+system that isn't being built.
 
-```
-COGS_per_signal = Σ_over_model_calls_in_the_pipeline [ (in_tokens / 1e6) · R_in  +  (out_tokens / 1e6) · R_out ]
-```
+**Standing note for Phase 2 (`<1.4>`, explicitly deferred, not in scope):** if a future phase reintroduces
+a generative-AI component, this section is re-authored from scratch at that time, re-priced at whatever
+frontier rates are current then (LL-15 — a stale token-rate estimate is worse than no estimate). Nothing to
+track here now.
 
-| Parameter | Value | Tag | Basis |
-|---|---|---|---|
-| `R_in`  (input token rate)  | frontier tier ≈ **$1 – $5 / 1M** | `estimated` | per-1M-tokens · market survey, read 2026-08-01 (see provenance) |
-| `R_out` (output token rate) | frontier tier ≈ **$15 – $75 / 1M** | `estimated` | per-1M-tokens · same |
-| `in_tokens` / `out_tokens` per signal | **UNKNOWN** | `unmeasured` | per-call · no engine/prompt exists (`<3.4>` pending) |
-| model-calls per signal (chain depth) | **UNKNOWN** | `unmeasured` | per-signal · pipeline undesigned |
-
-**Why this stays an expression, not a number (LL-15, verbatim risk):** a model swap that holds `R_out`
-constant can still change `COGS_per_signal` by tens of percent through a different **tokenizer** (same text →
-more tokens) and through **output length** (a chattier model at the same rate costs more per signal). The
-governor therefore caps and reconciles the **measured** `COGS_per_signal` from a real pipeline trace — it
-never trusts the headline `$/1M` rate. **First measurement obligation:** the day the engine has a runnable
-prompt, FinOps + AI/ML capture a real token trace and replace both `unmeasured` rows with `measured` ones
-*before* any cap value is proposed to the Director.
-
-### 2.2 · Polygon / Massive — market data (standing floor; the headline price is NOT the SaaS price)
+### 2.2 · Massive (personal tier, formerly modeled as commercial SaaS) — standing floor, mostly resolved
 
 > Provider identity is in transition — **Polygon.io, Inc. rebranded to "Massive" (effective 2025-10-30);
 > `api.polygon.io` and `api.massive.com` are both live.** Owned by SecOps `tos-taint-review.md` §Provider 2
@@ -102,39 +89,57 @@ prompt, FinOps + AI/ML capture a real token trace and replace both `unmeasured` 
 | Stocks Advanced | **$199** | unlimited | 20+ yr (+ Financials & Ratios) | **$0** (flat) | `measured` · per-month |
 | add-ons (Financials & Ratios standalone · NYSE Order Imbalances · partner datasets) | $29 · $49 · **$99/dataset** | — | — | — | `measured` · per-month |
 
-🟠 **The headline $29–$199 is the wrong number for HELM, and this is the FinOps half of a finding SecOps
-routed here.** Those tiers are **Non-Professional, individual, display-only** licenses. A commercial SaaS for
-ShupeCapital is a **Professional** subscriber on the **Business** tier, whose price is **contact-sales
-(quote-only)** and which, for **real-time** equities/options, **adds per-exchange market-data fees** —
-**OPRA · Nasdaq/UTP · NYSE** professional subscriber fees, billed per the SRO schedules, **not** shown on the
-self-serve page.
+🟢 **Re-scoped from the prior HIGH-taint commercial-SaaS finding — largely resolved by the pivot, not by
+new pricing research.** The self-serve **individual/Non-Professional** tiers above ($29–$199) were flagged
+🟠 in the pre-pivot draft because a *commercial SaaS* cannot legally hold that license (SecOps
+`tos-taint-review.md`). **`<1.2>` (personal use, one user, no distribution) plausibly makes the individual
+tier exactly the right, compliant, and cheapest tier** — canonical `<2.1>` notes this is Legal/SecOps's
+light confirmatory check to close, not a Director tier-selection decision anymore. **I do not own that
+confirmation** (provider-acceptability is SecOps's HUMAN column); the dollar consequence is simple either
+way: **personal tier = $0–$199/mo flat, unlimited calls on any paid tier** — no per-exchange OPRA/UTP/NYSE
+professional fees apply outside a Professional/Business subscription, which a personal user does not need.
 
-| Real market-data floor for a commercial SaaS | Value | Tag | Basis |
+| Real-world floor once the tier is confirmed | Value | Tag | Basis |
 |---|---|---|---|
-| Massive **Business/Professional** plan | **quote-only** | `unmeasured` | per-month · contact-sales; self-serve $199 does **not** apply |
-| OPRA / Nasdaq-UTP / NYSE professional exchange fees (real-time) | **quote-only, can dominate the plan fee** | `unmeasured` | per-exchange, often per-professional-user-month · SRO schedules |
-| Real market-data floor (carry as expression, LL-61) | `Massive_Business_plan + Σ exchange_pro_fees` | `unmeasured` | per-month |
+| Massive personal tier (Starter/Developer/Advanced, per data-need) | **$29 / $79 / $199** | `measured` | per-month, flat, unlimited calls |
+| **NEW open cost line (`<2.1>`, not previously modeled):** historical options-chain data (strikes/greeks/IV history) — required for Phase 1 backtesting, availability at the current tier **unconfirmed** | **UNKNOWN — may require a higher tier or a separate paid add-on** | `unmeasured` | per-month · DevOps/Data-Eng technical discovery, not a Director call |
 
-**Cost lever (routed back to the Director for `<2.1>`, in dollars):** choosing **delayed / end-of-day /
-reference data** instead of **real-time** removes most of the OPRA/UTP/NYSE surface and its professional
-fees; and if the near-term need is *filings/fundamentals*, **EDGAR (§2.3) covers it at $0** and market-data
-licensing can be deferred until a feature actually needs live quotes. Real-time vs delayed is a real-dollar
-decision — I state the lever; the Director decides `<2.1>`.
+**Cost lever, unchanged in spirit:** whichever tier is confirmed, the guard (`governor-spec.md`) watches the
+**included-quota boundary**, not a live per-call meter — paid personal tiers are flat/unlimited, so the risk
+is a rate-limit ban (Basic/Free tier only) or an unconfirmed add-on, not a running dollar total.
 
-### 2.3 · SEC EDGAR — filings (standing floor = $0, but confirm the key's issuer)
+### 2.3 · SEC-API.io (re-identified — was modeled as free direct EDGAR; now believed a paid subscription)
 
-Direct public EDGAR (`data.sec.gov` / submissions / XBRL frames): **free, no API key, no per-call charge**;
-fair-access cap **10 requests/second per IP**, mandatory declared `User-Agent`; a 403 + ~10-min IP block on
-breach (sources: SEC "Accessing EDGAR Data" + SecOps `tos-taint-review.md` §Provider 1, read 2026-08-01).
+**Re-authored, not patched (LL-19):** the prior draft treated the in-hand `..\Trade\sec_api_key.txt` as
+most likely a reseller key layered over free public EDGAR, with EDGAR itself carried at $0. Canonical
+`<2.1>` now identifies the likely real answer directly — **the float study used "SEC-API.io, account set
+up by the user," the same week the key was created** — which reframes this from "probably free EDGAR
+plus an unidentified reseller" to "**probably a specific, known, paid personal subscription.**"
 
-| EDGAR cost path | Value | Tag | Basis |
+**Re-verified directly against SEC-API.io's own pricing page (`https://sec-api.io/pricing`, read
+2026-08-01) rather than left as canonical's estimate** — this upgrades the figures from `estimated` to
+`measured`, and surfaces a genuinely metered dimension I hadn't previously modeled:
+
+| Tier | Price | Included data | Overage | Tag |
+|---|---|---|---|---|
+| Free | **$0** | first 100 calls free | — | `measured` · per-month |
+| **Personal & Startups** (the plausible fit for `<1.2>`) | **$49/mo** (annual) or **$55/mo** (monthly) | 50 GB downloads/month, filings 1993–present, XBRL-to-JSON, insider trading forms | **$0.30 per GB** beyond 50 GB | `measured` · per-month + per-GB |
+| Business Internal Use | **$199/mo** (annual) or **$239/mo** (monthly) | 100 GB/month + full-text search, 13F/N-PORT, real-time stream | **$0.30 per GB** beyond 100 GB | `measured` · per-month + per-GB |
+
+🟢 **This reopens a real per-use cost line the pivot's "everything is flat now" framing (§1) almost missed:**
+the **$0.30/GB overage** is genuine metered spend if a backtest script pulls unusually large data volumes
+(e.g., broad historical bulk pulls across the whole universe). This is exactly the shape §1's "quota
+overrun" failure mode describes — it is now a **named, measured** instance of it, not a hypothetical one.
+**Direct feed to `governor-spec.md`:** the guard's quota watch should track **GB downloaded this
+billing-month against the 50/100 GB included volume**, not just call count, for this specific provider.
+
+| SEC-API.io cost path | Value | Tag | Basis |
 |---|---|---|---|
-| Direct public EDGAR | **$0** | `measured` | per-call · public-domain, UA-gated not key-gated |
-| **If the in-hand "SEC key" is a third-party reseller** (SecOps flags the 77-byte key ≠ public EDGAR's UA model → likely an `sec-api.io`-class reseller) | **reseller subscription — quote/tier-priced** | `unmeasured` | per-month + likely per-query caps · reseller ToS + pricing govern |
+| Direct public EDGAR (fallback, still true if ever used directly instead of the reseller) | **$0**, 10 req/s cap, UA-gated | `measured` | per-call · SEC "Accessing EDGAR Data" + SecOps `tos-taint-review.md` §Provider 1, read 2026-08-01 |
 
-🟡 **Cost-relevant open item (echoes SecOps blocker-candidate, in dollars):** if the key authenticates a
-reseller, EDGAR stops being $0 and gains a subscription + query-cap cost. **Confirm the issuer before EDGAR
-enters the floor as $0.** I did not read the key (B5).
+🟡 **Still open (Director/Data-Eng to confirm):** whether the in-hand key **is** the SEC-API.io key, and
+which tier the account is on. If confirmed as Personal & Startups, the floor gains a **measured $49–$55/mo
++ $0.30/GB-overage line**. I did not read the key (B5).
 
 ### 2.4 · Supabase — DB / backend (standing plan + slow-moving usage overage)
 
@@ -168,57 +173,63 @@ it too (a design-dependent hook, flagged for the W1 chokepoint checklist).
 
 ---
 
-## §3 · Standing infra floor (part of the cost model — mandate + LL "surface the floor with the per-use spend")
+## §3 · Standing infra floor (revised — personal scale, all lines now bounded)
 
-The floor is what HELM pays **before a single signal is produced**. Carried as an expression (LL-61); the
-starting config is a *recommendation* for the Director, not a ruling.
+The floor is what the Director pays **before a single backtest is run**. Carried as an expression (LL-61);
+the starting config is a *recommendation*, not a ruling. Unlike the pre-pivot draft, **every line now has
+either a measured value or a bounded range** — nothing is open-ended quote-only anymore.
 
 ```
-Monthly_floor = Supabase_plan + Massive_plan + EDGAR_cost + CI + Hosting  (+ Director-time, non-$ below)
+Monthly_floor = Supabase_plan + Massive_personal_tier + SEC-API.io_personal_tier + CI  (+ Director-time, non-$ below)
 ```
 
-| Line | Bootstrap (dev/pre-build) | Build-time (commercial SaaS) | Tag |
+| Line | Bootstrap (dev, current) | Steady-state (personal tool, live) | Tag |
 |---|---|---|---|
-| Supabase | $0 (Free) | **$25** (Pro — needed for money-truth durability / RLS posture) | `measured` (prices) / `estimated` (which tier) |
-| Massive (market data) | $0 (Free, 5 calls/min) | **`Massive_Business_plan + Σ exchange_pro_fees`** (quote-only) | `unmeasured` |
-| EDGAR | $0 | $0 **or** reseller sub if the key is a reseller | `measured` / `unmeasured` |
-| CI (GitHub Actions) | $0 (free-tier minutes) | ~$0.008/Linux-min beyond free tier | `estimated` — not re-read 2026-08-01; verify before it enters a decision |
-| Hosting / compute | — | **UNKNOWN** (host unchosen, D-TRADE-010) | `unmeasured` |
-| **Floor total** | **≈ $0 measured** | **`$25 + quote-only market-data + CI + hosting`** — *not collapsible to one number yet* | mixed |
+| Supabase | $0 (Free — 500 MB DB is ample for scan history/signals at personal scale) | $0–$25 (Free likely sufficient; Pro only if storage/egress grows past Free's quota) | `measured` (prices) / `estimated` (which tier is actually needed) |
+| Massive (market data) | $0 (Free, 5 calls/min) | **$29–$199/mo** flat, per data-need tier, **plus an unconfirmed options-chain-data line** (§2.2) | `measured` (tiers) / `unmeasured` (options-chain add-on) |
+| SEC-API.io | $0 (assumed unused pre-build) | **$49–$55/mo** (Personal & Startups) **+ $0.30/GB** beyond 50 GB, **if** the in-hand key is confirmed SEC-API.io | `measured` / `unmeasured` (issuer confirmation) |
+| CI (GitHub Actions) | $0 (free-tier minutes) | ~$0.008/Linux-min beyond free tier — trivial at personal-project CI volume | `estimated` — not re-read this revision; verify before it enters a decision |
+| **Floor total (steady-state, once tiers confirmed)** | **≈ $0** | **≈ $78 – $279/mo** (`Massive $29-199 + SEC-API.io $49-55 + Supabase $0-25`), **not collapsible below that range until `<2.1>` tier confirmations land** | mixed |
+
+**Compare to the pre-pivot floor estimate:** the SaaS-scale draft couldn't even bound the market-data line
+(quote-only Business tier + uncapped exchange fees). At personal scale the **entire floor is now a bounded,
+mostly-measured range under $300/month** — a materially smaller and more knowable number, which is itself
+the headline finding of this revision.
 
 **Director's own time is a real cost (§1.8 / profile), stated not dollarized:** every lock, review and
-approval this model asks for (the cost-model lock, `<2.1>` provider/tier decision, the Legal `<4.3>` routing,
-each governor cap value) consumes Director time. It has no `$/hour` rate on record, so it is carried as a
-**named HUMAN input**, not a free good — flagged, not hidden.
+approval this model asks for (`<2.1>` tier/key confirmations, each guard cap value) consumes Director time.
+It has no `$/hour` rate on record, so it is carried as a **named HUMAN input**, not a free good.
 
 ---
 
-## §4 · What the governor must do given this model (hand-off to `governor-spec.md`)
+## §4 · What the spend guard must do given this model (hand-off to `governor-spec.md`)
 
-1. **Meter the variable line (LLM tokens) per call**, in real measured `COGS_per_signal`, not headline rate.
-2. **Fail closed:** no cap row / meter unreachable / ledger write fails ⇒ the call does **not** happen.
-3. **`$/day` self-tally auto-kill** on the global variable spend (D-TRADE-004).
-4. **Reconcile** the ledger's summed `$` per provider against the provider invoice each cycle; mismatch FAILS.
-5. **Record every billed-provider call** (incl. the `$0.00` Polygon/EDGAR rows) for reconciliation + rate
-   governance, while the auto-kill tally moves only on priced calls.
-6. Treat **Supabase edge-fn / realtime** as a conditional per-use line **iff** the design routes the pipeline
-   through them (checklist item for the W1 chokepoint lock).
+1. **Track GB-downloaded-this-month against SEC-API.io's 50/100 GB included volume** — the one concrete,
+   measured per-use overage line in the current provider set (§2.3).
+2. **Track call-count against Massive's tier limits** (a concern mainly on the Free/Basic tier; paid tiers
+   are unlimited-call flat subscriptions, §2.2).
+3. **Block, don't silently proceed,** when a tracked quota would be breached (§2 of `governor-spec.md`) —
+   the mechanical PARTIAL leg.
+4. **No LLM meter** — there is nothing to meter in Phase 1 (§2.1).
+5. **No reconciliation-vs-invoice oracle** — a monthly human glance at the Massive/SEC-API.io/Supabase
+   dashboards against the guard's own tally is the right-sized replacement (§3 of `governor-spec.md`).
 
 ---
 
 ## §5 · Open items surfaced to the Lead (dollars only; I do not rule these)
 
-- 🟠 **Market-data true cost is quote-only, not $199** — commercial SaaS = Professional/Business tier +
-  OPRA/UTP/NYSE fees. Real-time-vs-delayed is a real-dollar lever on `<2.1>`. (FinOps half of SecOps's HIGH
-  Polygon finding.) → **Director** decides provider/tier; **Legal** decides the `<4.3>` derivative-works
-  question that gates whether the tier is even usable.
-- 🟡 **"SEC key" issuer unconfirmed** — direct EDGAR = $0; a reseller key = a subscription cost. → confirm
-  issuer (SecOps/Data-Eng/Director) before EDGAR is booked at $0.
-- 🟡 **Per-signal COGS is unmeasured by construction** — no cap value can be *ruled* until a real engine token
-  trace exists. The governor is built to **meter and cap**, not to predict; caps arm tight and rise on
-  evidence.
-- 🟡 **Cost-model lock D-TRADE-004 is 🔒-pending** — this whole model presumes the billed-per-use lock; it
-  needs the explicit Director yes.
+- 🟡 **Confirm which Massive tier the account is on** (Free/Starter/Developer/Advanced) and **whether
+  historical options-chain data is included or a separate paid add-on** — Data-Eng/DevOps technical
+  discovery, not a Director dollar call, but it sets the real floor number.
+- 🟡 **Confirm the in-hand key's issuer (SEC-API.io vs. direct EDGAR vs. another reseller).** If SEC-API.io:
+  the floor gains a measured $49–$55/mo + $0.30/GB-overage line, and the guard should track GB/month for
+  this provider specifically. → Director/Data-Eng.
+- 🟢 **Resolved by the pivot itself (no further FinOps action needed):** the old 🟠 "market-data is
+  quote-only, not $199" escalation — that was a commercial-SaaS-tier problem; `<1.2>` personal use very
+  plausibly uses the correct, cheapest, already-published tier. SecOps is confirming compliance; I have
+  no open dollar question here anymore.
+- **Cost model D-TRADE-004 stands, re-scoped to personal scale** — no new lock action needed per the Lead's
+  message; this doc + `governor-spec.md` implement it at the right size.
 
 ---
 
@@ -228,12 +239,14 @@ each governor cap value) consumes Director time. It has no `$/hour` rate on reco
 |---|---|---|
 | Supabase plans + overage unit prices | `https://supabase.com/pricing` | 2026-08-01 |
 | Massive (Polygon) self-serve stock tiers | `https://massive.com/pricing` (`polygon.io/pricing` 301→ here) | 2026-08-01 |
-| Polygon→Massive rebrand; both API hosts live; Professional/exchange-fee structure | SecOps `docs/security/tos-taint-review.md` §Provider 2 (its own sources cited there) | 2026-08-01 |
+| Polygon→Massive rebrand; both API hosts live | SecOps `docs/security/tos-taint-review.md` §Provider 2 (its own sources cited there) | 2026-08-01 |
 | EDGAR free + 10 req/s + UA rule | SEC "Accessing EDGAR Data" + SecOps `tos-taint-review.md` §Provider 1 | 2026-08-01 |
-| Frontier LLM token-rate band | public LLM-pricing market survey (no model IDs recorded, protocol 4) | 2026-08-01 |
+| SEC-API.io tiers, included volume, $0.30/GB overage | `https://sec-api.io/pricing` — independently re-verified this revision (upgraded from canonical's `estimated` range to `measured`) | 2026-08-01 |
 | CI per-minute rate | prior knowledge — **not re-read**, tagged `estimated` | — |
+| Frontier LLM token-rate band (historical, superseded) | no longer load-bearing — Phase 1 has no LLM spend (§2.1) | — |
 
 ---
-*DRAFT — self-checked (gate ②). Awaiting: GA/second-seat RECONCILE (gate ③), the W1 chokepoint invariant
-lock (with SDE1/BE-Data + QA + SecOps), and Director locks on D-TRADE-004 + every cap value. Reported to the
-Lead once, at completion (protocol 15).*
+*DRAFT — self-checked (gate ②). Routine tier at this scale (protocol 17) — no independent-validation pass
+required. Awaiting: `<2.1>` tier/key confirmations (SecOps/Data-Eng), and Director sign-off on the guard's
+starting cap posture (`governor-spec.md` §3) when the guard is actually built. Reported to the Lead once, at
+completion (protocol 15).*

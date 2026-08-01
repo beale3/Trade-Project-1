@@ -197,3 +197,28 @@ last**, remove the three markers (LL-54).
 - Reported once to the Lead (protocol 15), bundling the blocker + the methodology-draft summary in one
   message per the completion-report discipline (blocker escalation folded into the same report since both
   landed together, not two separate pings).
+
+### [FinOps · 2026-08-01] D-TRADE-020 pivot — re-scoped both artifacts (ORACLE → PARTIAL)
+- Re-authored (protocol 19, not patched) **`docs/finops/governor-spec.md`**: the SaaS-scale fail-closed
+  governor (idempotent ledger, billing-reconciliation oracle, 3-layer caps, `$/day` auto-kill w/ SEV1
+  paging) is replaced by a **lightweight personal spend guard** — a daily/monthly quota-and-cap watch that
+  BLOCKS a call before it breaches a cap. Matches the oracle-boundary re-scope: FinOps moved **ORACLE →
+  PARTIAL** — only "a call that would breach the cap is BLOCKED" is mechanical now; the cap **value** stays
+  HUMAN. Routine tier (protocol 17) — self-check only, no independent-validation pass required at this scale.
+- Revised **`docs/finops/cost-model.md`** in place (targeted, not full rewrite — prices unchanged, only
+  classification/applicability): `<3.4>` is classical stats, so **Phase 1 has zero LLM spend** — the old
+  "LLM tokens are the only true per-use COGS" finding is superseded, deleted from load-bearing text. The old
+  🟠 "Polygon/Massive is quote-only, not $199" escalation is **resolved by the pivot itself** — personal use
+  plausibly is the correct tier (SecOps confirming); no further FinOps action.
+- **New finding, independently re-verified (not just carried from canonical's estimate):** re-fetched
+  `sec-api.io/pricing` directly — **Personal & Startups tier = $49/mo (annual) / $55/mo (monthly), 50 GB
+  included, $0.30/GB overage** (Business tier: $199/$239, 100 GB). This is a **real, measured, per-use
+  overage line** — the one genuine metered dimension left in the personal-tool provider set — fed directly
+  into the spend guard's design (track GB/month against the included volume, not just call count).
+  Upgraded from canonical `<2.1>`'s `estimated` $49–$239 range to `measured` with a source + read-date.
+- Personal-scale steady-state floor now **bounded**: ≈ $78–$279/mo (Massive $29–199 + SEC-API.io $49–55 +
+  Supabase $0–25) — down from the pre-pivot SaaS draft's unbounded quote-only market-data line.
+- Open items surfaced to the Lead (dollars only): 🟡 confirm which Massive tier + whether options-chain
+  history needs a paid add-on (Data-Eng/DevOps) · 🟡 confirm the in-hand key is actually SEC-API.io + its
+  tier (Director/Data-Eng) — resolves the $49–55/mo + overage line from `unmeasured` to `measured`.
+- DRAFT, self-checked (gate ②). Reported once to the Lead (protocol 15).
