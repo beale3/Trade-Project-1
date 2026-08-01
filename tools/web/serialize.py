@@ -57,17 +57,22 @@ def _s3_component_pairs(s3):
     return {k: [_clean(scores[k]), _clean(maxes.get(k))] for k in scores}
 
 
-def _serialize_intraday(intraday_df, alignment, prior_high, prior_low, prior_close):
-    if alignment is None or intraday_df is None or intraday_df.empty:
+def _serialize_intraday(alignment, prior_high, prior_low, prior_close):
+    if alignment is None:
         return None
+    # ADR-0002 OP-B (resolved 05fa941): bars fully serialize `annotated`, not just raw OHLCV --
+    # the D3 chart shades aligned bars + marks the trigger from these per-bar booleans.
+    annotated = alignment["annotated"]
     bars = [
         {
             "t": _iso(ts),
             "open": _clean(row["Open"]), "high": _clean(row["High"]),
             "low": _clean(row["Low"]), "close": _clean(row["Close"]),
             "volume": _clean(row["Volume"]),
+            "abovePivot": _clean(row["above_pivot"]), "aligned": _clean(row["aligned"]),
+            "alignedTrigger": _clean(row["aligned_trigger"]),
         }
-        for ts, row in intraday_df.iterrows()
+        for ts, row in annotated.iterrows()
     ]
     return {
         "bars": bars,
@@ -75,6 +80,7 @@ def _serialize_intraday(intraday_df, alignment, prior_high, prior_low, prior_clo
         "priorHigh": _clean(prior_high), "priorLow": _clean(prior_low), "priorClose": _clean(prior_close),
         "latestAligned": _clean(alignment["latest_aligned"]),
         "firstTriggerTime": _iso(alignment["first_trigger_time"]),
+        "numTriggerBars": _clean(alignment["num_trigger_bars"]),
     }
 
 
@@ -139,8 +145,8 @@ def serialize_candidate(raw):
         "guardrail": guardrail,
         "s3": s3,
         "patterns": raw.get("patterns_fired") or [],
-        "intraday": _serialize_intraday(raw.get("intraday_df"), raw.get("alignment"),
-                                         raw.get("prior_high"), raw.get("prior_low"), raw.get("prior_close")),
+        "intraday": _serialize_intraday(raw.get("alignment"), raw.get("prior_high"),
+                                         raw.get("prior_low"), raw.get("prior_close")),
         "simulatedTrades": _serialize_simulated_trades(raw.get("simulated_trades")),
     }
 
