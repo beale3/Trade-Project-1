@@ -144,5 +144,5 @@ Director's explicit confirmation on D-TRADE-010's scope**, same as any other wav
 | **FinOps** | ▶ **LIVE** (`Trade - FinOps`) | ▶ live · ✅ Phase-1 cost model delivered | **Next:** re-scope the governor spec down from SaaS-grade billing-reconciliation to a personal spend guard (cap + visibility). Messaged with new scope. |
 | Legal & Privacy | — | ⏸ not spawned, optional | `<4.3>` substantially de-risked (personal use) — a light confirmatory check, not urgent |
 | **Data Engineer** | — | ⏸ not spawned — **now has clear, real work** | build/maintain the liquid-optionable universe list; confirm historical options-chain data availability from Massive |
-| **Design Lead** ("Designer") | ▶ **LIVE** (`Trade - Designer`) | ▶ live · ⏸ holding | **Mandate mostly evaporates** — no UI surface in "a Python script/tool I can run." Messaged; likely stands down pending a concrete need (e.g. a results dashboard, if ever wanted). |
+| **Design Lead** ("Designer") | session remains available (`Trade - Designer`) | ⏹ **standing down** (D-TRADE-020) | No UI surface in "a Python script/tool I can run" — self-confirmed against decisions-log/canonical-design/oracle-boundary. Re-spawn on a concrete need (e.g. a results/backtest dashboard). |
 | Gauntlet cluster | — | ⏸ **N/A, dropped permanently** — no market opportunity to validate for a personal tool | — |
