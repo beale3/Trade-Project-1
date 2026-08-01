@@ -33,6 +33,35 @@ Director personally approves every prod secret; fresh per-env keys go **into the
   curl -s "$SUPABASE_URL/rest/v1/?apikey=$SUPABASE_ANON_KEY" -o /dev/null -w "%{http_code}\n"   # 200 = connected
   ```
 
+## MCP connector (team-wide, read-only) — D-TRADE-014
+The official **Supabase MCP server** is wired as a **project-scoped `.mcp.json`** at the repo root, so
+every clone inherits it. Config (committed, secret-free — token is `${SUPABASE_ACCESS_TOKEN}` from the
+environment): `npx -y @supabase/mcp-server-supabase@latest --read-only --project-ref=zyscsnhiymitpfdhjuci
+--features=database,docs,debugging`.
+
+- **`--read-only`** by default — seats can query schema/data + read docs, but **cannot mutate** the DB via
+  MCP. Write access is a deliberate, later, Director-gated change (money-truth surface — never open write
+  by default).
+- **`--project-ref` scoped** to `zyscsnhiymitpfdhjuci` — the token's blast radius is one project.
+
+### Director setup (interactive — this session can't run the OAuth/enable flow)
+1. **Create a Personal Access Token:** Supabase dashboard → **Account → Access Tokens → Generate** (name it
+   e.g. `helm-mcp-readonly`). This is a SECRET; treat it like a password.
+2. **Put it in the environment** (Claude Code expands `${SUPABASE_ACCESS_TOKEN}` from the process env, not
+   from `.env`). PowerShell, persistent for your user:
+   ```powershell
+   setx SUPABASE_ACCESS_TOKEN "sbp_your_token_here"
+   ```
+   Then open a **new** terminal so it takes effect. (Do not paste the token into chat or any tracked file.)
+3. **Approve the project MCP server:** launch Claude Code in the `Trade - Lead` clone and run **`/mcp`** →
+   approve/trust the `supabase` server (project-scoped servers require explicit approval on first use).
+4. **Verify:** ask Claude "list Supabase tables" (or run the `/mcp` health view). It should connect
+   read-only to project `zyscsnhiymitpfdhjuci`.
+
+> Note: this non-interactive founding session cannot itself authenticate or use the connector — it authored
+> the config; **you enable it interactively** per the steps above. Once enabled, spawned seats in this repo
+> inherit the same `.mcp.json`.
+
 ## Governance
 - **SecOps:** run the Supabase **ToS-as-taint** check + own the key denylist; the provider SDK/host is
   usable only from its sanctioned module (gate leg T). Provider credentials referenced only there (B4 L2).
