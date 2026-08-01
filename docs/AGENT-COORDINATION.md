@@ -21,7 +21,7 @@ The app tree, ports, DB and gate scripts **do not exist yet**; they are created 
 
 | Item | Value |
 |---|---|
-| Lead clone | `…\Trading Project 1\Trade - Lead` (this repo) · branch `main` · **no remote yet** |
+| Lead clone | `…\Trading Project 1\Trade - Lead` · branch `main` · **origin LIVE** → `github.com/beale3/Trade-Project-1` @ `3d3f1aa` |
 | App tree (planned, default stack) | `apps/api` (Fastify) · `apps/web` (React/Vite) · `packages/{domain,db,contracts,config}` |
 | Ports (planned — NOT validated) | API `:3000` · web `:5173` · Postgres `:5432`/Supabase — DevOps confirms at W0 |
 | DB / migrations | Postgres/Supabase; forward-only reviewed migrations under `packages/db/migrations`; baseline at W0 |
