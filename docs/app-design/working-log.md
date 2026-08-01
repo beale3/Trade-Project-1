@@ -58,3 +58,31 @@ last**, remove the three markers (LL-54).
 - **Instantiation blocked on (for Lead visibility):** ① `<1.1>` product · ② `<3.4>` engine + first sealed
   outputs · ③ reason-vocab co-authored w/ AI/ML · ④ Director rubric ratification · ⑤ named blind
   ground-truth expert · ⑥ providers `<2.1>` for source-of-record grounding. Reported once to Lead.
+
+### [SecOps · 2026-08-01] Provider ToS-as-taint review + key denylist + B5 checklist (first task, D-TRADE-010 foundation work)
+- Delivered three artifacts (write-lane `docs/security/**`): `tos-taint-review.md`, `key-denylist.md`
+  (leg K), `b5-secret-approval-checklist.md`. Method: a **volunteered** vendor constraint outweighs an
+  **advertised** capability (LL-62); every reading cites source + read-date + revision (LL-58/LL-52).
+- **SEC EDGAR** — taint **LOW (data)** / HARD ops. Filings are public-domain, redistributable. Volunteered
+  constraints: 10 req/s cap, declared User-Agent required, no undeclared bots (confirmed live: undeclared
+  fetch → HTTP 403, declared UA → 200). Binds `<2.1>` ingestion design. **Open:** the in-hand 77-byte
+  "SEC key" is likely a third-party reseller (public EDGAR is UA-based, keyless) → issuer to be confirmed
+  by Director/Data-Eng; a reseller re-opens the taint.
+- **Polygon.io / Massive** — taint **HIGH** 🟠 (headline). Entity rebranded Polygon.io→Massive (eff.
+  2025-10-30); both `api.polygon.io` + `api.massive.com` live → leg T sanctions both hosts. The
+  individual/default license (Market Data ToS, Oct 9 2024) is **non-commercial, Non-Professional,
+  display-only, no redistribution, no "investment strategy" derivative works** — incompatible with strawman
+  `<1.1>` on four counts. Business tier (Sept 2 2025) allows redistribution to "Edge Users" but STILL bars
+  unlicensed derivative works; real-time drags in OPRA/UTP/NYSE agreements + pro-tier fees. **Provider/tier
+  acceptability = Director; "are HELM signals a licensable investment strategy?" = Legal → `<4.3>`.**
+- **Supabase** — taint **MEDIUM**. We own our data (no IP taint); the binding duty is customer-bears-all
+  credential security (→ service_role + DB password are B5, server-only; leg T keeps them out of
+  `apps/web`). Data-class lines: no PHI w/o BAA, no cardholder data w/o approval → Legal if the model ever
+  touches them. Already Director-adopted (D-TRADE-013/014); read-only MCP is correct least-privilege.
+- **Leg K** authored for 6 secret classes (Supabase service_role/DB-pw/PAT/anon, Polygon/Massive key,
+  SEC/EDGAR key) + generic backstop — each with a planted negative control (LL-48); templates stay green.
+  DevOps wires · GA audits coverage · QA re-runs (builder ≠ judge). **Leg T** sanctioned-module rules
+  recorded per provider. **B5 gate** = HARD launch blocker; Director approves + SecOps co-signs; Lead may
+  not self-approve; agent never handles values.
+- Reported once to the Lead (protocol 15). Escalations flagged for the Lead to consolidate/route to
+  Director: Polygon HIGH taint (SEV2-candidate), SEC-key issuer, Supabase data-class lines.
