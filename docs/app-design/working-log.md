@@ -165,3 +165,35 @@ last**, remove the three markers (LL-54).
   Updated the file's status language from "recommended, not self-ruled" to "ratified, binding" (§2, §5)
   so the doc doesn't read as still-pending. **Still HOLDING** — no AI/ML result exists yet; protocol is
   now fully ratified and ready to fire on the first one.
+
+### [AI/ML · 2026-08-01] D-TRADE-020 pivot absorbed — methodology drafted, one blocker surfaced
+- **Pivot absorbed.** `git pull --rebase` → onto `9037b15`. Re-read canonical-design §1/`<3.4>` (incl. the
+  D-TRADE-021 clearance-bar addendum), stage-plan P1-2/P1-3, my `oracle-boundary` row (re-scoped VERIFIER —
+  runs the CV pipeline, reports pass/fail against the pre-registered bar; choosing candidates + interpreting
+  marginal results stays HUMAN), PROJECT-CONFIG §3. My PROFILE.md is still the pre-pivot generative-AI
+  version (stale, not yet re-authored by the Lead) — deferred to the newer canonical/oracle-boundary text
+  per the read-order (repo wins on conflict, and these are strictly newer).
+- **🔴 Blocker surfaced (protocol 11, reported to Lead the same message as this log entry):** the options
+  screener + 0DTE backtest engine ("delivered as a ZIP, location TBD" per stage-plan) are **not locatable**
+  on this host — searched `Downloads\` (incl. every `files*.zip` by content-listing), `Desktop\`,
+  `Documents\`, the legacy `..\Trade\` stub (key holder only), and all 4 study directories. Blocks P1-2
+  (screener ingestion) concretely. Will not reconstruct the screener from the canonical doc's prose
+  description — that would be inventing the artifact I'm meant to validate (LL-45). Needs Director/Data-Eng
+  to locate/deliver.
+- **What doesn't block on the above:** drafted `docs/roles/ai-ml/validation-methodology-draft.md` —
+  design/planning only (no code, no data, no numbers), consistent with the Lead's explicit "design/planning
+  is fine now, confirm before production pipeline code" scoping of the open D-TRADE-010 question. Covers:
+  two-tier target design (continuous forward-return regression as the primary CV vehicle, matching the
+  proven template exactly; a volatility-scaled directional-correctness binary as the Phase-1 success
+  criterion, usable on OHLCV alone so it doesn't block on the unconfirmed `<2.1>` options-chain/IV data —
+  delta-implied threshold recorded as an upgrade path, not invented now) · per-component isolation (never
+  bundle trend/momentum/breakout/volume/IV-rank) · no-lookahead + point-in-time discipline · a **new**
+  point-in-time-universe-membership requirement flagged for Data-Eng (survivorship bias — the 4 equity
+  studies used a static cohort and never had a rolling-index-membership question; Phase 1's multi-year
+  backtest over `<2.2>`'s universe does) · the D-TRADE-021 clearance bar, cited by id, not re-derived.
+- **Converged with AIQ before either reached the Lead (protocol 15):** independently arrived at adopting
+  AIQ's proposed bar verbatim rather than proposing a second number — turned out to be exactly what the
+  Lead ratified as D-TRADE-021.
+- Reported once to the Lead (protocol 15), bundling the blocker + the methodology-draft summary in one
+  message per the completion-report discipline (blocker escalation folded into the same report since both
+  landed together, not two separate pings).
