@@ -15,61 +15,61 @@ overrides when the build brief lands. Two items are **LOCKS** (roster, cost mode
 |---|---|---|
 | Product name | **HELM** (parked codename) | 🟡 DIRECTOR-PENDING — rename = one find-replace of `HELM` (LL-3) |
 | Infra slug | **`trade`** | recommended (matches existing `Trade - Lead` clone dir) |
-| Repo | **`beale3/Trade-Project-1`** (private) | recommended · **remote NOT yet created** (gh unavailable this session) |
+| Repo | **`beale3/Trade-Project-1`** | ✅ LIVE (D-TRADE-012; pushed by Director) |
 | Branch | **`main`** | recommended |
 | Clone-dir scheme | **`Trading Project 1\Trade - <Role>`** (Lead = `Trade - Lead`) | recommended (honors the pre-existing dir) |
 | Decision-log prefix | **`D-TRADE-`** | recommended |
 | Commit trailer | **`Authored by: Mähnbach <noreply@mahnbach.com>`** | house default (kit scaffolder default) |
 | Cross-session messaging | **`ccd_session_mgmt` MCP** (`send_message` + active-session verify per LL-36); durable fallback = repo `docs/roles/<role>/activity-log.md` | recommended |
 
-## 2 · Build shape
+## 2 · Build shape (🔒 REVISED 2026-08-01 — D-TRADE-020, personal-tool pivot)
 | Key | Value | Status |
 |---|---|---|
-| Greenfield vs port | **GREENFIELD** | 🔒 validated (no app code exists) → greenfield wave template (§7) |
-| Tech stack | **Node/TS · Fastify · Postgres/Supabase · React/Vite** | recommended default · 🟡 may add a **Python data/ML lane** if the product proves quant-heavy (depends on item Product) |
-| Lane cut | **standard 4-lane**, no deviation | recommended |
-| Product (one paragraph) | 🟡 **DIRECTOR-PENDING** — strawman: *"A SaaS that ingests SEC EDGAR filings + market data and produces AI-assisted trading/analysis signals for ShupeCapital."* Recorded as a first-class `NOT DECIDED` line in the canonical design doc `<1.1>`. | blocker for real design; scaffold uses the strawman |
-| External providers | 🟡 **DIRECTOR-PENDING** — recommended taint set: **SEC EDGAR API** (`sec_api_key` already present) + **Polygon.io** market data | SecOps runs the per-provider ToS-as-taint check before anything builds on a provider |
-| Cost model | 🔒-pending **LOCK** — recommended **BILLED PER-USE** (market-data calls + any LLM analysis are metered) → FinOps governs real dollars, **B4 metered chokepoint arms from the spine** | needs explicit Director yes (LL-38) |
+| Greenfield vs port | **GREENFIELD**, but existing artifacts to ingest (screener, backtest engine, 4 studies) — not a blank slate | 🔒 |
+| Tech stack | **Python** (pandas/numpy/scipy) for the screener/backtest/analysis core — matches all existing research + the options screener; **Supabase retained** as the durable store for scan history/signals/backtest results; **Node/Fastify/React likely drop** — no web frontend needed for "a Python script/tool I can run." `<3.5>` — Architect confirms at design time. | 🔒 reopened, D-TRADE-020 |
+| Lane cut | 4-lane cut **no longer fits** a single-Python-project personal tool — re-cut at design time (likely: screener/scoring, backtest/validation, data ingestion, infra/CI) | 🟡 reopen with Architect |
+| Product (one paragraph) | 🔒 **LOCKED** — see canonical `<1.1>`: a personal options-signal tool validating the existing screener via directional-correctness backtesting, on a liquid-optionable universe. Phase 2 (full P&L sim + a from-scratch predictive model) explicitly deferred. | 🔒 D-TRADE-020 |
+| External providers | Massive (market/options data, all prior research) + likely SEC-API.io (EDGAR filings, `..\Trade\sec_api_key.txt`) — both **very plausibly personal-tier-compliant** now that use is confirmed personal (SecOps's earlier HIGH-taint finding was scoped to commercial use) | 🟡 light confirmatory check, not a hard blocker |
+| Cost model | **BILLED PER-USE, but personal scale** — a spend GUARD (cap + visibility), not SaaS-grade metered-chokepoint/billing-reconciliation machinery | 🔒 D-TRADE-020 (re-scoped, not overturned) |
 
-## 3 · Roster (recommended ~14 seats — 🔒-pending LOCK, needs explicit yes)
-Core spine (never comes off) + the AI/finance-family seats. Models per §2 lock: **Architect = Fable 5 ·
-Max (LOCKED); every other seat = Opus 4.8 · High.** Escalation beyond High is per-wave Director approval.
+## 3 · Roster (🔒 REVISED 2026-08-01 — D-TRADE-020; roster LOCK confirmed via the personal-tool decision itself)
+Personal tool ⇒ **no multi-tenant surface, no GTM/commercial pod, no Gauntlet.** Models unchanged:
+**Architect = Fable 5 · Max (LOCKED); every other seat = Opus 4.8 · High.**
 
-| Seat | Profile | Lane / role | On? |
+| Seat | Profile | Lane / role (re-scoped) | On? |
 |---|---|---|---|
-| Program Lead | `roles/lead` | orchestration · canonical doc · pipeline | ✅ core |
-| Principal Architect *(on-demand)* | `roles/architect` | ADRs/ASRs · A0/A6 · Fable 5·Max | ✅ core |
-| QA Lead | `roles/qa` | coverage + phase-exit · runs armed legs | ✅ core |
-| Governance & Audit | `roles/ga` | rule/evidence audit · oracle coverage-audit · RECONCILE gate | ✅ core |
-| SecOps | `roles/secops` | keys · provider ToS-taint · bright-lines | ✅ core |
-| Backend (API & Platform) | `roles/be-api` | Lane 1 transport · money-moving chokepoint | ✅ core |
-| Backend (Data & Domain) | `roles/be-data` | Lane 2 domain+DB · money-truth ledger | ✅ core |
-| Frontend (Web) | `roles/fe-web` | Lane 3 SPA | ✅ core |
-| DevOps | `roles/devops` | Lane 4 build/env · wires oracle legs | ✅ core |
-| AI/ML | `roles/ai-ml` | builds the scoring/gen engine (judged by AIQ) | ✅ AI-family |
-| AI Quality | `roles/aiq` | golden evals · grounding · judges AI/ML | ✅ AI-family |
-| FinOps | `roles/finops` | per-unit COGS · fail-closed governor | ✅ (billed model) |
-| Legal & Privacy | `roles/legal` | SEC/financial-regulatory + PII surface | ✅ (heavy here — do not drop) |
-| Data Engineer | `roles/data-eng` | market-data / EDGAR ingestion | ✅ AI/data-family |
-| **Gauntlet cluster** (Market Research · Competitive Intel · Product Strategy · Viability Analyst · Skeptic→Director · Delivery/PMO) | *(no kit profile)* | product Phase-0 (B9) | 🟡 DIRECTOR-PENDING — seat only if B9 runs; needs the product defined |
-| Design Lead · PM · other GTM/Ops seats | `roles/design`,`roles/pm`,… | CX / product / GTM | ⏸ off until a surface appears (add the moment it does — LL-17) |
+| Program Lead | `roles/lead` | orchestration · canonical doc · pipeline | ✅ |
+| Principal Architect *(on-demand)* | `roles/architect` | stack/design ADRs for the Python tool, re-cut lanes | ✅ (spawned, holding) |
+| QA Lead | `roles/qa` | independent CV/backtest re-derivation, phase-exit | ✅ (not yet spawned) |
+| Governance & Audit | `roles/ga` | rule/evidence audit; audits AIQ's independent validation | ✅ (not yet spawned) |
+| SecOps | `roles/secops` | provider ToS-taint (now: confirm personal-tier compliance) · key denylist | ✅ (spawned, delivered Phase-1 work) |
+| Backend-API / Frontend-Web (`be-api`, `fe-web`) | — | **N/A** — no web frontend, no external API surface | ⏸ off (never spawned) |
+| Backend-Data → **SDE1** | `roles/sde1`(=be-data) | data ingestion + Supabase storage layer, re-scoped from "money-truth chokepoint" to normal data plumbing | ✅ (spawned, holding) |
+| DevOps | `roles/devops` | repo/CI/gate harness for a Python project; lighter than SaaS scope | ✅ (spawned, delivered Phase-1 work) |
+| AI/ML | `roles/ai-ml` | **re-scoped: builds the walk-forward-CV backtest pipeline** (quant research, not generative AI) | ✅ (spawned, holding — now has real work) |
+| AI Quality | `roles/aiq` | **re-scoped: independently re-derives/audits each backtest result** (builder≠judge on the CV discipline, not LLM-output grounding) | ✅ (spawned, holding — now has real work) |
+| FinOps | `roles/finops` | **re-scoped down**: a personal spend guard, not per-tenant billing/fail-closed governor | ✅ (spawned, delivered Phase-1 work) |
+| Legal & Privacy | `roles/legal` | **substantially de-risked** — light confirmatory check on `<4.3>`, not a hard pre-build blocker | 🟡 optional light-touch seat, not urgent |
+| Data Engineer | `roles/data-eng` | build/maintain the liquid-optionable-universe list; historical options-chain data discovery | ✅ (not yet spawned — now has clear, real work) |
+| Design Lead ("Designer") | `roles/design` | **mandate mostly evaporates** — "a Python script/tool I can run" has no UI surface to design | ⏸ (spawned, holding — notify + likely stand down) |
+| Gauntlet cluster / GTM pod / PM / BizOps / Support / Success | — | **N/A — personal tool, no market/customers to validate or serve** | ⏸ off, permanently (not "pending") |
 
-## 4 · Build-phase components (§9) — adopt + arming schedule
+## 4 · Build-phase components (§9) — 🔒 REVISED, D-TRADE-020
 | Comp | Adopt? | Arms |
 |---|---|---|
-| B1 Architecture gates A0/A6 | ✅ | brackets the architecture (A0 pre-build, A6 pre-merge) |
-| B2 Engineering-Quality-Bar (10 pillars / 5 one-way doors) | ✅ | pillars arm as their surface appears; 5 doors HARD at MVP |
-| B3 Build-Standards baseline | ✅ | lint/import-boundary at scaffold; test at spine; a11y at shell; perf W2/W3 |
-| B4 Metered-chokepoint containment L1–L4 | ✅ (billed per-use) | L1–L3 at scaffold, L4 at spine |
-| B5 Key & Secrets Approval Gate | ✅ (prod API keys) | HARD launch blocker |
-| B6 Wave-Entry Gate + dispatch-freshness | ✅ | every wave |
-| B7 Pre-build Design DP-1→DP-4 | 🟡 DIRECTOR-PENDING (only if CX-heavy) | before build if adopted |
-| B8 Assurance Layer | ✅ | brackets every wave (front red-team + back adversarial-verify) |
-| B9 Validation Gauntlet (G1–G8) | 🟡 DIRECTOR-PENDING — **recommended: RUN** (new opportunity) | product Phase-0, before any design/build |
-| B10 Operational-Readiness & Assurance-Register | ✅ | launch/operational-readiness phase |
+| B1 Architecture gates A0/A6 | ✅ (lighter — a Python project, not a service architecture) | brackets design decisions |
+| B2 Engineering-Quality-Bar | 🟡 **mostly N/A** — pillars ②(tenant-isolation) and most of the SaaS-reliability set don't apply; keep ⑨(cost efficiency) and basic test discipline | re-scope with Architect |
+| B3 Build-Standards baseline | ✅ (lint/test, simplified for a Python project) | scaffold |
+| B4 Metered-chokepoint containment L1–L4 | ❌ **dropped** — replaced by `<3.2>` the spend guard, a much lighter mechanism | — |
+| B5 Key & Secrets Approval Gate | ✅ (kept — personal API keys still deserve this discipline) | before any live-key use |
+| B6 Wave-Entry Gate + dispatch-freshness | ✅ (kept, lighter-weight for a personal project) | every phase |
+| B7 Pre-build Design DP-1→DP-4 | ❌ **N/A** — no CX surface | — |
+| B8 Assurance Layer | ✅ (kept — the builder≠judge backtest-validation split IS this) | brackets Phase 1 |
+| B9 Validation Gauntlet | ❌ **N/A** — no market opportunity to validate; this is personal tooling | — |
+| B10 Operational-Readiness & Assurance-Register | 🟡 **light-touch only** — no external "go-live," but a hazard register for "don't let a bad signal cause a bad trade" is still worth having | later, light |
 
-**Pre-build order:** B9 → (B7 if adopted) → build waves. B8 brackets every wave; B1 brackets the architecture.
+**Order:** B1 (lightweight design ADR) → B5 (secrets) → Phase 1 build, bracketed by B8 (builder≠judge on
+every backtest result) and B6 (phase-exit before Phase 2 starts).
 
 ## 5 · Validated environment (Phase 2 — read from the live repo 2026-08-01)
 Greenfield: the app tree, ports, DB, and gate scripts **do not exist yet** — they are created at **W0

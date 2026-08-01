@@ -1,58 +1,64 @@
-# Stage plan — HELM (`trade`) · GREENFIELD (D-TRADE-002)
+# Stage plan — HELM (`trade`) · personal options-signal validation tool
 
-> ⏸ **NO BUILD AUTHORIZED (D-TRADE-010).** This document is the *documented plan*, not a to-do list.
-> **No wave — including W0 — is an available action.** We are not building any code yet. Building
-> unblocks only after: product defined (`canonical-design <1.1>`) → B9 viability/blueprint (if run) →
-> an explicit Director **build-GO**. Until then, the waves below are reference, and no build role needs
-> spawning.
+🔒 **Revised 2026-08-01 — D-TRADE-020.** Supersedes the greenfield-SaaS wave template (§7 of the kit
+does not fit a single personal Python project) — re-authored, not patched (LL-19). Two phases, per
+canonical `<1.1>`/`<1.4>`: **Phase 1 = validate** the existing options screener. **Phase 2 = deferred**
+(full option-P&L simulation; a from-scratch predictive occurrence model).
 
-Wave template = greenfield (§7). **Phase-gate between waves; parallelize only the disjoint-by-lane.** Each
-wave is bracketed by a **Wave-Entry Gate** (Lead authors plan → oversight reviews → **Director GO**) and a
-**QA phase-exit sign-off** before the next unblocks. The Lead never self-dispatches. **This document plans;
-it does not build.**
+🟡 **D-TRADE-010 (no-build) — Lead's recommended reading, NOT yet re-ruled by the Director.** D-TRADE-010
+was an explicit Director correction of the Lead's own premature "spawn to build" framing; reinterpreting
+it is the Director's call, not the Lead's to assert. **Recommendation:** Phase-1 quant-research work
+(backtest scripts, data pipelines — no external side effects, modest API calls of the same kind already
+run throughout the prior research) plausibly falls outside what D-TRADE-010 meant to block (app/service
+code against an undefined product) — but this is flagged as a recommendation pending explicit Director
+confirmation, not treated as decided. **A wave-entry gate still applies regardless**: the Architect's
+Phase-1 design ADR (module boundaries, stack details) is authored and the Director GOes it before any
+broad build starts.
 
-## Pre-build order (before any wave): B9 → (B7 if adopted) → waves
-- **B9 · Validation Gauntlet (G1–G8)** — 🟡 DIRECTOR-PENDING, recommended RUN. Nothing designs/builds
-  until the opportunity clears viability + a signed blueprint (the only door into the build org). Needs the
-  product paragraph `<1.1>`. Run as a cohort if several opportunities exist; the Skeptic mounts a kill
-  attempt at each gate (→ Director). **If skipped, the Director records the skip explicitly.**
-- **B7 · Design DP-1→DP-4** — only if the product proves CX-heavy (pending). If adopted, nothing builds
-  (scaffold green but INERT) until all four pass + a Director build-GO.
+## Phase 1 — Validate the existing options screener
+**Inputs to ingest (real, external artifacts, not built from scratch):**
+- `Downloads/rolling_watchlist (3).py` — the guardrail/S3/PND scanner (equity side; reference for the
+  proven backtest methodology, not the Phase-1 subject itself)
+- The options screener (delivered as a ZIP; composite -100..+100 score → calls/puts near 0.40 delta)
+- The 0DTE backtest engine (ZIP; real options-pricing/slippage modeling — reusable infrastructure)
+- 4 completed equity studies (`C:\Users\beale\{regime,catalyst,short-interest,float}-study\`) — the
+  proven walk-forward-CV / ships-only-if-it-clears methodology this phase re-applies
 
-## Waves
-### W0 · Scaffold — *NOT AUTHORIZED yet (D-TRADE-010); planned only*
-Skeleton + DB day-one + the gate green on an empty app. Product-agnostic, so when building is eventually
-authorized this is the first wave — but it is **not** a "start now" step. No code is built until the
-Director gives a build-GO.
-- DevOps: monorepo tree (`apps/api`, `apps/web`, `packages/{domain,db,contracts,config}`), local DB,
-  gate harness (legs SKIP-visible), CI (secret-scan + dep-audit), import-boundary lint encoding the 4-lane
-  cut, `.claude/settings.json` placed by the Director from the template.
-- **Validate ports/DB immediately here and write them back into `gate-spec.md` + the charter** (LL-1).
-- **Arms:** B3 lint/import-boundary · B4 L1–L3 (provider-taint static) · leg K (secret-scan) · leg T (static).
-- **Exit:** `tsc`/build/CI green on the empty app; every other leg exit-visible SKIP; QA sign-off.
+**P1-0 · Design ADR (Architect)** — module boundaries (screener / backtest / data-ingestion / infra),
+`<3.5>` stack confirmation, re-cut lanes (§3 draft in the charter). Wave-entry gate: Director GO.
 
-### W1 · Core spine — *gated behind the product/cost/roster locks + Architect A0 ADR*
-Transport + request-context/tenant + auth + DB adapter + `{ok,data|error}` envelope + job spine + **the
-money-truth chokepoint `<3.2>`** (the one-way-door surface — invariant checklist locked by impl+QA+SecOps+
-FinOps before build, D-TRADE-008).
-- **Arms:** B2 pillars ①②④⑥⑧ (the 5 one-way doors) · B4 **L4 runtime money-truth** (leg M) · migrate+RLS
-  lint (legs 4/6) · transport smoke (leg 5, port now validated) · FinOps fail-closed governor.
-- **Exit:** all W1 legs armed + negative-controls shown to bite; QA phase-exit; A6 ASR before merge.
+**P1-1 · Universe construction (Data Engineer)** — build/maintain the liquid-optionable large/mid-cap
+list (S&P 500/1500 or Russell 1000-class, real options chains, tight spreads); confirm historical
+options-chain data availability from Massive at the tier in use.
 
-### W2 · Client shell — *behind W1*
-`apps/web` router/shell/API-client facade + auth screens. **Arms:** a11y lint, perf budget. No business
-logic in components (import-boundary leg enforces).
+**P1-2 · Ingest + adapt the screener (AI/ML)** — bring the composite-score logic into this repo; wire
+it to the new universe (§P1-1) instead of an arbitrary user-supplied watchlist.
 
-### W3+ · Features — *derived from `canonical-design <1.1>`; disjoint-by-lane; phase-gated*
-The EDGAR/market-data ingestion (Data-Eng) + the AI/ML signal engine (built by AI/ML, **judged by AIQ**,
-golden-eval + grounding gated) + the feature surfaces. **Order is NOT DECIDED until `<1.1>` lands** — no
-W3+ wave is build-ready before the product paragraph is confirmed.
+**P1-3 · The validation engine (AI/ML builds, AIQ independently audits)** — for each screener component
+(trend/momentum/breakout/volume/IV-rank), walk-forward-CV test: does it predict the underlying moving
+far enough in the right direction within the option's ~25–45 DTE window (directional correctness, per
+`<1.1>`), beating a naive baseline out-of-sample? Same discipline as the 4 studies (pre-registered bar,
+LOO + 5-fold, seed-sensitivity check before trusting a marginal result — LL-42/43/44/47). **AIQ
+independently re-derives every result before it's called "cleared"** — builder ≠ judge, structurally
+enforced (an improvement over the studies' single-session self-check).
 
-### Launch · B10 Operational-Readiness
-Hazard/assurance register (every row carries a test-id, build fails without one) · versioned+published
-SOPs (frozen dated PDFs) · immutable CI change-log · B5 key & secrets Director approval (HARD blocker).
+**P1-4 · Data + spend infra (SDE1, DevOps)** — Supabase persistence for scan history/backtest results;
+a lightweight spend guard (`<3.2>`) on Massive/SEC-API.io calls; repo/CI scaffold for the Python project.
 
-## Phase-gate discipline
-No wave builds until its Wave Plan is oversight-reviewed + Director-GO (B6); QA re-runs the full gate on
-each phase HEAD in its own clone before the next unblocks; idle lanes do dispatch-freshness read-in before
-writing; post-build A6 declares what changed.
+**P1-5 · SecOps light-touch confirm** — Massive + SEC-API.io accounts are on the personal/individual
+tier and usage stays within it (already very plausible per `<2.1>`, not a hard gate).
+
+**P1 exit:** each screener component is labeled cleared/dropped exactly like short-interest (kept) vs.
+regime/catalyst (dropped) in the equity studies, with a written finding — the tool ships with the
+components that actually work, same as the existing scanner's `_gates` flags.
+
+## Phase 2 — Deferred (explicitly, not dropped — `<1.4>`)
+- **P2-A** Full option-P&L backtest simulation (entry, realistic slippage, a defined exit rule) for any
+  component that clears Phase 1's directional-correctness bar — reuses the 0DTE backtest engine.
+- **P2-B** A from-scratch predictive breakout-occurrence model (the original "Core Pipeline": broad-
+  universe historical data, engineered features, a trained classifier, walk-forward backtest) — bigger,
+  riskier, deferred until Phase 1 proves out the validation discipline on a concrete, bounded problem.
+
+## What's explicitly out of scope (dropped, not deferred)
+Multi-tenant isolation · the money-truth chokepoint at SaaS scale (B4) · CX design gates (B7) · the
+Validation Gauntlet (B9, no market to validate) · a GTM/commercial roster. See PROJECT-CONFIG §3/§4.

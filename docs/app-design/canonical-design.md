@@ -3,69 +3,104 @@
 Protocol 13: this is the ONE canonical design doc. **Only the Lead edits it.** Every other seat APPENDS
 to `working-log.md`; the Lead absorbs. Reference design by its `<x.y>` id, never by re-describing it.
 Open points are **first-class inline `▸ NOT DECIDED` markers** (who decides + a recommendation) — silence
-must never read as decided (LL-31). Thin by design at founding (LL-33); it grows as decisions land.
+must never read as decided (LL-31).
+
+> **2026-08-01 — MAJOR REVISION.** `<1.1>` locked (Director, 3-round elicitation). This re-authors §1–4
+> rather than patching alongside the superseded SaaS strawman (LL-19 — a doc saying two contradictory
+> things is worse than one that's simply wrong). Superseded framing (multi-tenant SaaS, money-truth
+> chokepoint at SaaS scale, generative-AI signal engine) is **deleted**, not parked — see LL-19/protocol 19.
 
 ## 1 · Product
-- **`<1.1>` What HELM is — ▸ NOT DECIDED** (decides: **Director**; blocker for real feature design).
-  *Lead's recommendation / strawman to react to:* "A SaaS that ingests **SEC EDGAR filings + market data**
-  and produces **AI-assisted trading/analysis signals** for ShupeCapital." Replace or confirm; the roster,
-  stack, providers and wave-3+ feature order all resolve off this.
-- **`<1.2>` Primary users / value — ▸ NOT DECIDED** (decides: Director, with `<1.1>`).
-- **`<1.3>` Cost model = billed per-use** (D-TRADE-004, 🔒-pending). Every billed provider call goes
-  through the single metered chokepoint `<3.2>` and is capped by a fail-closed governor.
+- **`<1.1>` What HELM is — 🔒 LOCKED (Director, 2026-08-01).** HELM is a **personal trading-signal tool**
+  (not a commercial product) that formalizes and empirically validates an **existing, already-built
+  options screener**. The screener runs a rules-based composite technical score — trend (moving-average
+  stack), momentum (RSI/MACD), breakout (52-week high/low, Bollinger %B), volume conviction, with an
+  overextension dampener — against a universe of **liquid, optionable large/mid-cap stocks** (S&P
+  500/1500 or Russell 1000-class names with real options chains and tight spreads — a deliberate
+  departure from the sub-$20 momentum cohort used in the earlier equity studies), and recommends
+  **directional calls/puts near 0.40 delta at ~25–45 DTE**.
+  **Phase 1's job is validation, not invention:** apply the same walk-forward-CV, ships-only-if-it-
+  clears-the-bar discipline already proven across 4 completed equity studies (regime → null, catalyst →
+  null, short-interest → real but modest, float → no-go) to each of the screener's scoring components,
+  testing whether it predicts the underlying moving far enough in the right direction within the
+  option's DTE window (**directional correctness**, Director's explicit choice — NOT full option P&L;
+  a deliberate, known limitation: doesn't capture theta decay/IV crush/slippage, the exact trap the
+  Director's own 0DTE backtest already surfaced once — see `<1.4>`).
+  Delivered as a **Python tool in this durable, versioned repo** — replacing the current routine, which
+  lives in an ephemeral claude.ai Project sandbox and has already lost at least one script
+  (`day_trade_toolkit.py`) to a sandbox reset.
+- **`<1.2>` Primary user** — the Director, personally, for personal trading decisions. No other users,
+  no distribution, no monetization. This is load-bearing for `<3.x>`/`<4.x>` below (no multi-tenant
+  surface; no "regulated advice to others" question).
+- **`<1.3>` Cost model = billed per-use** (D-TRADE-004), but at **personal scale** — a spend GUARD
+  (cap + visibility), not a SaaS-grade metered-chokepoint/billing-reconciliation system. See `<3.2>`.
+- **`<1.4>` Phase 2 (explicitly DEFERRED, not dropped):** (a) full option-P&L backtest simulation
+  (entry, realistic slippage, a defined exit rule — reusing the 0DTE backtest engine's slippage/spread
+  modeling) for any component that clears the Phase 1 directional-correctness bar; (b) a from-scratch
+  predictive breakout-occurrence model (the original "Core Pipeline" ask — broader data, engineered
+  features, a trained classifier, walk-forward backtest). Neither is in scope now.
 
 ## 2 · Domain / data
-- **`<2.1>` External providers — ▸ NOT DECIDED (full set) · SecOps ToS-taint DONE** (decides: Director +
-  Legal `<4.3>`; source `docs/security/tos-taint-review.md`, D-TRADE-018). The taint review changes the
-  provider picture materially:
-  - **SEC EDGAR — LOW taint** (data is public-domain/redistributable) but HARD ops constraints: 10 req/s,
-    declared User-Agent required (public EDGAR is **keyless/UA-based**). ⚠️ The in-hand 77-byte "SEC API
-    key" is therefore **NOT public EDGAR** — likely a third-party reseller whose ToS re-opens the taint.
-    **▸ NOT DECIDED — the key issuer must be confirmed** (Director / Data-Eng) before the EDGAR-LOW verdict holds.
-  - **Polygon.io / "Massive" — HIGH taint 🟠 (SEV2-candidate).** Entity rebranded Polygon.io→Massive
-    (eff 2025-10-30). The default/individual Market Data ToS is **non-commercial, Non-Professional,
-    display-only, no redistribution, no "investment strategy" derivative works — INCOMPATIBLE with the
-    strawman `<1.1>` on four counts.** Business tier permits redistribution but still bars unlicensed
-    derivative works; real-time drags in OPRA/UTP/NYSE agreements + pro fees. **▸ NOT DECIDED — needs a
-    Director provider/tier decision AND a Legal `<4.3>` ruling before it can be `<2.1>`.**
-  - **Supabase — MEDIUM.** We own our data (no IP taint); binding duty = customer bears ALL credential
-    security → service_role + DB pwd are B5/server-only (leg T). Read-only single-project MCP is correct
-    least-privilege. Data-class lines (no PHI w/o BAA, no cardholder data w/o approval) → Legal if the
-    model ever touches them (billing may).
-  - **Key handling:** real keys NEVER enter this repo — B5 secret store (`<4.1>`).
-  *Near-term recommendation (SecOps):* EDGAR-only (public-domain filings/fundamentals) de-risks the
-  licensing wall; add licensed market-data (Business tier) only once `<1.1>` + `<4.3>` justify the cost.
-- **`<2.2>` Data ingestion (Data Engineer lane)** — EDGAR/market-data pull + normalization; shape
-  designed after `<1.1>`/`<2.1>` land. ▸ NOT DECIDED (design pending).
+- **`<2.1>` External providers.**
+  - **Massive (formerly Polygon.io)** — the live source for market/options data across ALL prior research
+    (4 equity studies + the options screener + the 0DTE backtest). SecOps's earlier HIGH-taint finding
+    (`docs/security/tos-taint-review.md`, D-TRADE-018) was scoped to **commercial/SaaS use** — the
+    default/individual "Non-Professional" tier's restrictions (non-commercial, no redistribution, no
+    "investment strategy" derivative works) plausibly describe exactly the right, compliant tier for
+    `<1.2>`'s personal use. ▸ **NOT DECIDED — Legal/SecOps to confirm the account is actually on that
+    tier and that usage stays within it** (a light confirmatory check now, not the heavy commercial-tier
+    gate previously scoped).
+  - **SEC-API.io** — the likely real identity of the in-hand `..\Trade\sec_api_key.txt` (float study
+    used "SEC-API.io, account set up by the user," same week). ▸ **NOT DECIDED — confirm this key IS the
+    SEC-API.io key** (Director/Data-Eng); if so it is a paid personal-tier subscription ($49–239/mo), not
+    free public EDGAR — reframe cost/taint accordingly.
+  - **Historical options-chain data (strikes, greeks/IV history)** — required for Phase 1 backtesting
+    and **not yet confirmed available** from Massive at the tier in use. ▸ **NOT DECIDED — technical
+    discovery, DevOps/Data-Eng**, not a Director call.
+  - **Key handling:** real keys NEVER enter this repo — secret store only (`<4.1>`).
+- **`<2.2>` Universe construction (Data Engineer lane)** — a maintained list of liquid, optionable
+  large/mid-cap names (S&P 500/1500 or Russell 1000-class) with real options chains + tight spreads;
+  shape TBD by Data-Eng, informed by the options screener's existing OI/volume/bid-ask filters.
 
-## 3 · Architecture (planned; ADRs author the binding form at W1)
-- **`<3.1>` Modular monolith**, compiler-enforced seams (B2 pillar ⑧); default stack per D-TRADE-003.
-- **`<3.2>` The money-truth chokepoint** (Lane 2 / BE-Data) — the **single** metered path for billed
-  provider calls; every call writes an append-only spend-ledger row, passes the fail-closed governor and
-  a $/day self-tally auto-kill (D-TRADE-008, B4 L4). This is a one-way-door / high-invariant surface:
-  its invariant checklist is locked (impl + QA + SecOps + FinOps) before W1 build.
-  **Cost shape (D-TRADE-019, FinOps):** only **LLM tokens are true per-use variable COGS**; market-data
-  (flat sub) and EDGAR (free, *if* the key issuer is confirmed public) are $0-marginal — the `$/day`
-  auto-kill is effectively an LLM-token meter, but every provider call still routes through the
-  chokepoint and ledgers (rate/ToS governance, not just cost). Per-signal COGS is unmeasured until
-  AI/ML has a real token trace — caps start tight, widen on evidence.
-- **`<3.3>` Tenant isolation** (B2 pillar ②) — RLS + threaded request-context; proof = a gate leg that
-  FAILS with RLS OFF. Applies if HELM is multi-tenant. ▸ NOT DECIDED (single- vs multi-tenant — decides:
-  Architect at W1, off `<1.1>`).
-- **`<3.4>` AI/ML engine** — scoring/generation of signals; built by AI/ML, **judged by AIQ** (builder ≠
-  judge); grounded-against-source, golden-eval gated before phase exit. Shape pending `<1.1>`.
+## 3 · Architecture (planned; ADRs author the binding form at build time)
+- **`<3.1>` Modular monolith / simple Python project** — no SaaS-scale modular-monolith machinery
+  required; default stack question reopens (`<3.5>`).
+- **`<3.2>` The spend guard** (replaces the SaaS-scale "money-truth chokepoint," LL-19 re-author) — a
+  lightweight cap + visibility layer on provider API spend (Massive, SEC-API.io) so a runaway loop can't
+  rack up a large bill. **Not** an idempotent-ledger/billing-reconciliation-oracle/fail-closed-governor
+  system — that machinery was sized for multi-tenant SaaS money-truth and is now overbuilt. FinOps scopes
+  the right-sized version.
+- **`<3.3>` Tenant isolation — N/A, not pending.** Single user (`<1.2>`); RLS/multi-tenant machinery does
+  not apply. Deleted from scope, not deferred.
+- **`<3.4>` The validation engine** (re-authored from "AI/ML engine" — this is **classical statistics /
+  quant research, not generative AI**). What AI/ML (#21) actually builds: the walk-forward-CV backtest
+  pipeline that tests each screener component against forward directional outcomes — the same kind of
+  work the 4 completed equity studies already did (linear regression, log-transforms, LOO/5-fold CV,
+  seed-sensitivity checks), now with a role split: AI/ML builds/runs it, **AIQ independently re-derives
+  and audits each result before a component is called "cleared"** (builder ≠ judge, same spirit as the
+  studies' existing "ships only if it clears CV" discipline, now structurally enforced by a second seat
+  instead of one session self-checking). "Anti-fabrication grounding" (AIQ's kit mandate) maps to: no
+  lookahead bias, no data leakage, a component doesn't ship on a fit-to-test number (LL-43).
+- **`<3.5>` Stack — ▸ NOT DECIDED, reopened.** The kit default (Node/TS · Fastify · Postgres/Supabase ·
+  React/Vite) was scoped for a SaaS. This is a **Python quant-research tool** — the existing screener,
+  backtest engine, and all 4 studies' analysis scripts are Python (pandas/numpy/scipy). Recommend:
+  **Python for the analysis/backtest/screener core**; Supabase (already connected) retained as the
+  durable store for scan history/signals/backtest results (a real, useful role, not a SaaS OLTP). Node/
+  Fastify/React likely drop entirely — no web frontend is needed for "a Python script/tool I can run."
 
 ## 4 · Compliance / risk (bright-lines → armed gates, D-TRADE-006)
-- **`<4.1>` No secret in repo/logs** — SEC/market-data keys live in the secret store only (B5).
+- **`<4.1>` No secret in repo/logs** — provider keys live in the secret store only (B5).
 - **`<4.2>` Provider ToS-as-taint** — a provider SDK/host used outside its sanctioned module FAILS.
-- **`<4.3>` Financial/SEC regulatory surface — ▸ NOT DECIDED · now a HARD pre-build gate** (decides:
-  **Legal**, escalates to Director). Whether HELM's AI signals constitute **regulated investment advice /
-  a licensable investment strategy** materially shapes scope — and SecOps's `<2.1>` finding makes it
-  load-bearing NOW: the market-data licensing tier (Polygon/Massive) turns on whether HELM's output is a
-  "derivative work / investment strategy." **Legal must rule this before `<2.1>`/`<1.1>` lock or any
-  build.** Legal & Privacy is **not yet spawned** — spawning it is on the critical path. *The un-oracle-able
-  duty §10 keeps HUMAN.*
+- **`<4.3>` Financial/SEC regulatory surface — substantially DE-RISKED (re-scoped, not closed).**
+  "Regulated investment advice / licensable investment strategy" concerns generally attach to advising
+  **others** for compensation — `<1.2>` (personal use only, no distribution) makes that very unlikely to
+  apply. ▸ **NOT DECIDED — still needs a light confirmatory check** (a Legal seat, or the Director's own
+  read, confirming personal-use trading tools don't trigger adviser registration) — this is a MUCH
+  smaller task than the pre-build hard-blocker previously scoped for a SaaS, and does not need to gate
+  Phase 1 build start. The un-oracle-able duty stays §10 HUMAN either way.
 
-## 5 · Not-yet-scoped
-Everything in waves W2+ derives from `<1.1>`. Until the product paragraph lands, no wave beyond **W0
-scaffold** (which is product-agnostic) may be planned as build-ready.
+## 5 · Superseded (deleted, not parked — LL-19)
+The prior SaaS framing (multi-tenant chokepoint, generative AI/ML signal engine judged for fabrication,
+GTM/commercial roster, B9 Gauntlet, B7 CX design gates, tenant-isolation pillar) is removed from this
+document. It does not describe HELM. If a future pivot toward commercial use ever happens, it is a new
+elicitation, not a resurrection of this text.

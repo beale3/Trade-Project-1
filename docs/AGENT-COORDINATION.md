@@ -15,41 +15,53 @@ Read order (repo WINS on conflict): **this file** → `docs/decisions-log.md` �
 
 ---
 
-## §1 · Validated environment (verified 2026-08-01 — GREENFIELD)
-The app tree, ports, DB and gate scripts **do not exist yet**; they are created at **W0 scaffold** and
-**re-validated immediately before authoring wave code** (LL-1). No runtime value below is baked as verified.
+## §1 · Validated environment (revised 2026-08-01 — D-TRADE-020 pivot to a Python tool)
+Not greenfield in the usual sense: real prior artifacts exist to ingest (the options screener, the 0DTE
+backtest engine, 4 completed studies — all in `Downloads/` and `C:\Users\beale\*-study\`, outside this
+repo). The app tree/gate scripts for the Python project don't exist *in this repo* yet.
 
 | Item | Value |
 |---|---|
-| Lead clone | `…\Trading Project 1\Trade - Lead` · branch `main` · **origin LIVE** → `github.com/beale3/Trade-Project-1` @ `3d3f1aa` |
-| App tree (planned, default stack) | `apps/api` (Fastify) · `apps/web` (React/Vite) · `packages/{domain,db,contracts,config}` |
-| Ports | **validated FREE by DevOps 2026-08-01** — API `:3000` · web `:5173` · Postgres `:5432` · Supabase-local `:54321` (bake these — LL-1) |
-| DB / migrations | Supabase `zyscsnhiymitpfdhjuci`; **baseline NOT yet captured** (blocked — see Toolchain); migrations at W0 |
-| Gate scripts | none exist — added at W0, SKIP-visible until armed |
-| 🔴 **Toolchain** | **ABSENT on host** (verified 2026-08-01, Lead + DevOps, both Git Bash AND PowerShell): `node`·`npm`·`npx`·`pnpm`·`docker`·`gh` all NOT FOUND; only `git` resolves. **W0 build is BLOCKED until the Director installs Node LTS + pnpm + Docker (+ gh)** — see D-TRADE-017. Also gates whether the Supabase MCP `npx` server can actually introspect (the DB-baseline blocker). |
+| Lead clone | `…\Trading Project 1\Trade - Lead` · branch `main` · **origin LIVE** → `github.com/beale3/Trade-Project-1` |
+| ✅ **Toolchain — Python is READY** (verified 2026-08-01, Lead) | `python 3.12.10` + `pip` resolve; **pandas 3.0.3, numpy 2.5.1, scipy 1.18.0, yfinance 1.5.2, matplotlib 3.11.1, requests 2.34.2 — every library the existing scripts already use — are installed and importable NOW.** D-TRADE-017's Node/Docker/pnpm/gh blocker is **superseded, not resolved** — those may still be absent but are likely unneeded for a Python-only Phase 1. Re-verify if the stack decision `<3.5>` pulls in a non-Python component. |
+| App tree (Phase 1, TBD by Architect) | Likely a Python package layout (screener + backtest + data-ingestion modules); re-cut lanes at design time, see `<3.5>`, `<3.1>` |
+| DB | Supabase `zyscsnhiymitpfdhjuci` — retained as durable store for scan history/signals/backtest results (`<3.5>`); **baseline still not captured** (light task, not a blocker for Phase 1 start) |
+| Gate scripts | none exist yet in-repo — designed at Phase 1 kickoff, lighter than the superseded SaaS gate-spec (B4/B7/B9 dropped, see PROJECT-CONFIG §4) |
+| Existing artifacts to ingest | `Downloads/rolling_watchlist (3).py` (guardrail/S3/PND scanner) · the options screener (delivered as a ZIP, location TBD) · the 0DTE backtest engine (`ZIP`, location TBD) · 4 completed studies in `C:\Users\beale\{regime,catalyst,short-interest,float}-study\` |
 | Full config of record | `docs/foundation/PROJECT-CONFIG.md` |
 
-## §2 · Roster (scaled — full record + status in PROJECT-CONFIG §3)
-🔒-pending LOCK (needs explicit Director yes — LL-38). **Models (Director-locked):** Architect =
-**Fable 5 · Max** (LOCKED at generation); **every other seat = Opus 4.8 · High**. Effort is a depth
-ceiling, not a quality dial; escalation beyond High is per-wave Director approval, never a default.
+## §2 · Roster (🔒 REVISED 2026-08-01, D-TRADE-020 — personal tool, no SaaS/GTM surface)
+**Models (Director-locked):** Architect = **Fable 5 · Max** (LOCKED at generation); **every other seat =
+Opus 4.8 · High**. Effort is a depth ceiling, not a quality dial.
 
-**Core spine (never comes off):** Program Lead · Principal Architect (on-demand) · QA · Governance &
-Audit · SecOps · Backend-API · Backend-Data · Frontend-Web · DevOps.
-**AI/finance-family (on):** AI/ML · AI Quality · FinOps · Legal & Privacy · Data Engineer.
-**Design (on — seated D-TRADE-011):** Design Lead ("Designer") — taste-tier, Director is approver of record.
-**Phase-0 Gauntlet cluster (B9):** DIRECTOR-PENDING — seat only if B9 runs.
-Oversight (Architect·QA·GA·SecOps·FinOps·AIQ·Legal) is **independent of builders and reports to the
-Director**; pod ICs report to their pod lead. No seat certifies its own work.
+**Core (kept, re-scoped):** Program Lead · Principal Architect (on-demand, design ADRs for a Python tool)
+· QA (independent CV/backtest re-derivation) · Governance & Audit · SecOps (now: light provider-tier
+confirmation) · **SDE1** (data ingestion + Supabase storage, was "Backend-Data/money-truth") · DevOps
+(repo/CI for a Python project).
+**Quant-research family (re-scoped from "AI/finance"):** AI/ML — **builds the walk-forward-CV backtest
+pipeline** (classical statistics, not generative AI) · AI Quality — **independently re-derives/audits
+each backtest result** (builder≠judge on the CV discipline) · FinOps — a personal spend guard, not
+per-tenant billing · Data Engineer — the liquid-optionable-universe list + options-chain data discovery.
+**N/A — dropped, not deferred (personal tool, no customers, no market to validate):** Backend-API,
+Frontend-Web (no external API/web surface) · the entire GTM/commercial pod · PM/BizOps/Support/Success ·
+the Phase-0 Gauntlet cluster (B9 — no market opportunity to validate).
+**Design Lead ("Designer") — mandate mostly evaporates** ("a Python script/tool I can run" has no UI to
+design); notified, likely stands down pending a concrete need.
+**Legal & Privacy — de-risked, optional light-touch** (personal use ≠ advising others; `<4.3>` is a
+confirmatory check now, not a hard pre-build blocker).
+Oversight (Architect·QA·GA·SecOps·FinOps·AIQ) is **independent of builders and reports to the Director**.
+No seat certifies its own work.
 
-## §3 · Lane cut (standard 4-lane · disjoint by file · mapped to the planned tree)
-| Lane | Owner | Write-lane (created at W0) |
+## §3 · Lane cut (🔒 REOPENED — the 4-lane API/DB/web/build cut doesn't fit a single Python project)
+Re-cut by the Architect at Phase-1 design time. Working default until then (disjoint by directory):
+
+| Lane (draft) | Owner | Write-lane (draft) |
 |---|---|---|
-| **1 · transport/API** | BE-API | `apps/api/**` — HTTP dispatcher, request-context/tenant resolver, auth, `{ok,data\|error}` envelope, job spine, credential threading |
-| **2 · domain-logic + DB** | BE-Data | `packages/domain/**`, `packages/db/**` (migrations) — framework-free domain modules, DB adapter, **the money-truth chokepoint** (single metered path for billed calls) |
-| **3 · frontend/SPA** | FE-Web | `apps/web/**` — router, shell, API-client facade, screens (no business logic in components) |
-| **4 · build/env** | DevOps | root config, `docker-compose*`, `.github/**`, `scripts/gate/**`, RLS/policy lint, drift guard, secrets/keys, **the oracle-leg runner** |
-| **Hot files (shared)** | Lead allocates IDs | `packages/contracts/**` (API contract) · the LIVE BOARD below · `packages/db/migrations/` · `docs/app-design/working-log.md` |
+| **Screener/scoring** | AI/ML | the composite-score + screener logic (ingested from the existing options screener) |
+| **Backtest/validation** | AI/ML (build) · AIQ (independent re-derive/audit) | the walk-forward-CV pipeline, per-component pass/fail |
+| **Data ingestion + storage** | SDE1 · Data Engineer | Massive/SEC-API.io pulls, universe construction, Supabase persistence |
+| **Repo/CI/env** | DevOps | root config, `.github/**`, gate harness, secrets |
+| **Hot files (shared)** | Lead allocates IDs | the LIVE BOARD below · `docs/app-design/working-log.md` |
 
 **Hot-file append protocol:** per-lane labelled append blocks · **keep-both on rebase, yours last, remove
 the three conflict markers** (a hot-file rebase conflict is an append collision, not a real conflict —
@@ -110,23 +122,27 @@ QA re-runs on exit. GA owns the standing coverage+soundness+boundary-honesty aud
 ---
 
 ## §LIVE BOARD (one row per seat · claim your row on spawn)
-Status legend per §4.5. `founding` = created, not yet spawned.
+Status legend per §4.5. **🔒 2026-08-01 — D-TRADE-020 pivot: `<1.1>` LOCKED, personal tool, Phase 1 =
+validate the existing options screener.** 🟡 D-TRADE-010 (no-build) is **not** re-ruled — see the flagged
+recommendation in `stage-plan.md`. Every seat below was messaged directly with its new scope; **design
+work (ADRs, backtest-script planning, universe/data discovery) proceeds now; broad build waits on the
+Director's explicit confirmation on D-TRADE-010's scope**, same as any other wave-entry gate.
 
 | Seat | Session | Status | Next-up |
 |---|---|---|---|
-| **Program Lead** | ▶ **LIVE — this session** (set title `HELM (trade) — Program Lead`; owns clone `Trade - Lead`) | ✅ founded · ▶ **active Lead** | run the delivery pipeline; **await Director locks + product `<1.1>`**; assign by message to verified-ACTIVE seats; never self-dispatch |
-| Principal Architect | ▶ **LIVE — this session** (owns clone `Trade - Architect`) | ▶ **live** · ⏸ **HOLDING** · **Fable 5·Max** · onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE · stage-plan · gate-spec) | HOLD — nothing to architect until product `<1.1>` lands + a build path/GO (D-TRADE-010); then the **W1 CORE-SPINE A0 ADR** (transport · request-context/tenant · auth · DB adapter · money-truth chokepoint `<3.2>`, its invariant checklist locking with QA+SecOps+FinOps). "Held is a state, not a failure." |
-| QA | — | ⏸ not spawned | arm gate legs at W0; phase-exit sign-offs |
-| Governance & Audit | — | ⏸ not spawned | seed oracle-coverage audit; own RECONCILE gate |
-| **SecOps** | ▶ **LIVE** (owns clone `Trade - SecOps`; spawned D-TRADE-015) | ▶ **active** · ✅ first task delivered | Onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE · supabase · gate-spec). **ToS-taint review DONE** (SEC EDGAR · Polygon/Massive · Supabase) + **leg-K key denylist** + **B5 approval checklist** authored under `docs/security/**` (D-TRADE-010 foundation work). Reported to Lead (protocol 15). **Next:** await Lead — leg K/T wiring is DevOps; provider/tier + `<4.3>` calls are Director/Legal. Flagged 🟠 Polygon HIGH-taint (strawman `<1.1>` incompatible) + SEC-key-issuer + Supabase data-class items |
-| Backend-API | — | ⏸ not spawned | Lane 1 at W1 |
-| Backend-Data = **SDE1** | ▶ **LIVE** (owns clone `Trade - SDE1`) | ▶ **live** · ⏸ **HOLDING** · onboarded (charter · decisions incl. D-TRADE-010/013/014/016 · canonical-design `<3.2>` chokepoint / `<3.3>` tenant-isolation · oracle-boundary Backend-Data row = **ORACLE**, money-truth **leg M** · PROFILE + lessons · supabase.md · gate-spec) | HOLD on build (D-TRADE-010) — no product `<1.1>` = no schema/domain yet; will NOT author migrations/DDL against an undefined product (spec-complete-before-build on the money-truth surface). "Held is a state, not a failure." Permitted now (read-only): review the Supabase DB **baseline** with DevOps. First work once `<1.1>`+build-GO land: LOCK the `<3.2>` chokepoint invariant checklist (impl + QA + SecOps + FinOps) BEFORE any DDL, then forward-only migrations under `packages/db/migrations` (RLS + policy-lint per tenant table). |
-| Frontend-Web | — | ⏸ not spawned | Lane 3 client shell at W2 |
-| **DevOps** | ▶ **LIVE** (owns clone `Trade - DevOps`) | ▶ **live** · ⏸ **HOLDING on scaffold** (D-TRADE-010) | Pre-build infra DONE: env validated (2026-08-01), gate-harness + leg K/T + W0 DoD designed (`docs/roles/devops/harness-design.md`), secret hygiene confirmed. **Blockers surfaced:** DB baseline uncaptured (capture from Lead clone — connector CONNECTED there); `node`/`npx` unresolvable on this host + pnpm/Docker not installed → W0-0 pre-req. Onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE · gate-spec). Next: W0 scaffold on Director build-GO + D-TRADE-010 lift |
-| AI/ML | ▶ **LIVE** (owns clone `Trade - AI-ML`) | ▶ **live** · ⏸ **HOLDING** | **HOLD for assignment** — D-TRADE-010 (no build) + `<1.1>` NOT DECIDED → no signal engine to design/build yet; will NOT invent one against an undefined product (LL-45). "Held is a state, not a failure." Onboarded (charter · decisions · canonical-design `<3.4>` · oracle-boundary AI/ML row = HUMAN, AIQ builds+judges · PROFILE). First work once `<1.1>` lands: the engine's GROUNDING CONTRACT (what source-of-record each signal must cite), co-designed with AIQ (oracle) + Data-Eng (source data) |
-| **AI Quality** ("AIQ") | ▶ **LIVE** (owns clone `Trade - AIQ`) | ▶ **live** · ⏸ **HOLDING** | **HOLD** — D-TRADE-010 (no build) · `<1.1>` NOT DECIDED · no AI output exists to grade yet. Onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE). Light prep done: eval **methodology** draft `docs/eval/methodology-draft.md` (rubric contract · blind/write-once · catch-matching reason-vocab · freeze-before-measure) for the Lead to absorb — **no golden set** until product + engine exist. Reported to Lead. Next: co-author reason-vocab w/ AI/ML + build the grounding oracle once `<3.4>` engine + first sealed outputs land |
-| FinOps | ▶ **LIVE** (owns clone `Trade - FinOps`) | ▶ **live** · ✅ pre-build cost model drafted | Delivered `docs/finops/cost-model.md` + `governor-spec.md` (DRAFT, gate ②). Finding: only LLM tokens = per-use COGS; Polygon/Massive + EDGAR = $0-marginal floor. Surfaced to Lead: 🟠 market-data true cost is quote-only (Professional/exchange fees), not $199. **Next:** await GA RECONCILE + Director locks (D-TRADE-004 + cap values); W1 chokepoint checklist co-sign with BE-Data/QA/SecOps |
-| Legal & Privacy | — | ⏸ not spawned | SEC/financial-regulatory + PII bright-lines |
-| Data Engineer | — | ⏸ not spawned | EDGAR/market-data ingestion design |
-| **Design Lead** ("Designer") | ▶ **LIVE** (owns clone `Trade - Designer`) | ▶ **live** · ⏸ **HOLDING** | **HOLD for assignment** — no product yet (`<1.1>` NOT DECIDED) → no UI to design; D-TRADE-010 stands. "Held is a state, not a failure." Onboarded (charter · decisions · canonical-design · oracle-boundary row · PROFILE). Likely first: product-experience/brand exploration or B9 UX support once `<1.1>` lands |
-| Gauntlet cluster | — | ⏸ pending B9 | seat if the Director runs B9 |
+| **Program Lead** | ▶ **LIVE — this session** | ✅ founded · ▶ **active Lead** | `<1.1>` propagated; assigning Phase-1 work by message |
+| Principal Architect | ▶ **LIVE** (`Trade - Architect`, Fable5·Max) | ▶ live · ⏸ holding | **Next real task:** the Phase-1 design ADR — re-cut lanes (§3 draft above), pick `<3.5>` stack details, define the screener/backtest module boundaries. Messaged with new scope. |
+| QA | — | ⏸ not spawned | independent re-run of each backtest component's CV result before it's called "cleared" |
+| Governance & Audit | — | ⏸ not spawned | audit AIQ's independent-validation discipline; RECONCILE gate |
+| **SecOps** | ▶ **LIVE** (`Trade - SecOps`) | ▶ active · ✅ Phase-1 taint review delivered | **Next:** light re-scope — confirm the Massive + SEC-API.io accounts are on the personal/individual tier and usage stays within it (no longer the heavy commercial-tier gate). Messaged with new scope. |
+| Backend-API | — | ⏸ **N/A, dropped** — no external API surface for a personal Python tool | — |
+| Backend-Data = **SDE1** | ▶ **LIVE** (`Trade - SDE1`) | ▶ live · ⏸ holding | **Next real task:** data-ingestion + Supabase-storage layer for scan history/backtest results — re-scoped from "money-truth chokepoint" to normal data plumbing (`<3.2>` is now a light spend guard). Messaged with new scope. |
+| Frontend-Web | — | ⏸ **N/A, dropped** — "a Python script/tool I can run" has no web surface | — |
+| **DevOps** | ▶ **LIVE** (`Trade - DevOps`) | ▶ live · ⏸ holding | ✅ **Toolchain blocker mostly resolved** — Python 3.12 + pandas/numpy/scipy/yfinance/matplotlib/requests all verified present (§1). **Next real task:** repo/CI scaffold for the Python project (lighter gate-spec — B4/B7/B9 dropped). Messaged with new scope. |
+| **AI/ML** | ▶ **LIVE** (`Trade - AI-ML`) | ▶ live · ⏸ holding | **Next real task — re-scoped from generative-AI to quant research:** build the walk-forward-CV backtest pipeline testing each screener component (trend/momentum/breakout/volume/IV-rank) for directional correctness, same discipline as the 4 completed equity studies. Messaged with new scope. |
+| **AI Quality** ("AIQ") | ▶ **LIVE** (`Trade - AIQ`) | ▶ live · ⏸ holding | **Next real task — re-scoped from LLM-grounding to backtest audit:** independently re-derive/audit each of AI/ML's CV results before a component is called cleared (builder≠judge on the statistics, not generative-output grounding). Messaged with new scope. |
+| **FinOps** | ▶ **LIVE** (`Trade - FinOps`) | ▶ live · ✅ Phase-1 cost model delivered | **Next:** re-scope the governor spec down from SaaS-grade billing-reconciliation to a personal spend guard (cap + visibility). Messaged with new scope. |
+| Legal & Privacy | — | ⏸ not spawned, optional | `<4.3>` substantially de-risked (personal use) — a light confirmatory check, not urgent |
+| **Data Engineer** | — | ⏸ not spawned — **now has clear, real work** | build/maintain the liquid-optionable universe list; confirm historical options-chain data availability from Massive |
+| **Design Lead** ("Designer") | ▶ **LIVE** (`Trade - Designer`) | ▶ live · ⏸ holding | **Mandate mostly evaporates** — no UI surface in "a Python script/tool I can run." Messaged; likely stands down pending a concrete need (e.g. a results dashboard, if ever wanted). |
+| Gauntlet cluster | — | ⏸ **N/A, dropped permanently** — no market opportunity to validate for a personal tool | — |
