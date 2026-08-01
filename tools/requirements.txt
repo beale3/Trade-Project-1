@@ -1,0 +1,10 @@
+# Dependencies for tools/ (the equity-side rolling-watchlist tool + its web UI, D-TRADE-023).
+# Scoped to this tree only -- disjoint from HELM's own dependency file (pyproject.toml, held pending
+# P-1 per docs/roles/devops/harness-design.md). numpy/pandas/matplotlib (rolling_watchlist.py's core
+# deps) were already present on this host before this file existed; pinned here for a clean install
+# elsewhere.
+
+flask==3.1.3
+numpy>=2.0
+pandas>=2.0
+matplotlib>=3.8
