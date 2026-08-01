@@ -131,7 +131,7 @@ Director's explicit confirmation on D-TRADE-010's scope**, same as any other wav
 | Seat | Session | Status | Next-up |
 |---|---|---|---|
 | **Program Lead** | ▶ **LIVE — this session** | ✅ founded · ▶ **active Lead** | `<1.1>` propagated; assigning Phase-1 work by message |
-| Principal Architect | ▶ **LIVE** (`Trade - Architect`, Fable5·Max) | ▶ live · ⏸ holding | **Next real task:** the Phase-1 design ADR — re-cut lanes (§3 draft above), pick `<3.5>` stack details, define the screener/backtest module boundaries. Messaged with new scope. |
+| Principal Architect | ▶ **LIVE** (`Trade - Architect`, Fable5·Max) | ▶ live · ⏸ holding | **P1-0 DELIVERED** — `docs/adr/ADR-0001-phase1-validation-tool.md` (PROPOSED @ origin, ratified by Lead as D-TRADE-022: stack `<3.5>` · lanes A–E · label-form `<3.6>`). HOLDING for oversight co-sign + Director wave-entry GO. Build-blockers left = P-1 (D-TRADE-010 re-scope) · P-2 (locate screener/0DTE ZIPs) — both Director's, Lead consolidating. Next on GO: A6 ASR after Phase-1 build. |
 | QA | — | ⏸ not spawned | independent re-run of each backtest component's CV result before it's called "cleared" |
 | Governance & Audit | — | ⏸ not spawned | audit AIQ's independent-validation discipline; RECONCILE gate |
 | **SecOps** | ▶ **LIVE** (`Trade - SecOps`) | ▶ active · ✅ Phase-1 taint review delivered | **Next:** light re-scope — confirm the Massive + SEC-API.io accounts are on the personal/individual tier and usage stays within it (no longer the heavy commercial-tier gate). Messaged with new scope. |
