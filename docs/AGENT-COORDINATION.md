@@ -113,7 +113,7 @@ Status legend per §4.5. `founding` = created, not yet spawned.
 
 | Seat | Session | Status | Next-up |
 |---|---|---|---|
-| Program Lead | this session | ▶ founding | STEP 6 kit self-improve → STEP 7 first-wave breakdown → await Director locks |
+| **Program Lead** | ▶ **LIVE — this session** (set title `HELM (trade) — Program Lead`; owns clone `Trade - Lead`) | ✅ founded · ▶ **active Lead** | run the delivery pipeline; **await Director locks + product `<1.1>`**; assign by message to verified-ACTIVE seats; never self-dispatch |
 | Principal Architect | — | ⏸ not spawned | on-demand: W1 spine ADR (after B9/design locks) |
 | QA | — | ⏸ not spawned | arm gate legs at W0; phase-exit sign-offs |
 | Governance & Audit | — | ⏸ not spawned | seed oracle-coverage audit; own RECONCILE gate |
