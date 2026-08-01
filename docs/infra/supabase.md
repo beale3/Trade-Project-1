@@ -77,19 +77,23 @@ read-only MCP connector (D-TRADE-014).
 | Host reachability | ✅ alive (`/auth/v1/health` responds; REST → 401 = needs apikey) |
 | Capture method | read-only Supabase MCP connector (introspect schemas/tables) — the only agent-safe route (direct DB / service_role require a SECRET the agent must never handle) |
 
-**🔴 BLOCKED — two compounding causes:**
-1. **Connector not enabled in-session.** `SUPABASE_ACCESS_TOKEN` is unset and no `supabase` MCP tool is
-   exposed to this session. Per D-TRADE-014 the Director enables it interactively (create PAT → set env var
-   → `/mcp` approve); this non-interactive session cannot run that OAuth/enable flow.
-2. **Node/`npx` absent on this host.** `.mcp.json` launches the server via `npx -y
-   @supabase/mcp-server-supabase@latest`; with no Node installed the connector cannot start **even with a
-   token**. Node LTS must be installed first (W0-0 in `docs/roles/devops/harness-design.md §E`).
+**Where it stands:** the connector is **Director-confirmed CONNECTED in the `Trade - Lead` clone** (banner
+above) — so the baseline **can be captured now from an interactive Lead-clone session**; it does not need
+this DevOps clone. It was simply **not capturable from this (non-interactive DevOps) session**:
+1. **No `supabase` MCP tool is exposed to this session**, and `SUPABASE_ACCESS_TOKEN` is not set in this
+   session's environment (a non-interactive session cannot run the `/mcp` approve / OAuth flow).
+2. **`node`/`npx` do not resolve on this host/session** (checked PATH + standard install dirs + nvm/fnm/
+   volta). `.mcp.json` launches the server via `npx`, so this session could not start it regardless.
 
-**To capture once enabled** (Director, interactively, on a host with Node): set `SUPABASE_ACCESS_TOKEN`,
-`/mcp` approve `supabase`, then ask Claude to *list schemas and tables for project `zyscsnhiymitpfdhjuci`*.
-Record the schema/table list (or "empty") back into this table. The connector is `--read-only` so this
-cannot mutate the DB. (Alternatively a human may read it directly from the Supabase dashboard → Table editor
-and paste the list here — no secret required for a screenshot of table names.)
+> ⚠️ **Reconcile (Director/Lead):** the connector runs via `npx`, yet this host/session cannot resolve
+> `node`/`npx`. Either Node lives on a path only the Lead's interactive session loads — in which case W0-0
+> must bake that exact path — or the CONNECTED status reflects `/mcp` trust without a live introspection
+> yet. Confirming which matters for the W0 toolchain (`docs/roles/devops/harness-design.md §A/§F`).
+
+**To capture the baseline now** (interactive Lead-clone session): ask Claude to *list schemas and tables for
+project `zyscsnhiymitpfdhjuci`* (the connector is `--read-only`, so this cannot mutate the DB). Record the
+schema/table list (or "empty") into the table above. Alternatively a human reads it from the Supabase
+dashboard → Table editor and pastes the table names here — no secret required for that.
 
 ## Governance
 - **SecOps:** run the Supabase **ToS-as-taint** check + own the key denylist; the provider SDK/host is

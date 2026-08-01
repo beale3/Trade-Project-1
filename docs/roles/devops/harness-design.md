@@ -141,12 +141,16 @@ paragraph `<1.1>` land and the Architect's W1 A0 ADR.
 ---
 
 ## §F · Open blockers / dependencies (surfaced to the Lead, this report)
-1. 🔴 **DB baseline (task a) BLOCKED** — the read-only Supabase MCP connector is **not enabled** in this
-   session (`SUPABASE_ACCESS_TOKEN` unset, no `supabase` MCP tool exposed) **and** Node/`npx` is absent so
-   the `npx`-launched server could not start even with a token. Baseline recorded as **UNKNOWN** in
-   `docs/infra/supabase.md`; needs the Director's interactive enable (PAT → env var → `/mcp` approve) **on a
-   host with Node installed**. See that doc for the exact commands.
-2. 🔴 **Toolchain absent (W0-0)** — Node/pnpm/Docker/gh not installed; blocks W0 + the MCP connector.
-   Human install action; $0 tooling (Docker Desktop paid only at org scale — flag FinOps if so).
+1. 🟡 **DB baseline (task a) — capture it from the Lead clone.** The connector is **Director-confirmed
+   CONNECTED in `Trade - Lead`**, so the baseline is **capturable now from an interactive Lead-clone
+   session** (ask Claude to list schemas/tables for `zyscsnhiymitpfdhjuci`; `--read-only`). It was **not**
+   capturable from **this** non-interactive DevOps session (no `supabase` MCP tool exposed here,
+   `SUPABASE_ACCESS_TOKEN` unset here, `node`/`npx` unresolvable here). Baseline still **UNKNOWN** in
+   `docs/infra/supabase.md` until someone runs the introspection.
+2. 🟡 **Node/`npx` unresolvable on this host/session — reconcile before W0-0.** The connector runs via
+   `npx`, yet `node`/`npx` do not resolve here (checked PATH + standard dirs + nvm/fnm/volta). Either Node
+   lives on a path only the Lead's interactive session loads (→ W0-0 bakes that path) or CONNECTED reflects
+   `/mcp` trust without a live introspection yet. Confirm which; W0 needs a resolvable `node`/`pnpm`/`docker`
+   ($0 tooling; Docker Desktop paid only at org scale — flag FinOps if so).
 3. 🟡 **Runtime commit identity** — this clone's git identity was unset; set locally to
    `Mähnbach <noreply@mahnbach.com>` to match the repo convention.
