@@ -1,0 +1,11 @@
+.env
+.env.*
+*.local
+node_modules/
+dist/
+build/
+*.log
+*api-key*
+sec_api_key.txt
+*.pem
+.claude/settings.local.json
