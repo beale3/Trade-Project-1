@@ -459,3 +459,63 @@ confirmed each and folded in one genuine refinement it surfaced:
   `intraday` objects, not just the `DATA` literal swapped for a fetch. Not my file to edit (Designer's
   write-lane) — flagged, not patched around.
 - Reported once to the Lead + messaged the Designer directly with the exact shape (protocol 11).
+
+### [Designer · 2026-08-01] Rolling Watchlist dashboard wired to the §3 contract (ADR-0002, D-TRADE-023)
+Frontend build task delivered: `tools/web/static/index.html` (copied from my cleaned
+`docs/design/rolling-watchlist-dashboard.html` per ADR-0002 §2.3's real served path). Only the `DATA`
+literal + its mock-generation code were touched; every render function, CSS class, and layout is
+byte-identical to the approved mockup — verified by diffing my edit boundaries against the original.
+- **`mapCandidate()` adapter:** renames/flattens the §3 `Candidate` (server-computed) onto the exact flat
+  shape the approved render functions already read (`d.gainOk`, `d.s3Pct`, `d.s3Rating`, etc.) — it
+  performs zero computation of its own; guardrail/S3/phase/pattern logic stays server-side, single source
+  of truth in Python, per ADR-0002 §2.3's "no logic in the serving layer" principle.
+- **`runScan(tickers, params)`:** `POST /api/scan`, then `empty → loading → loaded|error` state machine.
+  Exposed as `window.runScan` — **not auto-invoked and not wired to any input control**, because none
+  exists (see open item below). Loading/empty/error states added per the ADR's ask; empty state matches
+  my own PROFILE lesson (deferred surfaces get a designed empty-state, not a dead-click).
+- **OP-B (intraday chart) reconciled against the Architect+AI/ML resolution that landed while I was
+  building:** `buildSeries()` now reads real `bars[]`/`pivots`/`priorHigh`/`priorLow` and picks the
+  trigger bar via `bars.findIndex(b => b.alignedTrigger)` (the finalized per-bar flag), not a
+  timestamp-string match. Confirmed the approved mockup's design (one trigger marker, its legend text
+  "first bar above pivot & prior close") still holds 1:1 — the contract now also *supports* shading every
+  aligned bar, a richer treatment than the approved mockup shows; **not added**, since that would be a
+  design change outside "wiring, not redesign" and outside my unilateral authority (taste/hierarchy stays
+  HUMAN + Director-approved, oracle-boundary row).
+- **Cleanup debt removed** (not a design change): the static "Mockup · illustrative data" badge
+  (`tw-mock-badge`) — a review-only annotation, now misleading on a live-wired build. Its CSS rule is left
+  in place (inert, reusable) to avoid touching more than necessary.
+- **Verified in-browser (not just claimed), file:// standalone, mocked `window.fetch`** against the exact
+  §3 contract shape (incl. the finalized `abovePivot`/`aligned`/`alignedTrigger` bar fields): confirmed via
+  `get_page_text` — stat strip/table/guardrail/S3/phase/patterns/chart all populate correctly from a
+  2-candidate fixture (1 holding-up, 1 rolled-over skip row), the trigger circle resolves to the correct
+  bar index even when a later bar is also `aligned:true`, and the pivot/R1/S1/prior-close chart labels
+  match the fixture exactly. Also verified the error path (`fetch` rejecting → "Scan failed: …" renders).
+  Zero console errors across every state. No live backend exists yet (AI/ML's `app.py` not built) — this
+  is fixture-verified, not integration-tested against the real Massive-backed pipeline; that step is
+  QA's/AI/ML's once `app.py` lands.
+- **Two real open items, flagged not guessed past (protocol 11):**
+  1. **No ticker-input mechanism exists anywhere in the approved mockup or ADR-0002's Designer task, but
+     `tools/rolling_watchlist.py --tickers` is `required=True` with no default universe** (confirmed:
+     argparse has no default; the module's own docstring says the candidate list comes from "StocksToTrade,
+     Finviz, your [own screening]" — i.e., always user-supplied). `POST /api/scan` cannot run without
+     tickers from *somewhere*. I did not invent an input control (a ticker box + Scan button, or a params
+     form) — that's new UI surface, taste/layout territory the oracle-boundary row keeps HUMAN +
+     Director-approved, not mine to add unilaterally. `window.runScan()` is wired and ready; it just has
+     no caller yet. Recommend: Architect/Director decide the shape (a real input control needing my mockup
+     + approval per protocol 10, vs. a hardcoded personal watchlist config file DevOps/AI-ML own).
+  2. **The approved mockup has no UI for `simulatedTrades`**, even though D-TRADE-023's own decision text
+     lists "the trade simulator's results" as in-scope for the browser UI, and the §3 contract carries a
+     full `simulatedTrades` object. Not built — inventing that panel now would be redesign, not wiring, and
+     the Director hasn't approved a mockup for it. Flagged for the Lead/Architect/Director; I'll mock up
+     that section on request (UI-mockup gate, protocol 10) once it's prioritized.
+- Messaged AI/ML directly (protocol 11) to confirm OP-B's now-resolved shape from my side too (redundant
+  with the Architect's confirmation, but cross-checking a shared interface point independently is cheap
+  and protocol-15-clean).
+- **Reconciled on rebase (protocol 16) against AI/ML's entry directly above:** their 🟡 finding — the
+  mockup's JS re-derives guardrail thresholds/S3 total/the intraday series client-side instead of
+  consuming the server's precomputed `guardrail`/`s3`/`intraday` objects — is a real, correctly-flagged
+  issue against the *original* mockup, and it's **already fixed** in this same commit (independently;
+  I hadn't read their message when I built `mapCandidate()`/rewrote `buildSeries()`). Convergent, not a
+  new blocker. AI/ML's backend is live (`flask --app tools/web/app run`, smoke-passing) — next step is
+  integration-testing my wiring against their real `/api/scan`, not just my fixture. Reporting once to
+  the Lead.
