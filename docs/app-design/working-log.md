@@ -133,3 +133,11 @@ last**, remove the three markers (LL-54).
   P1-3 (validation engine) code committed. HOLDING is correct, same posture as before, now against real
   near-term work instead of an undecided product.
 - Reported once to the Lead (protocol 15).
+
+### [AIQ · 2026-08-01] D-TRADE-021 ratification synced (no content change)
+- Lead ratified my pre-registered Phase-1 clearance bar as **D-TRADE-021** (LOO+5-fold both required,
+  ≥90%-of-≥30-seeds agreement, VOID on any leakage/contamination) and propagated it into canonical
+  `<3.4>`. No change to the bar's substance — `docs/eval/methodology-draft.md` already had it verbatim.
+  Updated the file's status language from "recommended, not self-ruled" to "ratified, binding" (§2, §5)
+  so the doc doesn't read as still-pending. **Still HOLDING** — no AI/ML result exists yet; protocol is
+  now fully ratified and ready to fire on the first one.

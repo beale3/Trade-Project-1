@@ -11,6 +11,10 @@
 > AI/ML delivers a first CV result (stage-plan **P1-3**). Verified 2026-08-01: **no AI/ML backtest code is
 > committed to this repo yet** (P1-2/P1-3 unstarted) → nothing to audit → HOLDING, same posture as before,
 > now against real near-term work instead of an undecided product.
+>
+> **§2's bar is RATIFIED — D-TRADE-021 (Lead, 2026-08-01), propagated to canonical `<3.4>`.** No content
+> change from what was drafted here; the "recommended, not self-ruled" language below is now historical —
+> the bar is binding on every Phase-1 component test, not a proposal awaiting sign-off.
 
 ---
 
@@ -37,8 +41,8 @@ re-derivation reproduces AI/ML's headline result (or shows it doesn't survive).
 
 ## 2 · Pre-registration — write-once, before I open AI/ML's result (LL-44)
 Before touching any AI/ML output, I commit: the exact bar a component must clear, the resampling schemes
-required, and the seed-sensitivity threshold. **Recommended bar (for Lead/Director ratification — not
-self-declared binding):**
+required, and the seed-sensitivity threshold. **Ratified bar (D-TRADE-021, Lead — binding on every
+Phase-1 component test, propagated to canonical `<3.4>`):**
 - Beats a naive out-of-sample baseline under **BOTH** LOO-CV **AND** 5-fold CV (matching stage-plan P1-3's
   explicit "LOO + 5-fold" requirement) — a result surviving only one scheme is **not cleared**
   (catalyst-study precedent, §0 above).
@@ -75,8 +79,10 @@ credit — matches the existing 4-study precedent (short-interest kept; regime, 
 Per `docs/gate/oracle-boundary.md`: **"is the pre-registered bar itself the right bar"** (e.g., is
 ≥90%-of-30-seeds the correct robustness threshold, is directional-correctness-within-DTE the right success
 metric) is a judgment call — **HUMAN, escalates to the Lead/Director**. I certify mechanically whether a
-component DID or DID NOT clear a stated bar; I do not certify that the bar itself is correct. §2's
-recommended bar is exactly that kind of recommendation, not a ruling.
+component DID or DID NOT clear a stated bar; I do not certify that the bar itself is correct. §2's bar
+started as exactly that kind of recommendation and was ratified by the Lead (D-TRADE-021) precisely
+because it wasn't novel — it matched established precedent rather than resting on my own authority; a
+future bar change would still need the same route, not a self-declared revision.
 
 ## 6 · Status
 **HOLDING.** No AI/ML CV result exists in-repo yet (verified against `git log`/tree at commit `47f6e60` —
