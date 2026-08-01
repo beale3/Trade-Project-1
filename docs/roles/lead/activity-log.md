@@ -77,6 +77,11 @@ The load-bearing ones for a fresh Lead to know before doing anything:
 | Designer | **just re-activated** (was stood down at D-TRADE-020, no UI surface existed) | **New task just sent:** adapt the real, already-fetched "Rolling Watchlist" mockup source to consume live data — see "In-flight work" below for the exact file path. Not yet reported back. |
 | QA, GA, Legal, Data Engineer | never spawned | Real, unclaimed work exists for Data Engineer (universe construction) once HELM P-2 clears. QA/GA/Legal not yet needed. |
 
+## One more thing that landed while writing this handoff
+`6aab1ce` — DevOps co-signed ADR-0001's non-negotiables (design-review only, not the browser-UI work).
+Not yet consolidated/acknowledged by the Lead. Check `docs/adr/ADR-0001-phase1-validation-tool.md` §12
+co-sign status and DevOps's board row on resume.
+
 ## In-flight work — pick this up first if you're the incoming session
 **The browser-UI dashboard (D-TRADE-023) is mid-dispatch.** I sent 4 assignments this session and the
 conversation ended (session handoff) before any of them reported back:
