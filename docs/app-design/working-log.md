@@ -649,3 +649,18 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   app has the real control instead.
 - Self-checked (gate ②: request-body inspection + rendered-output verification across 4 distinct
   fixtures, not just code review). Reporting once to the Lead.
+
+### [FinOps · 2026-08-01] D-TRADE-026 absorbed — SEC-API.io floor line moves from contingent to confirmed
+- The Lead's live-verified finding (direct authenticated call to `api.sec-api.io` → HTTP 200 real filing
+  data, corroborated by the Director's own account) closes an open item I'd been carrying as `unmeasured`
+  since the pivot revision. Updated `docs/finops/cost-model.md` (§1 table, §2.3, §3 floor, §5 open items,
+  §6 provenance) and `docs/finops/governor-spec.md` (§3 cap table): the "EDGAR = $0 / is this even
+  SEC-API.io" framing is retired — this is now a **confirmed, currently-active, paid subscription**
+  ($49–$239/mo + $0.30/GB overage), not a future/contingent line. Narrowed the remaining open item to
+  **which of the two paid tiers** (Personal & Startups vs. Business) — an account lookup, not a credential
+  read or a new pricing question.
+- **Decision-relevant point surfaced, not ruled:** this is the first floor line that moved from "assumed
+  $0" to "real money being spent right now" — flagged as a fact, not a recommendation; whether that spend
+  is wanted stays HUMAN/Director.
+- Closes cost-model.md's named propagation slot in D-TRADE-026. Self-check only (routine, protocol 17 —
+  a factual figure update, not a new engine rule or cross-document invariant). Reported once to the Lead.

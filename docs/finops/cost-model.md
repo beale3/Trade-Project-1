@@ -46,7 +46,7 @@ the actual Phase-1 provider set:
 | Provider | Marginal cost of one more API call | Classification | Governed by |
 |---|---|---|---|
 | **Massive (personal tier)** | **$0 within the tier's included quota**; unconfirmed whether historical options-chain data is a paid add-on (`<2.1>`, open) | **standing floor** (flat sub) + a possible new floor line pending confirmation | the spend guard's *quota* watch (`governor-spec.md`), not a $ meter |
-| **SEC-API.io** (likely real identity of the in-hand key, `<2.1>` — reframed from the earlier "free direct EDGAR" assumption) | **$0 within its subscription tier's query cap**, if any | **standing floor** (a paid personal subscription, not free) | the spend guard's quota watch |
+| **SEC-API.io** (CONFIRMED, D-TRADE-026 — the in-hand key is live, paid; no longer "likely," no longer free EDGAR) | **$0 within the tier's included GB/month, then $0.30/GB overage** — a real, active subscription right now | **standing floor + a real overage risk** (not a hypothetical) | the spend guard's GB-downloaded watch |
 | **Supabase** | **≈ $0 per call**; cost accrues to slow-moving *usage* (storage, egress) | **standing floor + usage overage** | a periodic overage glance, not a per-call check |
 | **LLM (Phase 1)** | **N/A — not called in Phase 1** (`<3.4>` is classical stats). Kept as a Phase-2-contingent line only; do not budget for it now | **out of scope** | re-open only if a future phase reintroduces generative AI |
 
@@ -108,13 +108,15 @@ professional fees apply outside a Professional/Business subscription, which a pe
 **included-quota boundary**, not a live per-call meter — paid personal tiers are flat/unlimited, so the risk
 is a rate-limit ban (Basic/Free tier only) or an unconfirmed add-on, not a running dollar total.
 
-### 2.3 · SEC-API.io (re-identified — was modeled as free direct EDGAR; now believed a paid subscription)
+### 2.3 · SEC-API.io — CONFIRMED (D-TRADE-026): the in-hand key is live, paid, not free EDGAR
 
-**Re-authored, not patched (LL-19):** the prior draft treated the in-hand `..\Trade\sec_api_key.txt` as
-most likely a reseller key layered over free public EDGAR, with EDGAR itself carried at $0. Canonical
-`<2.1>` now identifies the likely real answer directly — **the float study used "SEC-API.io, account set
-up by the user," the same week the key was created** — which reframes this from "probably free EDGAR
-plus an unidentified reseller" to "**probably a specific, known, paid personal subscription.**"
+**Re-authored, not patched (LL-19), second time.** The original draft carried this as free direct EDGAR;
+the last revision reframed it as "probably SEC-API.io" based on circumstantial evidence (the float study's
+account naming). **The Lead has now closed that open item at source, not by inference:** a direct
+authenticated call to `https://api.sec-api.io` with the in-hand key returned **HTTP 200 with real EDGAR
+data** (10,000+ matched filings, a live 10-K/A sample), corroborated by the Director's own logged-in
+sec-api.io account (D-TRADE-026, `df54748`). **The "EDGAR = $0" framing is retired for this credential —
+this is a confirmed, live, paid personal-tier subscription**, not a hypothetical or a fallback.
 
 **Re-verified directly against SEC-API.io's own pricing page (`https://sec-api.io/pricing`, read
 2026-08-01) rather than left as canonical's estimate** — this upgrades the figures from `estimated` to
@@ -135,11 +137,14 @@ billing-month against the 50/100 GB included volume**, not just call count, for 
 
 | SEC-API.io cost path | Value | Tag | Basis |
 |---|---|---|---|
-| Direct public EDGAR (fallback, still true if ever used directly instead of the reseller) | **$0**, 10 req/s cap, UA-gated | `measured` | per-call · SEC "Accessing EDGAR Data" + SecOps `tos-taint-review.md` §Provider 1, read 2026-08-01 |
+| **In-hand key** — CONFIRMED live SEC-API.io, paid tier | **$49–$239/mo** (Personal & Startups or Business — exact tier still open, see below) **+ $0.30/GB** beyond the tier's included volume | `measured` (that it's paid, live, SEC-API.io) / `unmeasured` (which specific tier) | per-month + per-GB · D-TRADE-026 + this doc's §2.3 tier table |
+| Direct public EDGAR (no longer the operative path for this key — kept only as a theoretical fallback if a *different*, keyless integration is ever added) | $0, 10 req/s cap, UA-gated | `measured` | per-call · SEC "Accessing EDGAR Data" + SecOps `tos-taint-review.md` §Provider 1, read 2026-08-01 |
 
-🟡 **Still open (Director/Data-Eng to confirm):** whether the in-hand key **is** the SEC-API.io key, and
-which tier the account is on. If confirmed as Personal & Startups, the floor gains a **measured $49–$55/mo
-+ $0.30/GB-overage line**. I did not read the key (B5).
+🟡 **Narrower open item now (Director/Data-Eng):** the key is confirmed SEC-API.io and confirmed paid —
+what's left is only **which of the two paid tiers** the account sits on (Personal & Startups $49/55 + 50GB,
+or Business $199/239 + 100GB). Either way the floor moves from "$0 assumed" to "a real $49–$239/mo line,
+plus a real $0.30/GB overage risk" — this is no longer a $0-vs-something question, it's a which-number
+question. I did not read the key (B5); tier confirmation is an account-lookup, not a credential read.
 
 ### 2.4 · Supabase — DB / backend (standing plan + slow-moving usage overage)
 
@@ -187,14 +192,17 @@ Monthly_floor = Supabase_plan + Massive_personal_tier + SEC-API.io_personal_tier
 |---|---|---|---|
 | Supabase | $0 (Free — 500 MB DB is ample for scan history/signals at personal scale) | $0–$25 (Free likely sufficient; Pro only if storage/egress grows past Free's quota) | `measured` (prices) / `estimated` (which tier is actually needed) |
 | Massive (market data) | $0 (Free, 5 calls/min) | **$29–$199/mo** flat, per data-need tier, **plus an unconfirmed options-chain-data line** (§2.2) | `measured` (tiers) / `unmeasured` (options-chain add-on) |
-| SEC-API.io | $0 (assumed unused pre-build) | **$49–$55/mo** (Personal & Startups) **+ $0.30/GB** beyond 50 GB, **if** the in-hand key is confirmed SEC-API.io | `measured` / `unmeasured` (issuer confirmation) |
+| SEC-API.io | **already live now** (D-TRADE-026 — this is not a future/bootstrap-vs-steady-state distinction anymore; the subscription is active today) | **$49–$239/mo** + $0.30/GB overage beyond included volume — confirmed real, tier TBD | `measured` (paid, active, provider identity) / `unmeasured` (which tier) |
 | CI (GitHub Actions) | $0 (free-tier minutes) | ~$0.008/Linux-min beyond free tier — trivial at personal-project CI volume | `estimated` — not re-read this revision; verify before it enters a decision |
-| **Floor total (steady-state, once tiers confirmed)** | **≈ $0** | **≈ $78 – $279/mo** (`Massive $29-199 + SEC-API.io $49-55 + Supabase $0-25`), **not collapsible below that range until `<2.1>` tier confirmations land** | mixed |
+| **Floor total (revised: SEC-API.io is a CURRENT cost, not contingent)** | **≥ $49/mo right now** (SEC-API.io alone, tier-minimum) | **≈ $78 – $279/mo** (`Massive $29-199 + SEC-API.io $49-239 + Supabase $0-25`), **not collapsible below that range until the Massive tier and the SEC-API.io tier are both confirmed** | mixed |
+
+**The decision-relevant fact for the Director:** this is the first time a floor line has moved from
+"assumed $0 / future" to "**a real subscription already being paid today**." Whether that spend is wanted
+is a HUMAN/pricing call I don't make — I'm surfacing that it exists, at a known range, not a hypothetical.
 
 **Compare to the pre-pivot floor estimate:** the SaaS-scale draft couldn't even bound the market-data line
 (quote-only Business tier + uncapped exchange fees). At personal scale the **entire floor is now a bounded,
-mostly-measured range under $300/month** — a materially smaller and more knowable number, which is itself
-the headline finding of this revision.
+mostly-measured range under $300/month** — a materially smaller and more knowable number.
 
 **Director's own time is a real cost (§1.8 / profile), stated not dollarized:** every lock, review and
 approval this model asks for (`<2.1>` tier/key confirmations, each guard cap value) consumes Director time.
@@ -221,9 +229,10 @@ It has no `$/hour` rate on record, so it is carried as a **named HUMAN input**, 
 - 🟡 **Confirm which Massive tier the account is on** (Free/Starter/Developer/Advanced) and **whether
   historical options-chain data is included or a separate paid add-on** — Data-Eng/DevOps technical
   discovery, not a Director dollar call, but it sets the real floor number.
-- 🟡 **Confirm the in-hand key's issuer (SEC-API.io vs. direct EDGAR vs. another reseller).** If SEC-API.io:
-  the floor gains a measured $49–$55/mo + $0.30/GB-overage line, and the guard should track GB/month for
-  this provider specifically. → Director/Data-Eng.
+- 🟡 **Narrowed by D-TRADE-026 (was: confirm the issuer; now: confirm the tier).** The key is confirmed
+  live SEC-API.io — a real $49–$239/mo + $0.30/GB-overage line is already active, not contingent. What's
+  left is only **which of the two paid tiers** (Personal & Startups vs. Business) the account is on, to
+  collapse the range to one number. → Director/Data-Eng (an account-page lookup, not a credential read).
 - 🟢 **Resolved by the pivot itself (no further FinOps action needed):** the old 🟠 "market-data is
   quote-only, not $199" escalation — that was a commercial-SaaS-tier problem; `<1.2>` personal use very
   plausibly uses the correct, cheapest, already-published tier. SecOps is confirming compliance; I have
@@ -242,6 +251,7 @@ It has no `$/hour` rate on record, so it is carried as a **named HUMAN input**, 
 | Polygon→Massive rebrand; both API hosts live | SecOps `docs/security/tos-taint-review.md` §Provider 2 (its own sources cited there) | 2026-08-01 |
 | EDGAR free + 10 req/s + UA rule | SEC "Accessing EDGAR Data" + SecOps `tos-taint-review.md` §Provider 1 | 2026-08-01 |
 | SEC-API.io tiers, included volume, $0.30/GB overage | `https://sec-api.io/pricing` — independently re-verified this revision (upgraded from canonical's `estimated` range to `measured`) | 2026-08-01 |
+| In-hand key CONFIRMED live SEC-API.io (not free EDGAR, not a different reseller) | D-TRADE-026: Lead's direct authenticated `https://api.sec-api.io` call (HTTP 200, real filing data) + Director's own logged-in account, cross-checked, key value never read/logged | 2026-08-01 |
 | CI per-minute rate | prior knowledge — **not re-read**, tagged `estimated` | — |
 | Frontier LLM token-rate band (historical, superseded) | no longer load-bearing — Phase 1 has no LLM spend (§2.1) | — |
 
