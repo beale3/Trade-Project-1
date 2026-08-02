@@ -664,3 +664,20 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   is wanted stays HUMAN/Director.
 - Closes cost-model.md's named propagation slot in D-TRADE-026. Self-check only (routine, protocol 17 —
   a factual figure update, not a new engine rule or cross-document invariant). Reported once to the Lead.
+
+### [FinOps · 2026-08-02] D-TRADE-027 absorbed — SEC-API.io tier fully closed
+- Director confirmed the account is **Personal & Startups**, not Business (D-TRADE-027, `a002b5b`) —
+  closing the last open dimension on this provider (issuer closed by D-TRADE-026, tier now closed too).
+  Updated `cost-model.md` (§1, §2.3, §3, §5, §6) and `governor-spec.md` (§3 cap table, §7): dropped all
+  "which tier"/"tier TBD" language, pinned to $49/mo annual or $55/mo monthly, 50 GB included, $0.30/GB
+  overage. No new pricing research — this was FinOps's own already-measured figure, now pinned to the
+  active row.
+- **Verified the floor math didn't move**, per the Lead's ask: total steady-state floor is still ≈$78–279/mo
+  — Massive's $199 ceiling already dominated the old $49–239 SEC-API.io spread, so pinning the tier narrowed
+  SEC-API.io's own uncertainty without changing the total range. Said so explicitly rather than silently
+  re-deriving a new-looking number.
+- **Gave the guard a real starting cap value for the first time** (governor-spec.md §3): recommended 40 GB/
+  month (80% of the confirmed 50 GB quota) as a headroom cap — previously this row could only be a
+  placeholder; the boundary is now fully known so a concrete number is possible.
+- **Only Massive's tier remains open** on the provider-confirm item (SecOps/Data-Eng). Self-check only
+  (routine, protocol 17). Reported once to the Lead.

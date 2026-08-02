@@ -75,7 +75,7 @@ posture**, to react to:
 
 | Cap | Recommendation | Why | Status |
 |---|---|---|---|
-| **GB-downloaded-this-month cap, SEC-API.io specifically** | set well under the **50 GB (Personal tier) / 100 GB (Business tier)** included volume — e.g., a headroom fraction, not the exact boundary | this is the one **measured, real, currently-active** overage line (`$0.30/GB`, `cost-model.md` §2.3) — the key is CONFIRMED SEC-API.io (D-TRADE-026), so this line is live spend risk now, not a future contingency | ▸ needs only the specific **tier** confirmed (Personal vs. Business) before a precise number is set — issuer is no longer in question |
+| **GB-downloaded-this-month cap, SEC-API.io specifically** | tier is now confirmed **Personal & Startups, 50 GB/month included** (D-TRADE-027) — recommend a headroom cap around **40 GB** (80% of quota), leaving margin before the $0.30/GB overage starts, rather than capping at the exact 50 GB boundary | this is the one **measured, real, currently-active** overage line (`$0.30/GB`, `cost-model.md` §2.3) — issuer AND tier are both confirmed, so this is live spend risk now, not a future contingency | ▸ mechanism + boundary fully known — **this is now an actual value the Director can set**, not just a placeholder; 40 GB is FinOps's recommendation, not a rule |
 | Daily call-count cap, Massive | mainly relevant only on the Free/Basic tier (5 calls/min) — a paid tier is flat/unlimited, so this cap matters less once the tier is confirmed | a bug shows up as "blocked/rate-limited" well before a ban | ▸ needs confirmed tier (SecOps/Data-Eng) |
 | Daily $ ceiling (backstop) | small — a personal tool's daily run should cost near-$0 if both quotas above hold | catches any overage that slips past the GB/call-count watch | ▸ needs `<2.1>` confirmation |
 | Monthly check-in (not a hard cap — a HUMAN habit, not a mechanical leg) | glance at the actual provider bill once a month against the guard's own tally | catches slow creep (§1.3) that a daily cap won't; this is intentionally NOT an armed oracle at this scale — the old billing-reconciliation-with-negative-control machinery is dropped as overbuilt | recommendation only |
@@ -127,9 +127,10 @@ this scale — no multi-seat sign-off matrix needed for a single-user tool.
 
 ## §7 · Open items (dollars/mechanism only; I do not rule these)
 
-- ▸ **Cap values need `<2.1>`'s tier confirmations first** (Massive personal-tier quota, SEC-API.io tier +
-  its query cap if any, options-chain-data add-on status) — SecOps/Data-Eng own confirming the tiers; FinOps
-  will convert confirmed quotas into the `min(quota_calls, $_ceiling)` expression once they land.
+- ▸ **Cap values need `<2.1>`'s tier confirmations.** SEC-API.io is now fully confirmed (D-TRADE-026/-027,
+  §3) — that cap can be set today. **Only Massive's tier remains open**; SecOps/Data-Eng own confirming it,
+  and the options-chain-data add-on status. FinOps converts the confirmed Massive quota into the
+  `min(quota_calls, $_ceiling)` expression once it lands.
 - 🟡 If **historical options-chain data** turns out to require a paid add-on or a higher Massive tier
   (canonical `<2.1>`, still NOT DECIDED), that's a new floor line for `cost-model.md`, not just a guard
   parameter — flag back to me when confirmed.
