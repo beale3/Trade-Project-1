@@ -50,10 +50,12 @@ must never read as decided (LL-31).
     `<1.2>`'s personal use. ▸ **NOT DECIDED — Legal/SecOps to confirm the account is actually on that
     tier and that usage stays within it** (a light confirmatory check now, not the heavy commercial-tier
     gate previously scoped).
-  - **SEC-API.io** — the likely real identity of the in-hand `..\Trade\sec_api_key.txt` (float study
-    used "SEC-API.io, account set up by the user," same week). ▸ **NOT DECIDED — confirm this key IS the
-    SEC-API.io key** (Director/Data-Eng); if so it is a paid personal-tier subscription ($49–239/mo), not
-    free public EDGAR — reframe cost/taint accordingly.
+  - **SEC-API.io — 🔒 CONFIRMED (D-TRADE-026, 2026-08-01).** `..\Trade\sec_api_key.txt` holds a live
+    `SEC_API_KEY=<value>` credential, verified by a real authenticated call to `api.sec-api.io` (HTTP 200,
+    real EDGAR filing data returned) and corroborated by the Director's own logged-in sec-api.io account.
+    **This is a paid personal-tier subscription key, NOT free public keyless EDGAR** — FinOps/SecOps to
+    reframe `docs/finops/cost-model.md` and `docs/security/tos-taint-review.md`'s EDGAR entries accordingly
+    (was assumed $0-marginal/keyless under D-TRADE-019; that assumption no longer holds for this key).
   - **Historical options-chain data (strikes, greeks/IV history)** — required for Phase 1 backtesting
     and **not yet confirmed available** from Massive at the tier in use. ▸ **NOT DECIDED — technical
     discovery, DevOps/Data-Eng**, not a Director call.

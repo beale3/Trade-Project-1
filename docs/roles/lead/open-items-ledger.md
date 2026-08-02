@@ -9,7 +9,7 @@ and a W0 SaaS wave breakdown that no longer describes anything real. None of tha
 |---|---|---|
 | 1 | 🔴 **P-1 — D-TRADE-010 (no-build) re-scope.** Lead's stage-plan.md recommendation (Phase-1 quant-research/design work falls outside its original intent) is flagged, NOT ruled. | **The single most-asked-and-unanswered question this session.** Blocks all HELM Phase-1 production pipeline code. |
 | 2 | 🔴 **P-2 — locate/deliver the options-screener + 0DTE-backtest-engine ZIPs.** Confirmed absent from this machine (exhaustive search); exist only in the Director's claude.ai Project. | Blocks AI/ML's P1-2 (screener ingestion) specifically. |
-| 3 | 🟡 Provider/tier confirm (Massive personal tier, SEC-API.io key identity) — SecOps's task, light-touch now (not the heavy commercial gate it once was). | Not urgent, not blocking. |
+| 3 | 🟡 Provider/tier confirm — **Massive personal tier only** (SEC-API.io key identity resolved, D-TRADE-026) — SecOps's task, light-touch now (not the heavy commercial gate it once was). | Not urgent, not blocking. |
 | 4 | 🟡 `<4.3>` regulatory light-touch check — substantially de-risked (personal use), Legal not yet spawned. | Not urgent. |
 | 5 | 🟡 Historical options-chain/IV data availability at the Massive tier in use — gates only the IV-rank component (ADR-0001 R-3, de-risked). | DevOps/Data-Eng discovery, in progress. |
 | 6 | 🟡 Product name (`HELM` rebrand) | Any time, no urgency. |
