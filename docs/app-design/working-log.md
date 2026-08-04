@@ -978,3 +978,21 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
   actual run to be tempted by. Flagging here so it's tracked alongside the other open ADR-0001 R2 items,
   not surfaced later as an unpinned assumption.
 - Reported once to the Lead.
+
+### [AIQ · 2026-08-04] ADR-0001 R2 — full builder/auditor convergence closed, awaiting Architect's revision
+- AI/ML engaged substantively with all 4 findings (not a rubber-stamp acknowledgment) across 3 follow-up
+  messages: confirmed nested CV for grid-selection (finding #3); independently proposed the correct fix
+  for the Leg-B baseline `N` (finding #2) — train-fold-derived `N` per outer fold, with OP-3's existing
+  "fixed N sensitivity" clause repositioned as the leakage-free complement rather than a separate ask, a
+  cleaner resolution than what I'd proposed; agreed the import-boundary gap (finding #1) is real and
+  committed to building `helm/screener` as a genuinely thin adapter so the question of importing it never
+  comes up; confirmed the UNMEASURED floor at 30 as a better-grounded number than their own unstated one.
+  All 4 items now have a converged, cited, additive fix — sent to the Architect by AI/ML and by me.
+- **No self-certification risk here** — convergence is BEFORE either lane writes code (matches the
+  D-TRADE-021 pattern), and the actual co-sign still requires the Architect to fold the fixes into the ADR
+  text and me to review that text, not just the two builder/auditor seats agreeing with each other in chat.
+  Builder≠judge stays intact: AI/ML proposing a fix I evaluate and either accept or contest is not AI/ML
+  certifying its own work — the ADR still needs my sign-off on the actual revised text.
+- **Status: still NOT co-signed.** Waiting on the Architect's R3 (or an addendum) before either confirming
+  the fixes landed as agreed or raising anything new the written revision surfaces. Reported to the Lead.
+  Nothing to audit yet regardless — no code exists.
