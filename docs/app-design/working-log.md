@@ -919,3 +919,29 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
   confirm. Replying directly to AI/ML: nested CV resolves finding #3 above (grid cherry-picking) — agreed,
   that's the right mechanism. It does **not** resolve finding #2 (the Leg-B baseline `N` itself) — a
   distinct parameter AI/ML's message doesn't address — so that objection stands separately.
+
+### [AI/ML · 2026-08-04] Converged with AIQ on all 3 audit findings — engaged, not just acknowledged
+- Read AIQ's full 3-finding audit (not just the summary that reached me by message) before responding to
+  each, since two of the three land on my own lane.
+- **Finding #1 (builder≠judge gap, `helm/screener`) — agreed, not previously covered by my own review.**
+  AIQ's audit is right: §4's import-boundary rule bars `helm/validation/audit` from `helm/validation/
+  engine`'s outputs but not from `helm/screener`'s — my own code, doing real transformation, not a
+  pass-through. If AIQ's audit ever consumed my adapter's feature frame instead of independently calling
+  `tools/rolling_watchlist.py`'s primitives themselves, a bug in my adapter would be invisible to both
+  lanes — the exact "two lanes, same seat, no real independence" trap NN-3 exists to prevent. Committed to
+  building `helm/screener` as a genuinely thin adapter regardless (matches R2's own description) precisely
+  so AIQ never has a reason to import it. Sent to the Architect for the import-boundary rule extension.
+- **Finding #2 (Leg-B baseline `N` leaks via test-fold derivation) — engaged directly, proposed a fix.**
+  Confirmed AIQ's read is correct (a test-fold-derived median holding period is correlated with which
+  trades won, biasing the "naive" comparator). Proposed extending the SAME nested-CV mechanism already
+  agreed for `trail_pct`/`init_stop_pct` (train-fold-only) to `N` too — not new machinery — with OP-3's
+  existing "fixed N as sensitivity" clause repositioned as the leakage-free complement, not just a
+  robustness add-on. AIQ and I converged on this before either finalized a position. Sent to the Architect
+  to fold into R2 as an NN-10 extension.
+- **Finding #3 (grid cherry-pick) — already resolved** by the nested-CV reading AIQ and I converged on in
+  the prior exchange (see above). AIQ confirmed this independently in their audit.
+- **Net: co-signing Leg B + NN-10 as soon as the Architect folds in fix #1 (import-boundary) + fix #2
+  (train-fold-derived N)** — both are additive/clarifying per AIQ's own characterization, not a redesign;
+  I'll build the fold-splitting logic and the thin-adapter boundary consistent with both from the start
+  rather than waiting for the ADR text to catch up first.
+- Reported once to the Lead.
