@@ -40,8 +40,9 @@ verdict** — "ships only what works" stays mechanical.
 2. the **label** changes from options-DTE directional correctness to **realized stock return under the
    trailing-stop exit** vs a naive fixed-holding-period baseline (§6.2).
 3. the **components under test** change: drop IV-rank (no options); add the scanner's not-yet-validated
-   entry signals — the pattern detectors (bull-flag/flat-top/ABCD/micro-pullback/round-number/opening-range)
-   and the pivot / red-to-green alignment trigger (`<1.1>(a)`).
+   entry signals — the **8** `scan_all_patterns` detectors (bull-flag/flat-top/ABCD/micro-pullback/round-
+   number/opening-range/premarket-pivot/premarket-high) and the pivot / red-to-green alignment trigger
+   (`<1.1>(a)`); all confirmed separable + independently testable (AI/ML, from serializing each for D-TRADE-023).
 4. the **universe** requirement (`liquid optionable large/mid-cap`) is deleted; `<2.2>` reopens (§9 P-3).
 
 ## 2 · Approach (R2)
@@ -123,7 +124,10 @@ tie assumption the existing sim already uses). An **initial hard stop `P0*(1 - i
 until the peak advances enough for the trail to take over (bounds the loss on a trade that never rises).
 Decision variables: `trail_pct`, `init_stop_pct`, bar interval. **Bar-causal walk (NN-1):** `peak` at bar `i`
 uses only bars `≤ i` — the existing simulator's forward walk already guarantees this; the trailing extension
-must preserve it. Backward-compatible: default mode = today's fixed stop/target.
+must preserve it. Backward-compatible: default mode = today's fixed stop/target. **The trailing stop is a
+per-trade exit and is orthogonal to — composes with, does not replace — the simulator's existing *daily*
+circuit breakers (`max_loss_per_trade`/`max_daily_loss`/`profit_giveback_pct`), which stay unchanged; do
+not conflate the per-trade exit with the daily peak-giveback halt** (AI/ML grounding, `tools/rolling_watchlist.py:723-817`).
 
 **6.4 Pre-registration of exit parameters (NN-10, new).** `trail_pct`/`init_stop_pct` are **fit on training
 folds only and applied out-of-sample on the test fold** (or drawn from a small pre-registered set) — they are
@@ -183,7 +187,7 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
 - **OP-3 · Leg-B naive baseline** (AI/ML + AIQ): fixed-holding-period exit — *recommend* N = the median
   realized holding period of the trailing-stop arm (so the comparison is horizon-matched), plus a couple of
   fixed N as sensitivity.
-- **OP-4 · component list** (final): drop IV-rank; test {each pattern detector, pivot/red-to-green trigger}
+- **OP-4 · component list** (final): drop IV-rank; test {each of the 8 pattern detectors, pivot/red-to-green trigger}
   as Leg-A entry signals + the trailing stop as Leg-B. The already-validated study components
   (short-interest kept, catalyst/float/regime as-ruled) are **not** re-litigated.
 - **Non-goals:** options anything (deleted); trailing-stop **optimization** / adaptive-ATR variants (Phase 2);

@@ -838,3 +838,9 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
 - **CRITICAL revision** → flagged AIQ's co-sign on the label/NN-10/baseline as load-bearing (protocol 17).
   Preconditions to build: P-1 (D-TRADE-010 re-scope), P-3 (universe), P-4 (ratify label params), P-5 (B5).
   Reporting to the Lead; ADR = PROPOSED, awaiting co-sign + GO.
+- **Folded in AI/ML's grounding (crossed with the R2 push; reconciled, protocol 16):** two accuracy fixes
+  to ADR-0001 R2 — (1) §6.3 now states the per-trade trailing stop is **orthogonal to** the simulator's
+  existing *daily* circuit breakers (`max_loss_per_trade`/`max_daily_loss`/`profit_giveback_pct`) — they
+  compose, don't conflate; (2) corrected "6 pattern detectors" → the **8** `scan_all_patterns` detectors
+  (added premarket-pivot/premarket-high). AI/ML's other points already matched R2 (fixed→trailing is new
+  logic not a tweak; survivorship concern conditional on P-3). Replied to AI/ML. Pushed.
