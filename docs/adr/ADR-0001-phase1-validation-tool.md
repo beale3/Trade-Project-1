@@ -103,8 +103,8 @@ audit (AIQ, independent) — `helm/validation/audit` · E infra/CI/gate/spend (D
   support_count, loo_beats_naive, pct_seeds_beating_naive, effect_sign, effect_size, robustness_json,
   verdict∈{cleared,dropped,void,unmeasured}, reproduced_by_aiq)` — **append-only; `cleared` requires
   `reproduced_by_aiq=TRUE` (NN-3)**. Four verdict states: **CLEARED** (bar met) · **DROPPED** (tested, bar
-  not met) · **VOID** (leakage/contamination, D-TRADE-021) · **UNMEASURED** (below the support floor — see
-  §6.2; `support_count` records the trigger count that drove it).
+  not met) · **VOID** (leakage/contamination, D-TRADE-021) · **UNMEASURED** (below the 30-event support floor,
+  D-TRADE-029 — see §6.2; `support_count` records the trigger count that drove it).
 - `spend_ledger(ts, provider, endpoint, est_cost, cumulative_day)` — a row per provider call even at $0.00 (D-TRADE-019).
 
 **6.2 The validation contract — TWO legs** (the R2 re-design; CRITICAL tier). Both use the studies'
@@ -123,14 +123,14 @@ harness and the D-TRADE-021 bar; both obey NN-1 (point-in-time).
 - **How it plugs into the harness:** Leg A fits `evaluate_loo`/`evaluate_multiseed_kfold` directly
   (feature,target). Leg B is a small extension — a paired strategy-return comparison per fold/seed, reusing
   the same "beats-naive-OOS across ≥90% of ≥30 seeds" machinery, RMSE-of-fit swapped for realized-return-of-strategy.
-- **Minimum-support floor → UNMEASURED (AI/ML co-sign point 3; pre-register the RULE now, the number later).**
+- **Minimum-support floor → UNMEASURED (🔒 D-TRADE-029, ratified at 30 events).**
   A rarely-firing binary pattern trigger (fires only a handful of times across the window) cannot yield a
-  meaningful CV verdict — the sample is too thin for LOO or 5-fold to say anything. **A component whose
-  trigger count is below a pre-registered floor is verdict = UNMEASURED, a distinct fourth state, and never
-  silently reads as NOT-CLEARED** (absence is not a judgment — the float-study "no data behind it" precedent).
-  UNMEASURED ⇒ its `_gates` flag stays `False` for *lack of evidence*, explicitly not for a failed test.
-  The floor's numeric value is TBD on real trigger counts (OP-5) — but the rule, and that it is applied
-  before CV and pre-registered (LL-44), is fixed now, not improvised after seeing thin data for one component.
+  meaningful CV verdict — the sample is too thin for LOO or 5-fold to say anything. **A component with
+  fewer than 30 trigger firings across the window is verdict = UNMEASURED, a distinct fourth state, and
+  never silently reads as NOT-CLEARED** (absence is not a judgment — the float-study "no data behind it"
+  precedent). UNMEASURED ⇒ its `_gates` flag stays `False` for *lack of evidence*, explicitly not for a
+  failed test. The floor = **30** (D-TRADE-029, ratified by the Lead — anchored to the same n≥30 basis as
+  the D-TRADE-021 seed bar), applied before CV, pre-registered (LL-44).
 
 **6.3 The trailing-stop rule** (new, built in `tools/rolling_watchlist.py`'s simulator as a mode). Precise
 definition: after entry at `P0`, track `peak(t) = max(High over bars entry..t)`. The **effective stop is a
@@ -210,9 +210,9 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
   NN-5/§4-§5's Data-Eng references vanish with it), vs. a maintained universe (⇒ lane stays; with Data-Eng
   unseated its residual duties fall to **SDE1** until/unless the seat is created). *Recommend drop* —
   matches the scanner's `--tickers` status quo + the studies' own cohorts, and needs no unseated role.
-- **P-4 · Ratify the Leg-A horizon + Leg-B baseline + the pre-registered trail set + the support-floor value**
-  (Director + AI/ML + AIQ) before the run (LL-44). The D-TRADE-021 *bar* is already ratified; what's open is
-  the label parameters (OP-1..3, OP-5).
+- **P-4 · Ratify the Leg-A horizon + Leg-B baseline + the pre-registered trail set** (Director + AI/ML + AIQ)
+  before the run (LL-44). The D-TRADE-021 *bar* and the OP-5 support-floor (D-TRADE-029, =30) are already
+  ratified; what's open is the remaining label parameters (OP-1..3).
 - **P-5 · B5 secret approval** before any live-key use.
 
 ## 10 · Open points (LL-31) & non-goals (R2)
@@ -232,11 +232,10 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
 - **OP-4 · component list** (final): drop IV-rank; test {each of the 8 pattern detectors, pivot/red-to-green trigger}
   as Leg-A entry signals + the trailing stop as Leg-B. The already-validated study components
   (short-interest kept, catalyst/float/regime as-ruled) are **not** re-litigated.
-- **OP-5 · the minimum-support floor value** — *recommend* **≥30 trigger events** (AI/ML↔AIQ convergence,
-  anchored to D-TRADE-021's own n≥30 seed basis — one statistical-power assumption in the pipeline, not two).
-  Below the floor ⇒ UNMEASURED (§6.2), no partial credit either direction. **Pending Lead/Director
-  ratification** (same path as the D-TRADE-021 bar; pre-registered now before any real trigger count exists,
-  LL-44 — never chosen per-component after seeing thin data).
+- **OP-5 · the minimum-support floor value — 🔒 RESOLVED: 30 events (D-TRADE-029, Lead-ratified).** Below
+  30 trigger firings ⇒ UNMEASURED (§6.2), no partial credit either direction. Anchored to D-TRADE-021's own
+  n≥30 seed basis (one statistical-power assumption in the pipeline, not two); pre-registered before any real
+  trigger count exists (LL-44). No longer an open item.
 - **Non-goals:** options anything (deleted); trailing-stop **optimization** / adaptive-ATR variants (Phase 2);
   the from-scratch predictive breakout-occurrence model (Phase 2); any web/API/UI surface **inside `helm/`**
   (the D-TRADE-023 dashboard is a separate tool); multi-tenant/RLS (`<3.3>` N/A).
@@ -294,7 +293,7 @@ Leg A/B (§6.2); `tools/rolling_watchlist.py` as a shared library.
 
 **Co-sign amendments (2026-08-04, pre-ratification — additive, from the load-bearing co-sign pass):**
 - **AI/ML:** §6.3 explicit effective-stop formula (monotone, loss-bounded) + fixed-target-unused in trail
-  mode; 8 pattern detectors; UNMEASURED 4th verdict + support floor (OP-5); nested-CV reading of NN-10 (§6.4).
+  mode; 8 pattern detectors; UNMEASURED 4th verdict + support floor (D-TRADE-029, =30); nested-CV reading of NN-10 (§6.4).
 - **AIQ (3 objections, all addressed):** #1 **builder≠judge extended to the feature layer** — NN-3 + the
   import boundary now bar Lane D (audit) from importing `helm/screener` outputs; AIQ re-derives features from
   raw scanner primitives. #2 **NN-10 broadened** to the Leg-B baseline `N` (and every data-derived

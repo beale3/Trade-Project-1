@@ -1048,3 +1048,10 @@ ratification** (same path as D-TRADE-021 — pre-registered before any real trig
 self-ruled). Both seats confirm my 3 fixes (#1 import-boundary, #2 N train-fold-only, #3 grid primary-cell)
 match what they asked for; AI/ML will co-sign Leg B + NN-10 on these landing. Reporting to Lead; replying to
 both seats.
+
+### [Architect · 2026-08-04] ADR-0001 R2 — OP-5 floor cite updated to D-TRADE-029 (ratified, =30)
+Lead ratified the 30-event UNMEASURED floor as **D-TRADE-029** (crossed with my OP-5 edit, which still read
+"recommend ≥30, pending"). Per the Lead's request, updated OP-5 · §6.2 · the verdict-state line · P-4 · §14
+to cite **D-TRADE-029, floor ratified at 30** (no longer "pending"). Text-only, no design change. P-4's open
+list now = OP-1..3 label params only (OP-5 closed). Pushed. AIQ's re-review of the R2 text remains the one
+outstanding co-sign gate before canonical absorption.
