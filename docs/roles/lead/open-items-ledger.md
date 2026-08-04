@@ -8,11 +8,12 @@ and a W0 SaaS wave breakdown that no longer describes anything real. None of tha
 | # | Item | Status |
 |---|---|---|
 | 1 | 🔴 **P-1 — D-TRADE-010 (no-build) re-scope.** Lead's stage-plan.md recommendation (Phase-1 quant-research/design work falls outside its original intent) is flagged, NOT ruled. | **The single most-asked-and-unanswered question this session.** Blocks all HELM Phase-1 production pipeline code. |
-| 2 | 🔴 **P-2 — locate/deliver the options-screener + 0DTE-backtest-engine ZIPs.** Confirmed absent from this machine (exhaustive search); exist only in the Director's claude.ai Project. | Blocks AI/ML's P1-2 (screener ingestion) specifically. |
+| 2 | ✅ **P-2 — MOOT (D-TRADE-028, 2026-08-04).** No options screener to locate — HELM dropped options entirely; the actual scanner (`tools/rolling_watchlist.py`) was never missing, already fully in-repo. | Closed, not by search — by the product no longer needing that artifact. |
 | 3 | 🟡 Provider/tier confirm — **Massive personal tier only** (SEC-API.io key identity resolved, D-TRADE-026) — SecOps's task, light-touch now (not the heavy commercial gate it once was). | Not urgent, not blocking. |
 | 4 | 🟡 `<4.3>` regulatory light-touch check — substantially de-risked (personal use), Legal not yet spawned. | Not urgent. |
-| 5 | 🟡 Historical options-chain/IV data availability at the Massive tier in use — gates only the IV-rank component (ADR-0001 R-3, de-risked). | DevOps/Data-Eng discovery, in progress. |
+| 5 | ✅ **MOOT (D-TRADE-028).** Historical options-chain/IV data availability — no longer relevant, IV-rank dropped with options framing. | Closed by the pivot, not by discovery. |
 | 6 | 🟡 Product name (`HELM` rebrand) | Any time, no urgency. |
+| 7 | 🔴 **NEW — ADR-0001 revision (D-TRADE-028).** Architect to redesign the validation label/contract around the new trailing-stop exit rule + realized stock return (no more options DTE/delta), confirm whether `helm/screener`'s job still makes sense, and settle the Phase-1/Phase-2 boundary now that `simulate_day_trades()` already does most of what Phase 2 was going to build. | **New pacing item, dispatched this session.** Blocks re-validating ADR-0001 as current; does NOT block P-1 (still separately Director-pending). |
 
 **Everything else from founding (roster lock, cost-model lock, B9/B7 adoption, the old provider set,
 toolchain installation) is either resolved by D-TRADE-020's pivot or dropped as N/A — see
