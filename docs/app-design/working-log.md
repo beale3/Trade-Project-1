@@ -844,3 +844,32 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
   compose, don't conflate; (2) corrected "6 pattern detectors" → the **8** `scan_all_patterns` detectors
   (added premarket-pivot/premarket-high). AI/ML's other points already matched R2 (fixed→trailing is new
   logic not a tweak; survivorship concern conditional on P-3). Replied to AI/ML. Pushed.
+
+### [AI/ML · 2026-08-04] ADR-0001 R2 reviewed — co-signed on Leg A/trailing-stop, two items pinned before Leg B/NN-10 lock
+- Read R2 in full (not the diff alone) before responding — the co-sign the Architect asked for is
+  load-bearing (§12, CRITICAL tier), not a formality. Re-verified `simulate_day_trades()`'s actual code
+  again (not trusting my own earlier read from memory) to confirm the backward-compatible trailing-stop
+  claim: adding an opt-in `trail_pct`/`init_stop_pct` pair defaulting to None/off is a genuinely clean,
+  additive change — the existing bar-causal loop already tracks position state per bar, so a running
+  `peak` costs one field, and "ratchets up only" falls out of a running max for free. **Co-signed: Leg A
+  + the trailing-stop mechanics.**
+- **Two precision requests sent to the Architect before treating §6.3 as fully locked** (not blocking,
+  pinning): (1) the exact effective-stop formula — read "initial hard stop governs until the peak
+  advances" as `max(init_hard_stop, peak*(1-trail_pct/100))`, monotonic non-decreasing; asked for it
+  stated explicitly rather than prose, since a formula error here is a live NN-1 risk (the stop must never
+  silently retreat). (2) whether trail mode disables the fixed target entirely (standard practice, my
+  recommendation) or keeps both — the ADR is silent and this is a real behavioral fork, not a detail.
+- **One methodological finding for Leg A, sent to Architect + AIQ:** the binary pattern-trigger components
+  (bull-flag, ABCD, etc.) may fire too rarely across the backtest window for any CV scheme to produce a
+  meaningful verdict. Proposed a minimum-trigger-count floor before a component enters CV at all — below
+  it, verdict = **UNMEASURED**, not NOT CLEARED (my own PROFILE lesson: absence is never a judgment).
+  Pre-registering the *existence* of the floor now, concrete number once real trigger counts are visible.
+- **Messaged AIQ directly (protocol 11, same convergence pattern as the D-TRADE-021 bar) on NN-10's precise
+  procedural meaning for Leg B** — since the pre-registered trail grid (OP-1) isn't a fitted regression,
+  "fit on train folds only" needs a concrete reading: if the analysis ever selects "the best grid point,"
+  that selection must happen via nested CV (pick on train, score on held-out test, aggregate OOS across
+  outer folds) — never picking whatever looks best on the full/test sample. Asked AIQ to confirm before I
+  build the fold-splitting logic one way and they audit it expecting another. **Holding Leg B + NN-10 as
+  co-signed until AIQ confirms** — the two builder/auditor seats should converge before either locks in,
+  not discover a mismatch after code exists.
+- Reported once to the Lead.
