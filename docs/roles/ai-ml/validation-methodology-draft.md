@@ -1,95 +1,77 @@
-# Walk-forward-CV validation engine — methodology draft (AI/ML) — D-TRADE-020 scope
+# Walk-forward-CV validation engine — methodology draft (AI/ML)
 
-> **Status: DESIGN/PLANNING ONLY. No pipeline code, no data pulled, no numbers computed.**
-> Per the Lead's D-TRADE-010 flag (stage-plan.md banner): whether Phase-1 quant-research work falls
-> outside D-TRADE-010's no-build ruling is a Lead recommendation, **not yet Director-confirmed**. This
-> file is the methodology *contract* — the counterpart AI/ML authors to what AIQ audits against
-> (`docs/eval/methodology-draft.md`) — not an implementation. Writing the actual backtest pipeline waits
-> for that confirmation (or explicit Lead go-ahead) plus the inputs blocker in §1.
+> **RE-AUTHORED 2026-08-04 (D-TRADE-028), not patched (LL-19/protocol 19).** The prior version of this
+> file designed a directional-correctness label over an *option's* DTE window (calls/puts, 0.40 delta,
+> 25–45 DTE, an OTM-distance threshold). **That entire framing is deleted, not parked** — canonical
+> `<1.1>`/`<3.6>` (2026-08-04): no options in scope, plain stock buy signals exited via a trailing-stop
+> rule. If options ever re-enter scope, that's a new elicitation, not a resurrection of the deleted text.
+>
+> **Status: DESIGN/PLANNING ONLY. No pipeline code, no data pulled, no numbers computed.** P-1
+> (D-TRADE-010 no-build) is **unchanged by this pivot** — still Director-pending, still bars production
+> code. **P-2 (locate the screener) is MOOT, not resolved-by-search** — it was never actually missing;
+> `tools/rolling_watchlist.py` (already deeply read for D-TRADE-023) is the scanner, already in-repo,
+> already Massive-wired.
+>
+> **Holding on the label/component-list/horizon redesign per the Lead's explicit instruction** — canonical
+> `<3.6>` dispatches that to the Architect (an ADR-0001 revision), specifically so AI/ML and the Architect
+> converge once rather than drafting two independent guesses (the pattern that worked well the first time
+> — protocol 15). This file states what survives unchanged, what's deleted, and the grounding I can offer
+> the Architect — not a redesign of my own.
 
-## 0 · Scope (canonical `<1.1>`/`<1.4>`/`<3.4>`, stage-plan P1-2/P1-3, my oracle-boundary row VERIFIER)
-Build the walk-forward-CV pipeline testing each **options-screener component** (trend / momentum /
-breakout / volume / IV-rank) for whether it predicts the underlying moving far enough in the right
-direction within the option's ~25–45 DTE window — **directional correctness only** (`<1.1>`), explicitly
-NOT full option P&L (theta/IV-crush/slippage stay out of scope — `<1.4>`, Phase 2). Same discipline as the
-4 completed equity studies (LOO-CV + 5-fold/30-seed, pre-registered bar, ships only if it clears).
+## 0 · What survives unchanged (canonical `<3.6>` says so explicitly — not reopened by this pivot)
+- **The CLEARANCE BAR (D-TRADE-021).** A component is **CLEARED** only if it beats naive OOS under
+  **BOTH** LOO-CV **and** 5-fold CV (≥30 seeds), **≥90% of seeds agreeing**; **NOT CLEARED** otherwise;
+  **VOID** on any leakage/contamination finding regardless. A validation-discipline rule, not an
+  options-specific one.
+- **The no-lookahead invariant (NN-1, ADR-0001 §8).** Every feature/label at `t` uses only data `≤ t`,
+  point-in-time joined exactly as the short-interest study did. Still the single most safety-critical
+  non-negotiable.
+- **Per-component isolation.** Test each scanner component **separately**, never bundled into the
+  composite score — the "don't bundle" discipline the short-interest study followed testing
+  `days_to_cover`/`si_over_avg_vol_20d` independently. Applies to whatever the new component list turns
+  out to be (`<3.6>`, dispatched).
+- **Verdict format.** **CLEARED** / **NOT CLEARED** / **VOID**, no partial credit — the existing 4-study
+  precedent (short-interest kept; regime/catalyst/float dropped).
 
-## 1 · 🔴 BLOCKER — screener + 0DTE backtest engine artifacts not located
-Stage-plan's "Inputs to ingest" names two artifacts as "delivered as a ZIP, location TBD": the options
-screener and the 0DTE backtest engine. I searched (read-only, this session): all of `Downloads\` including
-every `files*.zip`/`files (N).zip` archive by content-listing (none match — contents are unrelated: chart
-PNGs/CSVs, an unrelated `stocksim` scaffold, `ibkr_guardrail_scanner.py`/`day_trade_toolkit.py`, a verified
-catalyst-CV script), `Desktop\` (empty), `Documents\` (no matches), the legacy `..\Trade\` stub repo (SEC
-key holder only, no code), and all 4 completed study directories (equity-only, no options logic). **Not
-found anywhere on this host.** This blocks P1-2 (screener ingestion) concretely — I will not reconstruct
-the screener's composite-score formula from the canonical doc's prose description; that would be inventing
-the artifact I'm supposed to validate, not grounding a fix on a real source (LL-45). Flagged to the Lead
-in the same-day report; needs the Director or Data-Eng to locate/deliver the actual files.
+## 1 · What's deleted (D-TRADE-028, LL-19 — not resurrected here even as reference)
+The DTE-window directional-correctness label, the volatility-scaled-vs-delta-implied threshold design,
+the 25/35/45-DTE horizons, and the IV-rank component — all designed around an option's payoff structure
+that no longer exists in scope (`<1.1>`). The "P1-2 screener-location blocker" this file previously led
+with is also gone — resolved as moot, not by search (see status banner).
 
-**What does NOT block on this:** the methodology below is written at the level of "a component's screener
-sub-score, whatever its native form in the source, is one isolated predictor" — it doesn't require the
-screener's internals to be specified, only ingested once found.
+## 2 · Grounding for the Architect's `<3.6>` redesign (facts, not a competing design)
+Not proposing a label or component list — holding for the ADR revision. But I already have direct,
+load-bearing grounding from building `tools/web/scan_service.py` (D-TRADE-023) worth handing over before
+the Architect starts, the same "ground before designing" move that worked well for ADR-0002:
 
-## 2 · Target / label design (principled, not tuned — LL-45)
-Two tiers, so Phase 1 can start on data already confirmed available (underlying OHLCV, used by all 4 prior
-studies) without waiting on the options-chain/IV-history discovery item (`<2.1>`, owned by DevOps/Data-Eng,
-NOT YET CONFIRMED available):
+- **`simulate_day_trades()` (`tools/rolling_watchlist.py:723-817`) has a FIXED stop/target today, not a
+  trailing stop.** On entry: `stop = entry * (1 - stop_loss_pct/100)` and
+  `target = entry + (entry - stop) * min_risk_reward` — both computed once at entry and never adjusted as
+  price moves favorably. A trailing-stop rule (canonical `<1.1>`/`<1.4>`) is new logic, not a parameter
+  tweak on the existing function — it needs the stop to ratchet up (long) as the highest price-since-entry
+  rises, which the current bar-by-bar loop structure can accommodate (it already tracks position state
+  across bars) but doesn't implement.
+- **The existing halt conditions** (`max_loss_per_trade_dollars`, `max_daily_loss_dollars`,
+  `profit_giveback_pct` — a *daily* peak-giveback halt, not a *per-trade* trailing exit) stay orthogonal to
+  a trailing-stop redesign; they're circuit breakers on the trading session, not the per-trade exit rule
+  itself. Worth the Architect not conflating the two when scoping `<3.6>`.
+- **Candidate components already confirmed real and independently computable** (from serializing all of
+  them for D-TRADE-023): guardrail (`scan_guardrail_criteria`), S3 (`compute_s3_score`), P&D phase
+  (`classify_pnd_phase`), the 8 pattern detectors (`scan_all_patterns` — bull-flag/flat-top/ABCD/
+  micro-pullback/round-number/opening-range/premarket-pivot/premarket-high), and the pivot/red-to-green
+  alignment trigger (`analyze_intraday_alignment`) — canonical `<1.1>` names the pattern detectors +
+  alignment trigger as the ones "not yet validated by the 4 completed studies." All are already
+  cleanly separable per-component (no bundling needed) since D-TRADE-023 already wired each independently.
+- **Universe (`<2.2>`, also dispatched to Architect/Data-Eng):** flagging conditionally, not asserting —
+  my prior point-in-time-universe-membership/survivorship-bias concern was scoped to a rolling S&P/Russell-
+  class index backtest, which `<2.2>` now says may not be needed at all (reverting to user-supplied
+  tickers, like the 4 prior studies and `tools/rolling_watchlist.py --tickers` already do). If the universe
+  question resolves to "user-supplied, no rolling index," this concern doesn't apply and I'm not carrying
+  it forward as a requirement.
 
-- **Primary (matches the proven template's mechanics exactly):** continuous forward log-return over each
-  DTE-window horizon (e.g., `fwd_25d_ret` / `fwd_35d_ret` / `fwd_45d_ret`, mirroring the 4 studies'
-  `fwd_1d/1w/1m_ret` style) — linear regression per (component, horizon), evaluated via LOO-CV + 5-fold CV
-  vs. a naive (train-mean) baseline. This is the load-bearing evaluation vehicle; it's the exact mechanic
-  already proven 4 times and is what "beats naive OOS" means below.
-- **Phase-1-specific pre-registered success criterion — directional correctness, volatility-scaled:** a
-  binary label, 1 if `sign(fwd_return) == sign(recommended direction)` AND `|fwd_return|` exceeds a
-  threshold `τ = k × trailing realized volatility over the horizon` (own-stock, own-window baseline — same
-  principle the short-interest study used when it normalized short interest to the cohort's own 20-day
-  volume rather than an external constant, so "far enough" scales to each stock's own noise floor instead
-  of an arbitrary flat %). This avoids depending on unconfirmed options-chain/IV data for a first pass.
-  **Upgrade path, not a substitute:** once `<2.1>` options-chain/IV history is confirmed, a delta-implied
-  OTM-distance threshold (tying "far enough" to the actual 0.40-delta structure) becomes the more faithful
-  version of this same label — recorded here as a known Phase-1-to-Phase-1.5 refinement, not invented now
-  as if the data already existed.
-- `k` (the volatility multiplier) is a calibration value — same HUMAN/Director-ruled category as my
-  PROFILE's existing "what the rules *should* believe" line; I propose a starting value with the first CV
-  run, not before there's data to justify one.
-
-## 3 · Discipline (directly reused from the proven template, `short-interest-study` + `catalyst-study`)
-- **Per-component isolation.** Trend / momentum / breakout / volume / IV-rank tested **separately**, never
-  bundled into the composite score for this test — same "don't bundle" instruction the short-interest study
-  followed testing `days_to_cover` and `si_over_avg_vol_20d` independently.
-- **No lookahead / point-in-time.** Signal computed only from data available strictly before the DTE window
-  starts; forward-return window starts strictly after the signal date; point-in-time join (nearest prior
-  reading, no revisionary data) — mirrors the short-interest study's `settlement_date <=` sample-date join.
-- **Point-in-time universe membership (new relative to the 4 prior studies — flagging, not assuming).** The
-  4 equity studies used a static, already-selected observation cohort — no rolling index-membership question.
-  Phase 1's universe (`<2.2>`, S&P 500/1500 or Russell 1000-class, multi-year backtest window) is different:
-  using **today's** index constituents to backtest **past** dates is survivorship bias (index membership
-  changes — delistings, index adds/drops). The universe/backtest join needs point-in-time membership, not a
-  current snapshot. This is Data-Eng's `<2.2>` build, but the backtest pipeline's correctness depends on it,
-  so recording the requirement here for P1-1 coordination once Data-Eng is live.
-- **Pre-registered bar — `<3.4>` addendum, D-TRADE-021 (RATIFIED).** A component is **CLEARED** only if it
-  beats naive OOS under **BOTH** LOO-CV **and** 5-fold CV (≥30 seeds), **≥90% of seeds agreeing**; **NOT
-  CLEARED** otherwise; **VOID** on any leakage/lookahead/contamination finding regardless. This was AIQ's
-  proposal (`docs/eval/methodology-draft.md` §2, citing the catalyst-study addendum's coin-flip near-miss —
-  a nominal LOO "win" that was only 68/24/6%-of-seeds, which the short-interest study's looser 50%-bar would
-  have falsely cleared); I independently converged on adopting it verbatim rather than proposing a second
-  number (the two builder/auditor seats' bars matched before either reached the Lead — protocol 15), and the
-  Lead has since ratified it. Binding on every Phase-1 component test now, not a recommendation.
-- **Verdict format — matches AIQ's exactly:** each component gets **CLEARED** / **NOT CLEARED** / **VOID**
-  (contamination/non-reproducible). No partial credit, same as the 4-study precedent (short-interest kept;
-  regime/catalyst/float dropped).
-
-## 4 · Explicitly out of scope for Phase 1 (`<1.4>` — deferred, not dropped)
-Theta decay, IV crush, bid-ask slippage, realistic fill/exit modeling, full option P&L. Directional
-correctness of the underlying is the entire Phase-1 question. A component clearing this bar is a candidate
-for Phase 2's full-P&L simulation (reusing the 0DTE backtest engine's slippage/spread modeling, once
-located) — clearing Phase 1 is necessary, not sufficient, for "this makes money as an option trade."
-
-## 5 · Open items / needs
-1. **Screener + 0DTE backtest engine location** (§1) — blocks P1-2 concretely. Director or Data-Eng.
-2. **Options-chain/IV historical data availability** (`<2.1>`) — not a Phase-1 blocker (§2's primary label
-   works on OHLCV alone) but gates the more faithful delta-implied threshold upgrade. DevOps/Data-Eng.
-3. **Point-in-time universe membership source** (§3) — needed before P1-1 delivers the final universe list;
-   flagging now so Data-Eng scopes it in from the start rather than discovering the gap after the fact.
-4. **`k` (volatility-multiplier) starting value** — proposed alongside the first CV run, not before.
+## 3 · Open items
+1. **Architect's `<3.6>` ADR revision** — holding, not drafting a parallel version (Lead's explicit
+   instruction). Will engage the moment it's dispatched to me.
+2. **P-1 (D-TRADE-010)** — still Director-pending, unchanged by this pivot. No production code regardless
+   of how `<3.6>` resolves.
+3. **`<2.2>` universe question** — noted above; not mine to resolve, flagged for awareness only.
