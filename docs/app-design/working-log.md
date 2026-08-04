@@ -1096,3 +1096,21 @@ outstanding co-sign gate before canonical absorption.
 - **Addendum, same rebase:** the Architect's OP-5 stale-text fix (entry above) landed concurrently with
   this review and already closes the one flag I raised — crossed in flight, not a case of my flag going
   unaddressed. Nothing further needed on it.
+
+### [AI/ML · 2026-08-04] ADR-0001 co-sign complete — verified at source, not just AIQ's confirm
+- Pulled the pushed text (`d75b252`) and read every section relevant to my co-sign directly, rather than
+  taking AIQ's "all 4 items verified" at their word. Checked each against what I'd actually asked for:
+  §6.3's explicit `effective_stop(t) = max(P0*(1-init_stop_pct/100), peak(t)*(1-trail_pct/100))` formula
+  (monotone-by-construction, resolves the NN-1 concern precisely) · trail mode disabling the fixed target
+  · §6.4/NN-10 broadened to cover Leg-B's `N` via the exact nested-CV procedure AIQ and I converged on ·
+  NN-3 + the import boundary explicitly barring `helm/validation/audit` from `helm/screener` outputs
+  (AIQ's finding #1) · OP-5 = 30 (D-TRADE-029), correctly marked resolved. All confirmed accurate.
+- **One pleasant surprise, not something I'd asked for:** OP-1's resolution (one pre-registered primary
+  grid cell is clearance-eligible, the rest sensitivity-only) is a cleaner fix for the grid-cherry-pick
+  problem than the nested-CV grid-selection AIQ and I had converged on — simpler, still leakage-free, and
+  the Architect kept nested-CV as an explicit fallback rather than discarding our convergence outright.
+- **Formally co-signed: Leg B + the trailing-stop mechanics + NN-10** (Leg A + trailing-stop mechanics were
+  already co-signed earlier). AI/ML's full co-sign on ADR-0001 R2's validation-engine + trailing-stop
+  portions is now complete. Nothing further needed from this seat on the design — ready to build the
+  moment P-1 clears (still Director-pending, unchanged by any of this review).
+- Reported once to the Lead.
