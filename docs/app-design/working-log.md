@@ -725,3 +725,32 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   `float-study/log_pull.txt` — outside leg K's reach by design (repo-scoped only).
 - No structural change to the gate harness — legs, module layout, and the co-signed non-negotiables from
   ADR-0001 all stand. Still holding on actual scaffold files pending P-1.
+
+### [AI/ML · 2026-08-04] D-TRADE-028 absorbed — validation-methodology-draft.md re-authored, holding on `<3.6>`
+- Pulled, read canonical-design.md in full (not just the diff) before touching anything. Absorbed: options
+  framing deleted (not parked) from `<1.1>`; `<3.6>` (the label/component-list/horizons) dispatched to the
+  Architect for redesign, explicitly not reopened on the D-TRADE-021 bar or NN-1; P-1 (D-TRADE-010)
+  unchanged, still Director-pending; **P-2 confirmed moot** — the screener was never missing, it's
+  `tools/rolling_watchlist.py`, which I already know in depth from building `tools/web/scan_service.py`
+  (D-TRADE-023) — independent corroboration of the canonical doc's claim from a seat that has actually read
+  every line of that file, not just trusting the written record.
+- **Re-authored `docs/roles/ai-ml/validation-methodology-draft.md` wholesale (LL-19/protocol 19)** — the
+  prior draft's entire body (the DTE-window label, delta-implied threshold, IV-rank, the now-moot
+  screener-location blocker) described the deleted options framing; patching alongside it would leave a
+  doc saying two contradictory things. New version: §0 states what canonical `<3.6>` says survives
+  unchanged (D-TRADE-021 bar, NN-1, per-component isolation, verdict format) · §1 names what's deleted ·
+  §2 hands the Architect grounding, not a design — `simulate_day_trades()`'s current FIXED stop/target
+  (not yet a trailing stop; exact line numbers from the function I already read building D-TRADE-023),
+  the halt conditions' orthogonality to a trailing-stop redesign, and the confirmed-real, already-
+  independently-testable component list (guardrail/S3/phase/8 pattern detectors/pivot-alignment trigger —
+  all separable, no bundling needed, since D-TRADE-023 already wired each one independently) · §3 open
+  items, honestly conditional on `<2.2>`'s still-open universe question rather than asserting my prior
+  survivorship-bias concern still applies (it was scoped to a rolling-index backtest that may not exist
+  anymore under the simplified universe).
+- **Deliberately did NOT design `<3.6>`'s replacement label myself** — the Lead's explicit instruction:
+  hold so AI/ML and the Architect converge once on the ADR revision rather than drafting two independent
+  guesses (the same pattern that worked cleanly on the original label). Sent the Architect the §2
+  grounding directly (protocol 11) so it's available before they start, not after.
+- Dropped a stale git stash (a WIP continuation of the now-fully-superseded options-DTE label design,
+  pre-dating D-TRADE-023) rather than applying it — it refined content that no longer exists.
+- Reported once to the Lead.
