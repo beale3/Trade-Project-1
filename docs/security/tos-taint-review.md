@@ -211,8 +211,13 @@ constraint outweighs the advertised "comprehensive market-data API"** (LL-62).
 Massive is confirmed in `<2.1>`, resolve, in this order — (a) tier: only the Business tier can support a
 commercial SaaS…~~ **No longer operative** — see the update at the top of this section. The one part that
 survives the pivot: real-time-vs-delayed remains a real cost/entitlement fact (confirmed above: this
-account is delayed-tier, not real-time), and options-chain-data availability at this tier is still an open
-**technical** (not taint) question for DevOps/Data-Eng per canonical `<2.1>`.
+account is delayed-tier, not real-time) — relevant to plain stock quote/bar pacing, independent of the
+now-deleted options question.
+
+> **2026-08-04 — D-TRADE-028 update (Lead-flagged).** The options-chain-data-availability open item
+> referenced just above is now **MOOT, not resolved** — `<1.1>`/`<2.1>` deleted options from scope
+> entirely (stock buy/sell + trailing-stop only). No taint implication either way; noted so this doc
+> doesn't carry a stale open item forward. No change to the LOW-MEDIUM taint verdict.
 
 </details>
 

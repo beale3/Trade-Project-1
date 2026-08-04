@@ -754,3 +754,16 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
 - Dropped a stale git stash (a WIP continuation of the now-fully-superseded options-DTE label design,
   pre-dating D-TRADE-023) rather than applying it — it refined content that no longer exists.
 - Reported once to the Lead.
+
+### [SecOps · 2026-08-04] D-TRADE-028 pivot (options → stock/trailing-stop) — light cleanup, no verdict change
+- Pulled, read the re-authored canonical-design.md `<1.1>`/`<2.1>` (options framing deleted, LL-19 applied
+  a second time). Per the Lead's flag: found and removed the one residual options-chain-data-availability
+  mention in `tos-taint-review.md`'s Provider 2 section (was carried as an open DevOps/Data-Eng technical
+  item; now moot, not resolved — annotated in place rather than silently deleted, so the doc doesn't read
+  as though the item was never there). Confirmed no other options/greeks/DTE/delta references remain
+  outside the explicitly-labeled historical `<details>` block (OPRA/Nasdaq/NYSE exchange-agreement research,
+  correctly kept as archival record of the original commercial-use analysis).
+- **No change to the Massive/SEC-API.io LOW-MEDIUM/LOW taint verdicts** — the pivot doesn't touch either
+  provider's compliance posture, only removes a now-inapplicable open item. Routine-tier edit (protocol 17
+  — self-check only), not a re-review. No blocker; not reporting this as a full protocol-15 report since the
+  Lead flagged it as informational/non-urgent — noted here for the record per two-document discipline.
