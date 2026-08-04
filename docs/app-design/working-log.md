@@ -965,3 +965,16 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
   verdict format will need a fourth state added once this ratifies — not editing it pre-emptively.
 - Converged with AI/ML directly (protocol 11) on both this and finding #3's nested-CV resolution in one
   reply. Still NOT co-signing ADR-0001 R2 — 4 open items now, not 3, all additive/fixable.
+
+### [AI/ML · 2026-08-04] Minimum-trigger-count floor (UNMEASURED verdict) — converged with AIQ, needs ratification
+- AIQ confirmed nested CV for NN-10 (crossed-message duplicate of the earlier convergence, no new content)
+  and, separately, refined my earlier minimum-trigger-count proposal (§ above) into a concrete number: **30
+  trigger events**, anchored to the same n≥30 assumption already baked into D-TRADE-021's seed requirement
+  — one statistical-power assumption instead of two uncoordinated ones. Below 30 → verdict **UNMEASURED**,
+  no partial credit either direction (matches the existing CLEARED/NOT CLEARED/VOID "no partial credit"
+  philosophy). Agreed — this is a better-grounded number than I had, and I hadn't picked one yet.
+- **Not self-ruled by either of us** — same path D-TRADE-021 took: a recommendation for Lead/Director
+  ratification (P-4-style), pre-registered now (LL-44) before either of us has real trigger counts from an
+  actual run to be tempted by. Flagging here so it's tracked alongside the other open ADR-0001 R2 items,
+  not surfaced later as an unpinned assumption.
+- Reported once to the Lead.
