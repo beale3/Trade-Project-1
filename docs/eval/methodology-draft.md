@@ -26,21 +26,44 @@
 > **Explicitly NOT reopened by D-TRADE-028 (its own text) and unchanged below:** §1–4 (the re-derivation
 > sequence, the D-TRADE-021 bar, the verdict format) — this is subject-agnostic validation discipline that
 > applies identically to a trailing-stop-exit stock result. Only the *subject* changes, not the *method*.
+>
+> **2026-08-04 — ADR-0001 R2 landed and audited; co-signing.** The Architect delivered the two-leg
+> contract (§0 below, no longer `▸ NOT DECIDED`). Load-bearing review (protocol 17) found 3 gaps — a
+> builder≠judge hole at the feature-extraction layer, NN-10 not covering the Leg-B baseline `N`, and no
+> bar against grid-cell cherry-picking — plus a 4th converged with AI/ML mid-review (a support floor for
+> thin-firing components, verdict = UNMEASURED not DROPPED). **All 4 verified fixed in the revised text**
+> (not just claimed — re-read the actual ADR, not the summary, per §1's own discipline): import boundary
+> now bars Lane D from `helm/screener` outputs too (NN-3) · NN-10 broadened to every data-derived
+> label/baseline parameter, train-fold-only · one pre-registered grid cell is clearance-eligible, the rest
+> sensitivity-only (OP-1) · UNMEASURED added as a 4th verdict state, floor **ratified at 30 events**
+> (D-TRADE-029). §3/§4 below updated to match. **One flag, not blocking:** the ADR's own OP-5/§6.2/P-4 text
+> still reads "TBD"/"pending" for the floor value despite D-TRADE-029 already ratifying it — a stale-text
+> gap against the governing decisions-log record (protocol 16), not a design defect; flagged back to the
+> Architect for a quick fix, not held against co-sign.
 
 ---
 
-## 0 · Scope (per canonical `<1.1>`/`<3.4>`/`<3.6>`, stage-plan P1-3 — subject updated by D-TRADE-028)
+## 0 · Scope (per canonical `<3.6>` / ADR-0001 R2 §6.2, ratified two-leg contract, D-TRADE-028)
 AI/ML builds a **walk-forward-CV backtest pipeline** — classical statistics/quant research, not
-generative AI — testing HELM's signal components for whether they predict a real, tradeable move. **The
-exact subject-specific form (which components, what label, what horizons) is `▸ NOT DECIDED`**, pending
-the Architect's ADR-0001 revision (canonical `<3.6>`): under D-TRADE-020 it was options
-directional-correctness over a DTE window; under D-TRADE-028 (2026-08-04, current) it is realized stock
-return under a new trailing-stop exit rule vs. a naive baseline, against `tools/rolling_watchlist.py`'s
-existing guardrail/S3/pattern-detector triggers — no options, no DTE, no IV-rank. **My mandate is
-unchanged across both:** independently re-derive and audit every CV result before a component is called
-"cleared" — builder ≠ judge, on classical-statistics CV discipline, not LLM output. This is deliberately
-written at the level of "a component's signal, whatever its native form, is one isolated predictor" so it
-doesn't need to be rewritten every time the label/subject changes — only §0's context note above does.
+generative AI — testing HELM's signal components for whether they predict a real, tradeable move, via
+**two legs**, both governed by the D-TRADE-021 bar and NN-1 (point-in-time):
+- **Leg A · entry-signal validation** — per not-yet-validated component (the 8 `scan_all_patterns`
+  detectors + the pivot/red-to-green trigger): does entering on it beat a naive baseline (no-signal /
+  all-bars mean) OOS, over a fixed evaluation horizon (studies' 1d/1w/1m style, OP-2)? Verdict → the
+  component's `_gates` flag.
+- **Leg B · exit-rule validation** — the new trailing-stop rule: realized trade return under the trailing
+  exit vs. a fixed-holding-period naive baseline, over the same entry set. Holding period is endogenous
+  (no fixed horizon); metric = realized return, raw + risk-adjusted.
+
+**My mandate is unchanged across the pivot:** independently re-derive and audit every CV result, both
+legs, before a component/rule is called "cleared" — builder ≠ judge, on classical-statistics CV
+discipline, not LLM output.
+
+**Open parameters (P-4, ADR-0001 §9), NOT mine to invent — pending Director/AI/ML/AIQ ratification:**
+OP-1 (the pre-registered trail/init-stop grid + which single cell is primary), OP-2 (Leg-A horizon), OP-3
+(Leg-B baseline `N`'s exact value/derivation window). **OP-5 (the support floor) is RATIFIED at 30 events
+(D-TRADE-029)** — the one parameter already locked; the rest await the same ratification path before a
+first real run.
 
 **Reference discipline** (Lead-cited template): `C:\Users\beale\catalyst-study\CATALYST_STUDY_FINDINGS.md`
 addendum — a nominal "beats naive" LOO-CV result at the 1-day horizon (+0.04% RMSE improvement, OOS R²
@@ -50,10 +73,14 @@ naive across the three horizons) — below the ≥90%-of-seeds robustness bar th
 already set as precedent. **That is the standard AI/ML's results must clear before I call anything
 cleared**, and it is exactly the failure mode a tier-only or single-resampling check would miss.
 
-## 1 · "Independently re-derive" means from raw data (LL-34) — never from AI/ML's summary
+## 1 · "Independently re-derive" means from raw data (LL-34) — never from AI/ML's summary or its adapter
 I do not audit by reading AI/ML's report and checking its arithmetic. I **re-run the CV from raw data**,
 in my own script, against the same pre-registered bar. A component is not "cleared" until my from-scratch
-re-derivation reproduces AI/ML's headline result (or shows it doesn't survive).
+re-derivation reproduces AI/ML's headline result (or shows it doesn't survive). **"Raw" means
+`tools/rolling_watchlist.py`'s primitives directly (ADR-0001 §4/NN-3, my own audit finding #1) — I do
+not import `helm/screener`'s feature frame either**, even though it's not the CV engine: it's AI/ML-owned
+code that transforms the raw signal, and a bug there would otherwise be invisible to both lanes. Every
+feature I score is one I extracted myself from the scanner's own functions.
 
 ## 2 · Pre-registration — write-once, before I open AI/ML's result (LL-44)
 Before touching any AI/ML output, I commit: the exact bar a component must clear, the resampling schemes
@@ -85,24 +112,38 @@ Phase-1 component test, propagated to canonical `<3.4>`):**
 8. **Void on contamination (LL-47).** If I see AI/ML's number or reasoning before completing my
    independent re-derivation, that check is contaminated — noted, and either re-run blind or the
    compromised independence is flagged explicitly, never silently trusted.
+9. **Support-floor check (D-TRADE-029, before CV even runs).** For a Leg-A component, count its trigger
+   events first. Below **30**, the verdict is **UNMEASURED** — I do not run CV at all, since a from-scratch
+   re-derivation on a thin sample would just be noise re-derived, not a real independent check.
+10. **Parameter-isolation check (NN-10, ADR-0001 §6.4/§8, my own audit finding #2).** For Leg B and any
+    grid-selected Leg-A parameter: confirm `N` (and `trail_pct`/`init_stop_pct` if selection was used) was
+    computed on train-fold data only, never from the test-fold trades it's scored against — I verify this
+    on MY OWN re-derivation, not by trusting AI/ML's fold-splitting code. If the pre-registered grid's
+    single primary cell (OP-1) was used with no selection, this check is simpler: confirm no selection
+    happened at all — every cell reported, only the pre-designated primary treated as clearance-eligible.
 
-## 4 · Verdict format
-Each component gets exactly one of: **CLEARED** (survives LOO + 5-fold + seed-sweep, independently
-re-derived) · **NOT CLEARED** (fails any leg) · **VOID** (contamination / non-reproducible). No partial
-credit — matches the existing 4-study precedent (short-interest kept; regime, catalyst, float dropped).
+## 4 · Verdict format (4 states, ADR-0001 §6.1, D-TRADE-029)
+Each component/rule gets exactly one of: **CLEARED** (survives LOO + 5-fold + seed-sweep, independently
+re-derived) · **DROPPED** (tested, fails any leg — was "NOT CLEARED" in earlier drafts, renamed to match
+ADR-0001's canonical `validation_verdicts` schema) · **VOID** (contamination / non-reproducible) ·
+**UNMEASURED** (below the 30-event support floor — untested for lack of evidence, never a judgment; float-
+study "no data behind it" precedent). No partial credit, no state overlap — matches the 4-study precedent
+(short-interest kept; regime/catalyst/float dropped) extended with the UNMEASURED distinction D-TRADE-029
+adds on top of it.
 
 ## 5 · What stays HUMAN (oracle-boundary row, re-scoped)
 Per `docs/gate/oracle-boundary.md`: **"is the pre-registered bar itself the right bar"** (e.g., is
-≥90%-of-30-seeds the correct robustness threshold, is whatever label the Architect's ADR-0001 revision
-lands on — trailing-stop-exit realized return, per D-TRADE-028 — the right success metric) is a judgment
-call — **HUMAN, escalates to the Lead/Director**. I certify mechanically whether a
-component DID or DID NOT clear a stated bar; I do not certify that the bar itself is correct. §2's bar
-started as exactly that kind of recommendation and was ratified by the Lead (D-TRADE-021) precisely
-because it wasn't novel — it matched established precedent rather than resting on my own authority; a
-future bar change would still need the same route, not a self-declared revision.
+≥90%-of-30-seeds the correct robustness threshold, is realized return under a trailing-stop the right
+Leg-B success metric, is 30 events the right support floor) is a judgment call — **HUMAN, escalates to the
+Lead/Director**. I certify mechanically whether a component/rule DID or DID NOT clear a stated bar; I do
+not certify that the bar itself is correct. §2's bar and §3.9's floor both started as exactly that kind of
+recommendation and were ratified against precedent (D-TRADE-021, D-TRADE-029) rather than resting on my
+own authority; a future bar change would still need the same route, not a self-declared revision. OP-1/2/3
+(the grid, horizon, and baseline `N`'s exact value) are still open — HUMAN + AI/ML + me, pending.
 
 ## 6 · Status
-**HOLDING.** No AI/ML CV result or `helm/validation/` code exists in-repo yet (re-verified against
-`git log`/tree at commit `fb830f1`, 2026-08-04, post-D-TRADE-028 — only `tools/`, the separate D-TRADE-023
-dashboard side-tool, and docs exist; no `helm/` package). This protocol is pre-registered and ready to fire
-the moment AI/ML delivers a first CV result, whatever the label ends up being once ADR-0001 is revised.
+**CO-SIGNED ADR-0001 R2 (2026-08-04)** — the design is sound; still **HOLDING** on actual auditing. No
+AI/ML CV result or `helm/validation/` code exists in-repo yet (re-verified 2026-08-04, post-R2 — only
+`tools/`, the separate D-TRADE-023 dashboard side-tool, and docs exist; no `helm/` package). This protocol
+is pre-registered and ready to fire the moment AI/ML delivers a first CV result, once P-1 (build re-scope)
+and P-4 (remaining OP-1/2/3 ratification) clear.

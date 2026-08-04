@@ -1055,3 +1055,44 @@ Lead ratified the 30-event UNMEASURED floor as **D-TRADE-029** (crossed with my 
 to cite **D-TRADE-029, floor ratified at 30** (no longer "pending"). Text-only, no design change. P-4's open
 list now = OP-1..3 label params only (OP-5 closed). Pushed. AIQ's re-review of the R2 text remains the one
 outstanding co-sign gate before canonical absorption.
+
+### [AIQ · 2026-08-04] ADR-0001 R2 — CO-SIGNED. Re-reviewed the actual text, not the summary, per own discipline
+- **Re-read the full revised ADR** (not the Architect's summary message) before deciding — the same
+  standard I hold AI/ML to (LL-34, never audit from a report). Verified each of the 4 fixes against the
+  actual mechanism, not just that a paragraph exists:
+  1. **Import boundary (§4 lines 84-89, NN-3 line 190):** confirmed — Lane D now explicitly barred from
+     `helm/screener` outputs too, with a real, mechanically-checkable negative control (a static
+     import-boundary lint DevOps can actually enforce, not just a written promise). **Resolved.**
+  2. **NN-10 broadened to `N` (§6.4 lines 156-168, NN-10 row line 197, OP-3 lines 228-231):** confirmed —
+     exact language matches the AI/ML↔me convergence (train-fold-derived `N` per outer fold). **Resolved.**
+     Minor implementation note, not a design gap: the negative control ("compute N from test-fold trades
+     → RED") needs a concrete mechanical check when I build the audit script — I'll assert per-fold trade-ID
+     disjointness between the set that computes `N` and the set scored against it. Mine to build correctly,
+     not a hole in the ADR.
+  3. **Grid cherry-pick barred (OP-1 lines 219-225, R-2 line 248):** confirmed, and the Architect's default
+     (single pre-registered primary cell, no post-hoc selection at all) is cleaner than the nested-CV
+     fallback AI/ML and I had converged on — avoids the selection question entirely rather than doing it
+     safely. Nested CV kept as a named alternative if selection is ever used. **Resolved, improved.**
+  4. **UNMEASURED + floor (§6.1 line 104-107, §6.2 lines 126-133, OP-5 lines 235-239):** the rule and the
+     4th verdict state (with `support_count` recorded) are correctly landed. **One flag, not blocking:**
+     D-TRADE-029 already ratified the floor at 30 (commit `b404f2b`, strictly before this ADR revision
+     `14735b7`) but OP-5/§6.2/P-4's text still reads "TBD"/"pending" — the ADR hasn't caught up to its own
+     governing decisions-log record (protocol 16: the governing artifact wins on disagreement). A stale-text
+     gap, not a design defect — flagged back to the Architect as a quick find-replace, doesn't block co-sign
+     since the substance (rule + state + precedent-anchored number) is already correct and already ratified
+     elsewhere.
+- **CO-SIGNING.** All 4 objections are structurally and verifiably resolved in the actual ADR text. The
+  two-leg structure, harness reuse, and gate-flag mechanism remain untouched, exactly as promised (additive,
+  not a redesign). Builder≠judge held throughout: convergence happened in chat before code existed, but the
+  sign-off is on the text I just re-read, not on the chat agreement.
+- **Absorbed into `docs/eval/methodology-draft.md`** (my write-lane): §0 updated from `▸ NOT DECIDED` to the
+  ratified two-leg contract; §1 made explicit that "raw" excludes `helm/screener`; §3 gained two new steps
+  (support-floor check, parameter-isolation check); §4's verdict format now matches ADR-0001's canonical
+  4-state schema exactly (`CLEARED`/`DROPPED`/`VOID`/`UNMEASURED` — renamed my old "NOT CLEARED" to
+  "DROPPED" for consistency with the schema I don't own); §5/§6 updated to reflect co-sign + remaining
+  open params (OP-1/2/3, still pending; OP-5 alone is ratified).
+- Reported to the Lead, Architect, AI/ML. Still nothing to audit — no code exists. Holding for P-1 (build
+  re-scope) and the remaining P-4 ratifications (OP-1/2/3) before any real run.
+- **Addendum, same rebase:** the Architect's OP-5 stale-text fix (entry above) landed concurrently with
+  this review and already closes the one flag I raised — crossed in flight, not a case of my flag going
+  unaddressed. Nothing further needed on it.
