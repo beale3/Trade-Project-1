@@ -13,8 +13,14 @@ protocol 19, not left standing alongside the new framing (LL-19).
 **Post-pivot reality check:** the validation engine `<3.4>` is **classical statistics** (walk-forward CV),
 not generative AI — so **Phase 1 has no LLM spend at all**. Every provider actually in scope (Massive,
 SEC-API.io, Supabase) is a **flat subscription or quota-based tier**, not a metered-per-call bill. The open
-dollar questions are now about **which tier** applies (personal vs. commercial — largely resolved by the
-pivot) and **whether an add-on (options-chain history) is needed**, not about a per-call meter.
+dollar question is now just **which Massive tier** applies (personal vs. commercial — largely resolved by
+the pivot).
+
+**2026-08-04 update (D-TRADE-028):** HELM's options framing is deleted entirely — plain stock buy/sell
+signals with a trailing-stop exit, no calls/puts/DTE. The **historical options-chain-data cost question
+this doc was tracking as an open item is therefore moot, not resolved** — deleted here too (LL-19/protocol
+19), not left as a stale "still open" line. No dollar figure in this doc changes; only that one open item
+disappears.
 
 ---
 
@@ -45,7 +51,7 @@ the actual Phase-1 provider set:
 
 | Provider | Marginal cost of one more API call | Classification | Governed by |
 |---|---|---|---|
-| **Massive (personal tier)** | **$0 within the tier's included quota**; unconfirmed whether historical options-chain data is a paid add-on (`<2.1>`, open) | **standing floor** (flat sub) + a possible new floor line pending confirmation | the spend guard's *quota* watch (`governor-spec.md`), not a $ meter |
+| **Massive (personal tier)** | **$0 within the tier's included quota** | **standing floor** (flat sub) | the spend guard's *quota* watch (`governor-spec.md`), not a $ meter |
 | **SEC-API.io — Personal & Startups** (CONFIRMED, D-TRADE-026 issuer + D-TRADE-027 tier — no longer "likely," no longer free EDGAR, no longer "which tier") | **$0 within 50 GB/month, then $0.30/GB overage** — a real, active $49–$55/mo subscription right now | **standing floor + a real overage risk** (not a hypothetical) | the spend guard's GB-downloaded watch |
 | **Supabase** | **≈ $0 per call**; cost accrues to slow-moving *usage* (storage, egress) | **standing floor + usage overage** | a periodic overage glance, not a per-call check |
 | **LLM (Phase 1)** | **N/A — not called in Phase 1** (`<3.4>` is classical stats). Kept as a Phase-2-contingent line only; do not budget for it now | **out of scope** | re-open only if a future phase reintroduces generative AI |
@@ -102,11 +108,15 @@ professional fees apply outside a Professional/Business subscription, which a pe
 | Real-world floor once the tier is confirmed | Value | Tag | Basis |
 |---|---|---|---|
 | Massive personal tier (Starter/Developer/Advanced, per data-need) | **$29 / $79 / $199** | `measured` | per-month, flat, unlimited calls |
-| **NEW open cost line (`<2.1>`, not previously modeled):** historical options-chain data (strikes/greeks/IV history) — required for Phase 1 backtesting, availability at the current tier **unconfirmed** | **UNKNOWN — may require a higher tier or a separate paid add-on** | `unmeasured` | per-month · DevOps/Data-Eng technical discovery, not a Director call |
+
+**Deleted, not resolved (D-TRADE-028, LL-19):** the "historical options-chain data" open cost line this
+table used to carry is moot — `<1.1>` drops options entirely (plain stock buy/sell + trailing-stop exit).
+Nothing to price here; not carried forward as a closed item, just removed, since it never described what
+HELM actually needs now.
 
 **Cost lever, unchanged in spirit:** whichever tier is confirmed, the guard (`governor-spec.md`) watches the
-**included-quota boundary**, not a live per-call meter — paid personal tiers are flat/unlimited, so the risk
-is a rate-limit ban (Basic/Free tier only) or an unconfirmed add-on, not a running dollar total.
+**included-quota boundary**, not a live per-call meter — paid personal tiers are flat/unlimited, so the only
+remaining risk is a rate-limit ban on the Basic/Free tier, not a running dollar total.
 
 ### 2.3 · SEC-API.io — Personal & Startups, CONFIRMED (D-TRADE-026 issuer + D-TRADE-027 tier)
 
@@ -191,7 +201,7 @@ Monthly_floor = Supabase_plan + Massive_personal_tier + SEC-API.io_personal_tier
 | Line | Bootstrap (dev, current) | Steady-state (personal tool, live) | Tag |
 |---|---|---|---|
 | Supabase | $0 (Free — 500 MB DB is ample for scan history/signals at personal scale) | $0–$25 (Free likely sufficient; Pro only if storage/egress grows past Free's quota) | `measured` (prices) / `estimated` (which tier is actually needed) |
-| Massive (market data) | $0 (Free, 5 calls/min) | **$29–$199/mo** flat, per data-need tier, **plus an unconfirmed options-chain-data line** (§2.2) | `measured` (tiers) / `unmeasured` (options-chain add-on) |
+| Massive (market data) | $0 (Free, 5 calls/min) | **$29–$199/mo** flat, per data-need tier | `measured` (tiers); which tier confirmed still `unmeasured` |
 | SEC-API.io | **already live now, CONFIRMED Personal & Startups** (D-TRADE-026 + D-TRADE-027 — not a future/bootstrap distinction; the subscription is active today, at a now-fixed tier) | **$49/mo** (annual) or **$55/mo** (monthly) + $0.30/GB beyond 50 GB — fully confirmed, nothing left open on this line | `measured` — issuer, paid status, AND tier |
 | CI (GitHub Actions) | $0 (free-tier minutes) | ~$0.008/Linux-min beyond free tier — trivial at personal-project CI volume | `estimated` — not re-read this revision; verify before it enters a decision |
 | **Floor total** | **≥ $49/mo right now** (SEC-API.io alone, confirmed) | **≈ $78 – $279/mo** (`Massive $29-199 + SEC-API.io $49-55 + Supabase $0-25`) — **the range is unchanged from the prior revision**, since Massive's $199 ceiling already dominated the old $49-239 SEC-API.io spread; pinning the tier narrowed SEC-API.io's own uncertainty without moving the total range. **Only Massive's tier remains open** to collapse this further | mixed |
@@ -226,9 +236,10 @@ It has no `$/hour` rate on record, so it is carried as a **named HUMAN input**, 
 
 ## §5 · Open items surfaced to the Lead (dollars only; I do not rule these)
 
-- 🟡 **Confirm which Massive tier the account is on** (Free/Starter/Developer/Advanced) and **whether
-  historical options-chain data is included or a separate paid add-on** — Data-Eng/DevOps technical
-  discovery, not a Director dollar call, but it sets the real floor number.
+- 🟡 **Confirm which Massive tier the account is on** (Free/Starter/Developer/Advanced) — Data-Eng/DevOps
+  technical discovery, not a Director dollar call, but it sets the real floor number.
+- 🟢 **DELETED, not resolved (D-TRADE-028):** the "historical options-chain data / paid add-on" open item
+  is moot — `<1.1>` drops options entirely. No longer tracked; removed rather than left as a stale line.
 - 🟢 **CLOSED by D-TRADE-026 + D-TRADE-027 — no further FinOps action.** SEC-API.io is confirmed
   Personal & Startups: $49/mo (annual) or $55/mo (monthly), 50 GB included, $0.30/GB overage. Both the
   issuer and the tier are now Director-confirmed facts, not estimates.

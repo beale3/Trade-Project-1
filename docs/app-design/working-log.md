@@ -767,3 +767,17 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   provider's compliance posture, only removes a now-inapplicable open item. Routine-tier edit (protocol 17
   — self-check only), not a re-review. No blocker; not reporting this as a full protocol-15 report since the
   Lead flagged it as informational/non-urgent — noted here for the record per two-document discipline.
+
+### [FinOps · 2026-08-04] D-TRADE-028 absorbed — options-chain-data open item deleted, not resolved
+- Pulled the second major pivot (options framing dropped entirely, `<1.1>` re-locked to plain stock
+  buy/sell + trailing-stop exit). Per the Lead's flag: minimal impact on my numbers — Massive/SEC-API.io/
+  Supabase pricing, tiers, and the floor estimate (≈$78–279/mo) are all unaffected; nothing there was
+  options-specific.
+- **The one thing that did change:** the "historical options-chain data availability/cost" open item I'd
+  been carrying in `cost-model.md` (§1, §2.2, §3, §5) and `governor-spec.md` (§1, §7) since the first
+  pivot revision is now **moot** (canonical `<2.1>`: "DELETED, not applicable"). Removed it everywhere it
+  appeared — per LL-19/protocol 19, deleted rather than left as a stale "still open" line now that the
+  product it was tracking a cost for no longer exists. No dollar figure changed; only that one open item
+  disappeared. Renumbered governor-spec.md's failure-mode list from 3 items to 2 accordingly.
+- Self-check only (routine, protocol 17 — a scope cleanup off an already-ruled decision, not a new number
+  or invariant). Reported once to the Lead.

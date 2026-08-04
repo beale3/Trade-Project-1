@@ -34,12 +34,12 @@ narrower than a SaaS money-truth surface:
    retry storm re-fetching the same data, is a realistic way to cross that boundary. Massive's paid tiers
    are flat/unlimited-call, so its equivalent risk is smaller (mainly the Free/Basic tier's rate limit, a
    ban risk rather than a billing risk).
-2. **An unconfirmed paid add-on gets silently exercised** — canonical `<2.1>` flags that **historical
-   options-chain data (strikes/greeks/IV history)** is not yet confirmed available at the current Massive
-   tier; if it turns out to be a metered or higher-tier add-on, a backtest script could trigger it
-   unknowingly.
-3. **Slow creep**, not a spike — e.g., Supabase storage/egress from a growing scan-history table crossing
+2. **Slow creep**, not a spike — e.g., Supabase storage/egress from a growing scan-history table crossing
    into Pro-tier overage over weeks. Caught by a periodic look, not a per-call block.
+
+*(D-TRADE-028, 2026-08-04: a third failure mode formerly listed here — an unconfirmed options-chain-data
+add-on getting silently exercised — is deleted, not resolved. `<1.1>` drops options entirely; there is no
+such add-on to guard against.)*
 
 **What this guard is NOT:** a certified oracle over correctness of billing (no reconciliation-vs-invoice
 requirement), a multi-tenant isolation mechanism (no tenants), or a system that needs to survive concurrent
@@ -127,13 +127,9 @@ this scale — no multi-seat sign-off matrix needed for a single-user tool.
 
 ## §7 · Open items (dollars/mechanism only; I do not rule these)
 
-- ▸ **Cap values need `<2.1>`'s tier confirmations.** SEC-API.io is now fully confirmed (D-TRADE-026/-027,
-  §3) — that cap can be set today. **Only Massive's tier remains open**; SecOps/Data-Eng own confirming it,
-  and the options-chain-data add-on status. FinOps converts the confirmed Massive quota into the
-  `min(quota_calls, $_ceiling)` expression once it lands.
-- 🟡 If **historical options-chain data** turns out to require a paid add-on or a higher Massive tier
-  (canonical `<2.1>`, still NOT DECIDED), that's a new floor line for `cost-model.md`, not just a guard
-  parameter — flag back to me when confirmed.
+- ▸ **Cap values need `<2.1>`'s tier confirmation.** SEC-API.io is now fully confirmed (D-TRADE-026/-027,
+  §3) — that cap can be set today. **Only Massive's tier remains open**; SecOps/Data-Eng own confirming it.
+  FinOps converts the confirmed Massive quota into the `min(quota_calls, $_ceiling)` expression once it lands.
 - Recommend the Director simply **glance at the guard's own log** during Phase 1's first few real runs to
   sanity-check the estimate against the actual provider dashboard once, before trusting the tally long-term.
 
