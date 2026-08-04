@@ -1,8 +1,9 @@
 # ADR-0001 — HELM Phase-1: validation-tool structure, stack, lanes & the validation contract
 
-- **Status:** PROPOSED · **Revision 2 (2026-08-04, D-TRADE-028)** — re-authored, not patched (LL-19/protocol 19).
-  Awaiting oversight co-sign + Director wave-entry GO. R2 supersedes R1's options framing entirely; the
-  §14 delta declares every removal/change (ADR-0001 §13 / A6a-A6b).
+- **Status:** PROPOSED · **Revision 2 (2026-08-04, D-TRADE-028) + co-sign amendments** — re-authored, not
+  patched (LL-19/protocol 19). R2 supersedes R1's options framing entirely; the §14 delta declares every
+  removal/change (ADR-0001 §13 / A6a-A6b) + the AI/ML + AIQ co-sign amendments folded in pre-ratification.
+  Awaiting AIQ's re-review (its 3 objections now addressed) + Director wave-entry GO.
 - **adr_reference id:** `ADR-0001` (unchanged — build tasks keep citing it; protocol 8).
 - **Author:** Principal Architect (Fable5·Max). **R1:** 2026-08-01 (options). **R2:** 2026-08-04 (equity + trailing-stop).
 - **Governs:** canonical `<1.1>` `<1.4>` `<2.1>` `<2.2>` `<3.1>` `<3.2>` `<3.4>` `<3.5>` `<3.6>` `<4.1>` `<4.2>`;
@@ -81,8 +82,11 @@ does not bite a Python-only phase.
 | `scripts/gate/` | gate runner + legs; import-boundary lint | DevOps | runner honesty |
 
 **Import boundaries (a DevOps leg):** `helm/screener` reaches the scanner only through `tools/rolling_watchlist.py`'s
-function API; `helm/validation/audit` may not import `engine` outputs (builder≠judge); provider SDK/host imports
-only under `helm/ingest`.
+function API; **`helm/validation/audit` (Lane D, AIQ) may not import EITHER `helm/validation/engine`'s outputs
+NOR `helm/screener`'s feature frames** — it **independently re-derives features from `tools/rolling_watchlist.py`'s
+primitives itself** (AIQ audit objection #1: `helm/screener` is AI/ML-owned code that *transforms* — a
+lookahead/alignment bug there would otherwise be inherited silently by both the engine and the audit, and
+builder≠judge would be defeated at the feature layer); provider SDK/host imports only under `helm/ingest`.
 
 ## 5 · Lane re-cut (R2 — absorb into charter §3)
 A ingest+store (SDE1·Data-Eng) — `helm/ingest`,`helm/storage` (**universe conditional, §9 P-3**) · B screener
@@ -96,8 +100,11 @@ audit (AIQ, independent) — `helm/validation/audit` · E infra/CI/gate/spend (D
 - `validation_runs(val_id, ts, git_commit, bar_id, cohort_id, n_components, n_exit_configs, n_comparisons)` —
   `git_commit`+`bar_id` pin the pre-registered bar (LL-41/44); `n_comparisons` records the multiple-comparison count.
 - `validation_verdicts(val_id, subject, subject_kind∈{entry_signal,exit_rule}, horizon_or_config,
-  loo_beats_naive, pct_seeds_beating_naive, effect_sign, effect_size, robustness_json,
-  verdict∈{cleared,dropped}, reproduced_by_aiq)` — **append-only; `cleared` requires `reproduced_by_aiq=TRUE` (NN-3)**.
+  support_count, loo_beats_naive, pct_seeds_beating_naive, effect_sign, effect_size, robustness_json,
+  verdict∈{cleared,dropped,void,unmeasured}, reproduced_by_aiq)` — **append-only; `cleared` requires
+  `reproduced_by_aiq=TRUE` (NN-3)**. Four verdict states: **CLEARED** (bar met) · **DROPPED** (tested, bar
+  not met) · **VOID** (leakage/contamination, D-TRADE-021) · **UNMEASURED** (below the support floor — see
+  §6.2; `support_count` records the trigger count that drove it).
 - `spend_ledger(ts, provider, endpoint, est_cost, cumulative_day)` — a row per provider call even at $0.00 (D-TRADE-019).
 
 **6.2 The validation contract — TWO legs** (the R2 re-design; CRITICAL tier). Both use the studies'
@@ -116,23 +123,49 @@ harness and the D-TRADE-021 bar; both obey NN-1 (point-in-time).
 - **How it plugs into the harness:** Leg A fits `evaluate_loo`/`evaluate_multiseed_kfold` directly
   (feature,target). Leg B is a small extension — a paired strategy-return comparison per fold/seed, reusing
   the same "beats-naive-OOS across ≥90% of ≥30 seeds" machinery, RMSE-of-fit swapped for realized-return-of-strategy.
+- **Minimum-support floor → UNMEASURED (AI/ML co-sign point 3; pre-register the RULE now, the number later).**
+  A rarely-firing binary pattern trigger (fires only a handful of times across the window) cannot yield a
+  meaningful CV verdict — the sample is too thin for LOO or 5-fold to say anything. **A component whose
+  trigger count is below a pre-registered floor is verdict = UNMEASURED, a distinct fourth state, and never
+  silently reads as NOT-CLEARED** (absence is not a judgment — the float-study "no data behind it" precedent).
+  UNMEASURED ⇒ its `_gates` flag stays `False` for *lack of evidence*, explicitly not for a failed test.
+  The floor's numeric value is TBD on real trigger counts (OP-5) — but the rule, and that it is applied
+  before CV and pre-registered (LL-44), is fixed now, not improvised after seeing thin data for one component.
 
 **6.3 The trailing-stop rule** (new, built in `tools/rolling_watchlist.py`'s simulator as a mode). Precise
-definition: after entry at `P0`, track `peak = max(High since entry)`; **trailing stop = `peak*(1 - trail_pct/100)`**,
-ratchets up only, never down; exit at the first bar whose `Low ≤ stop` (filled at the stop — the conservative
-tie assumption the existing sim already uses). An **initial hard stop `P0*(1 - init_stop_pct/100)`** governs
-until the peak advances enough for the trail to take over (bounds the loss on a trade that never rises).
-Decision variables: `trail_pct`, `init_stop_pct`, bar interval. **Bar-causal walk (NN-1):** `peak` at bar `i`
-uses only bars `≤ i` — the existing simulator's forward walk already guarantees this; the trailing extension
-must preserve it. Backward-compatible: default mode = today's fixed stop/target. **The trailing stop is a
+definition: after entry at `P0`, track `peak(t) = max(High over bars entry..t)`. The **effective stop is a
+single monotonically non-decreasing series (AI/ML co-sign point 1 — the stop must NEVER silently retreat,
+an NN-1 risk):**
+
+> `effective_stop(t) = max( P0*(1 - init_stop_pct/100),  peak(t)*(1 - trail_pct/100) )`
+
+Because `peak(t)` is non-decreasing, `effective_stop(t)` is non-decreasing **by construction** (max of a
+constant floor and a non-decreasing term), and it can never fall below the initial floor — so the loss is
+bounded at `init_stop_pct` and the trail takes over automatically once `peak*(1-trail_pct)` exceeds the
+floor. Exit at the first bar whose `Low ≤ effective_stop` (filled at the stop — the conservative tie
+assumption the existing sim already uses), **or EOD force-close**. **In trail mode the fixed `target_price`
+is UNUSED (AI/ML co-sign point 2):** exits are trail-hit or EOD only — letting winners run is the whole
+point of a trailing vs. fixed-R:R exit. Decision variables: `trail_pct`, `init_stop_pct`, bar interval.
+**Bar-causal walk (NN-1):** `peak` at bar `i` uses only bars `≤ i` — the existing simulator's forward walk
+already guarantees this; the trailing extension must preserve it. Backward-compatible: default mode = today's
+fixed stop/target (new opt-in params `trail_pct`/`init_stop_pct` default None/off). **The trailing stop is a
 per-trade exit and is orthogonal to — composes with, does not replace — the simulator's existing *daily*
 circuit breakers (`max_loss_per_trade`/`max_daily_loss`/`profit_giveback_pct`), which stay unchanged; do
 not conflate the per-trade exit with the daily peak-giveback halt** (AI/ML grounding, `tools/rolling_watchlist.py:723-817`).
 
-**6.4 Pre-registration of exit parameters (NN-10, new).** `trail_pct`/`init_stop_pct` are **fit on training
-folds only and applied out-of-sample on the test fold** (or drawn from a small pre-registered set) — they are
-**never chosen by looking at test-set outcomes**. This is the specific leakage vector a trailing stop
-introduces and is a first-class non-negotiable (§8).
+**6.4 Pre-registration of ALL data-derived label/baseline parameters (NN-10, broadened per AIQ objection #2).**
+`trail_pct`/`init_stop_pct` **and the Leg-B naive baseline `N`** (the fixed holding period) are **fit on
+training folds only and applied out-of-sample on the test fold** (or drawn from a pre-registered set) —
+**never computed from test-fold outcomes**. `N` is the same leakage class as the trail params and is
+*especially* dangerous: trailing trades ride longer exactly when winning, so a test-fold-derived "median
+trailing holding period" is **not independent of the profitability of the arm it's compared against** — the
+"naive" baseline would be built from the treatment's own outcomes (AIQ objection #2). Any data-derived
+label/baseline parameter obeys this rule; it is a first-class non-negotiable (§8). **Precise procedure (AI/ML↔AIQ convergence, recommended
+— pending their final confirm, same builder/auditor pattern as the D-TRADE-021 bar):** if the analysis ever
+*selects* a grid point (rather than reporting every pre-registered point), the selection is done by **nested
+CV** — pick on the inner/training folds, score on the held-out outer fold, aggregate OOS across outer folds;
+**never** pick whatever scores best on the full/test sample. Reporting all pre-registered points needs no
+selection and is the simpler default.
 
 **Serialization/serializer** rules unchanged: NaN→null, Timestamp→ISO8601, DataFrame→records.
 
@@ -154,14 +187,14 @@ Each = a fail-closed assertion + the negative control that must make it bite + t
 |---|---|---|---|
 | **NN-1** | **No look-ahead.** Every feature/label/simulated-bar at `t` uses only data `≤ t`, point-in-time (incl. the trailing-stop `peak`) | inject a `t+k` feature, or a peak using a future bar → leakage leg RED | AIQ re-derivation + DevOps leakage assert |
 | **NN-2** | **Ratified clearance bar (D-TRADE-021 / `<3.4>`):** CLEARED ⇔ beats naive OOS under BOTH LOO **and** ≥90% of ≥30-seed 5-fold; VOID on leakage/contamination. Pinned before the run | an in-sample win that fails OOS, or a ~68%-agreement coin-flip → dropped | AI/ML runs · AIQ verifies pre-registration · GA audits |
-| **NN-3** | **Builder ≠ judge.** AIQ re-derives every `cleared` verdict from RAW; `cleared` requires `reproduced_by_aiq` | AIQ re-run disagrees → component/rule blocked | AIQ · GA audits independence |
+| **NN-3** | **Builder ≠ judge — to the feature layer.** AIQ re-derives every `cleared` verdict from RAW scanner primitives (`tools/rolling_watchlist.py`), **not** from `helm/screener`'s or `engine`'s outputs; `cleared` requires `reproduced_by_aiq` | AIQ importing `helm/screener` outputs, or an adapter lookahead bug surviving because audit reused it → RED | AIQ · GA audits independence |
 | **NN-4** | **Gate-flag conformance.** A scanner component's `_gates=True` requires a matching `cleared` verdict | set a gate `True` with no `cleared` record → conformance leg RED | SDE1/DevOps |
-| **NN-5** | **Cohort integrity** *(re-scoped from options-universe):* the backtest cohort is well-defined + point-in-time; a name/bar without the required history is excluded, not imputed. **No options-chain requirement** | inject a name with insufficient history → excluded | Data-Eng |
+| **NN-5** | **Cohort integrity** *(re-scoped from options-universe):* the backtest cohort is well-defined + point-in-time; a name/bar without the required history is excluded, not imputed. **No options-chain requirement** | inject a name with insufficient history → excluded | Data-Eng if seated, else **SDE1** (P-3); moot if universe drops |
 | **NN-6** | **Data schema/freshness.** Malformed/stale ingested row FAILS | plant a stale/malformed row → SDE1 leg RED | SDE1 |
 | **NN-7** | **No secret / provider taint.** Keys server-side only (leg K); provider SDK/host only under `helm/ingest` (leg T) | plant a fake key / an out-of-module provider import → RED | SecOps authors · DevOps wires |
 | **NN-8** | **Spend guard.** A call breaching the daily cap is BLOCKED | simulate over-cap → blocked | FinOps |
 | **NN-9** | **Reproducibility.** QA re-runs each CV end-to-end; numbers reproduce (pinned seeds+data) | a non-deterministic script whose numbers move → QA FAILS | QA |
-| **NN-10** | **Exit-parameter isolation (NEW, R2):** `trail_pct`/`init_stop_pct` fit on train folds only (or a pre-registered set), never chosen on the test fold | fit the trail on the full sample / test fold → leakage leg RED | AIQ + DevOps |
+| **NN-10** | **Parameter isolation (NEW, R2; broadened per AIQ #2):** `trail_pct`/`init_stop_pct` **and the Leg-B baseline `N`** — every data-derived label/baseline parameter — fit on train folds only (or pre-registered), never computed from test-fold outcomes | compute `N` (or the trail) from the test-fold trades it's compared against → leakage leg RED | AIQ + DevOps |
 
 NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage vector) → frontier A6 depth
 + protocol-17 AIQ validation. NN-5..9 = standard.
@@ -171,25 +204,39 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
   outside D-TRADE-010's intent (Lead's recommendation; not yet ruled). Design proceeds; **no production code until P-1**.
 - **P-2 · MOOT (D-TRADE-028).** The "missing screener/0DTE ZIPs" were never missing — the scanner is
   `tools/rolling_watchlist.py`, in-repo. No artifact-location work remains.
-- **P-3 · `<2.2>` universe decision** (Architect/Data-Eng): confirm the Phase-1 backtest cohort = the studies'
-  existing event-defined datasets + user-supplied tickers (⇒ `helm/universe` lane **drops**), vs. a maintained
-  universe (⇒ lane stays). *Recommend drop* — matches the scanner's `--tickers` status quo and the studies' cohorts.
-- **P-4 · Ratify the Leg-A horizon + Leg-B baseline + the pre-registered trail set** (Director + AI/ML + AIQ)
-  before the run (LL-44). The D-TRADE-021 *bar* is already ratified; what's open is the label parameters (OP-1..3).
+- **P-3 · `<2.2>` universe decision** (Director — **Data-Eng is unseated**, so the Lead is taking this
+  straight to the Director rather than a seat that doesn't exist): confirm the Phase-1 backtest cohort = the
+  studies' existing event-defined datasets + user-supplied tickers (⇒ `helm/universe` lane **drops**, and
+  NN-5/§4-§5's Data-Eng references vanish with it), vs. a maintained universe (⇒ lane stays; with Data-Eng
+  unseated its residual duties fall to **SDE1** until/unless the seat is created). *Recommend drop* —
+  matches the scanner's `--tickers` status quo + the studies' own cohorts, and needs no unseated role.
+- **P-4 · Ratify the Leg-A horizon + Leg-B baseline + the pre-registered trail set + the support-floor value**
+  (Director + AI/ML + AIQ) before the run (LL-44). The D-TRADE-021 *bar* is already ratified; what's open is
+  the label parameters (OP-1..3, OP-5).
 - **P-5 · B5 secret approval** before any live-key use.
 
 ## 10 · Open points (LL-31) & non-goals (R2)
 - **OP-1 · the pre-registered trailing-stop set** (Director + AI/ML + AIQ): which `{trail_pct, init_stop_pct}`
   settings Phase 1 tests. *Recommend* a small fixed grid (e.g. trail ∈ {5,8,12}%, init ∈ {2,3}%) fixed before
-  the run — **not** an optimization (that's Phase 2, `<1.4>`).
+  the run — **not** an optimization (Phase 2, `<1.4>`). **Anti-cherry-pick (AIQ objection #3):** exactly ONE
+  pre-registered grid cell is the **primary, clearance-eligible** config; the remaining cells are
+  **sensitivity-only — reported, never a clearance claim**. (Alternatively a stated multiplicity correction,
+  or nested-CV selection per §6.4 — but the single-primary-cell rule is the simplest leakage-free default and
+  is what I recommend.) "Test all 6, report whichever clears" is barred.
 - **OP-2 · Leg-A evaluation horizon** (AI/ML): the fixed forward window for entry-signal ranking. *Recommend*
   the studies' existing 1d/1w/1m set (directly comparable to the 4 completed studies).
-- **OP-3 · Leg-B naive baseline** (AI/ML + AIQ): fixed-holding-period exit — *recommend* N = the median
-  realized holding period of the trailing-stop arm (so the comparison is horizon-matched), plus a couple of
-  fixed N as sensitivity.
+- **OP-3 · Leg-B naive baseline** (AI/ML + AIQ): fixed-holding-period exit. *Recommend* N = the median
+  realized holding period of the trailing-stop arm (horizon-matched), **but computed train-fold-only per
+  NN-10** (never from the test-fold trades it's compared against — AIQ #2), plus a couple of fixed N as
+  sensitivity. A fully pre-registered fixed N is the leakage-free simplest option.
 - **OP-4 · component list** (final): drop IV-rank; test {each of the 8 pattern detectors, pivot/red-to-green trigger}
   as Leg-A entry signals + the trailing stop as Leg-B. The already-validated study components
   (short-interest kept, catalyst/float/regime as-ruled) are **not** re-litigated.
+- **OP-5 · the minimum-support floor value** — *recommend* **≥30 trigger events** (AI/ML↔AIQ convergence,
+  anchored to D-TRADE-021's own n≥30 seed basis — one statistical-power assumption in the pipeline, not two).
+  Below the floor ⇒ UNMEASURED (§6.2), no partial credit either direction. **Pending Lead/Director
+  ratification** (same path as the D-TRADE-021 bar; pre-registered now before any real trigger count exists,
+  LL-44 — never chosen per-component after seeing thin data).
 - **Non-goals:** options anything (deleted); trailing-stop **optimization** / adaptive-ATR variants (Phase 2);
   the from-scratch predictive breakout-occurrence model (Phase 2); any web/API/UI surface **inside `helm/`**
   (the D-TRADE-023 dashboard is a separate tool); multi-tenant/RLS (`<3.3>` N/A).
@@ -198,7 +245,7 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
 | id | risk | sev | mitigation |
 |---|---|---|---|
 | R-1 | look-ahead/leakage — now incl. the trailing-stop peak + exit-parameter fitting | HIGH | NN-1 + NN-10 + AIQ re-derive (NN-3) |
-| R-2 | multiple comparisons (components × horizons × trail settings) inflate false positives | MED-HIGH | the ≥90%-seed bar (NN-2) + AIQ void-on-fragility; record `n_comparisons` |
+| R-2 | multiple comparisons (components × horizons × trail settings) inflate false positives | MED-HIGH | **one pre-registered primary grid cell is clearance-eligible, rest sensitivity-only (OP-1, AIQ #3)**; the ≥90%-seed bar (NN-2) + AIQ void-on-fragility; `n_comparisons` recorded AND used (primary-cell rule or multiplicity correction, not just logged) |
 | R-3 | shared-file churn — trailing-stop edit to `tools/rolling_watchlist.py` collides with the live D-TRADE-023 build | MED | backward-compatible mode (default off) + coordinate with AI/ML/Designer (§7) |
 | R-4 | realized-return metric is noisy on small cohorts | MED | report raw + risk-adjusted; seed-robustness bar; magnitude honesty (as short-interest FINDINGS did) |
 | R-5 | D-TRADE-010 not re-scoped | blocks build | P-1 (Director) |
@@ -208,8 +255,9 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
   independent validation (AIQ). Stack/layout/lane = STANDARD.
 - **Co-sign before wave-entry GO:** AI/ML (harness + trailing-stop + Leg-A/B) · **AIQ (the label design +
   NN-10 + the baseline — this is the CRITICAL methodology leg, its sign-off is load-bearing)** · SDE1
-  (ingest/store/schema) · Data-Eng (cohort/universe P-3) · DevOps (legs + import-boundary + shared-file
-  coordination) · FinOps (spend) · QA (reproducibility) · SecOps (legs K/T). **Director:** GO + P-1 + P-4.
+  (ingest/store/schema) · ~~Data-Eng~~ (**unseated** — cohort/universe P-3 goes to the Director; SDE1 covers
+  residual cohort duty if the lane is kept) · DevOps (legs + import-boundary + shared-file coordination) ·
+  FinOps (spend) · QA (reproducibility) · SecOps (legs K/T). **Director:** GO + P-1 + P-3 + P-4.
 
 ## 13 · For a later revision (A6a/A6b forward)
 Any revision names every removed decision variable (A6a) and partitions changed inputs into repairs vs
@@ -239,7 +287,17 @@ R2's own delta is §14.
 - NN-5 — **REPAIRED:** options-universe integrity → generic cohort integrity (no options-chain clause).
 
 **Carried forward UNCHANGED (explicit — not silently retained):** NN-1 (no-lookahead/point-in-time),
-NN-2 = the D-TRADE-021 bar, NN-3 (AIQ builder≠judge), NN-4 (gate-flag conformance), NN-6/7/8/9; the
+NN-2 = the D-TRADE-021 bar, NN-4 (gate-flag conformance), NN-6/7/8/9; the
 gate-flag organizing claim; the CV harness reuse (`evaluate_loo`/`evaluate_multiseed_kfold`); stack `<3.5>`
-Python core; lanes C/D/E. **NEW in R2:** NN-10 (exit-parameter isolation); the trailing-stop rule (§6.3);
+Python core; lanes C/D/E. **NEW in R2:** NN-10 (parameter isolation); the trailing-stop rule (§6.3);
 Leg A/B (§6.2); `tools/rolling_watchlist.py` as a shared library.
+
+**Co-sign amendments (2026-08-04, pre-ratification — additive, from the load-bearing co-sign pass):**
+- **AI/ML:** §6.3 explicit effective-stop formula (monotone, loss-bounded) + fixed-target-unused in trail
+  mode; 8 pattern detectors; UNMEASURED 4th verdict + support floor (OP-5); nested-CV reading of NN-10 (§6.4).
+- **AIQ (3 objections, all addressed):** #1 **builder≠judge extended to the feature layer** — NN-3 + the
+  import boundary now bar Lane D (audit) from importing `helm/screener` outputs; AIQ re-derives features from
+  raw scanner primitives. #2 **NN-10 broadened** to the Leg-B baseline `N` (and every data-derived
+  label/baseline parameter) — train-fold-only. #3 **grid cherry-pick barred** — one pre-registered primary
+  cell is clearance-eligible, rest sensitivity-only (OP-1, R-2). AIQ re-review pending on these.
+- **Lead:** Data-Eng is unseated → P-3 to the Director; residual cohort duty → SDE1 if the universe lane is kept.

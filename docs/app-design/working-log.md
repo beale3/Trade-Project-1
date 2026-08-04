@@ -996,3 +996,55 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
 - **Status: still NOT co-signed.** Waiting on the Architect's R3 (or an addendum) before either confirming
   the fixes landed as agreed or raising anything new the written revision surfaces. Reported to the Lead.
   Nothing to audit yet regardless — no code exists.
+
+### [Architect · 2026-08-04] ADR-0001 R2 — folded in AI/ML's 3 co-sign points + Lead's unseated-Data-Eng catch
+AI/ML co-signed Leg A + trailing-stop mechanics, raised 3 load-bearing precisions before locking Leg B/NN-10
+(exactly the pre-build convergence discipline). All 3 accepted into the ADR (I author the contract):
+- **§6.3 effective-stop FORMULA now explicit:** `effective_stop(t) = max(P0*(1-init_stop_pct/100),
+  peak(t)*(1-trail_pct/100))` — monotonically non-decreasing **by construction** (max of a constant floor
+  and a non-decreasing term), loss bounded at `init_stop_pct`, trail takes over automatically. Removes the
+  "governs until" ambiguity; a silently-retreating stop would be an NN-1 defect.
+- **§6.3 fixed target resolved:** in trail mode `target_price` is UNUSED — exits are trail-hit or EOD only
+  (the point of a trailing exit). Was a real behavioral fork the ADR had left silent.
+- **UNMEASURED = a 4th verdict state (§6.1/§6.2):** a component firing below a pre-registered minimum-support
+  floor is UNMEASURED, never silently NOT-CLEARED (absence ≠ judgment — the float "no data" precedent);
+  `_gates` stays False for lack of evidence, not a failed test. Rule fixed now; the count = OP-5 (set on real
+  data, pre-registered). Verdict enum → {cleared,dropped,void,unmeasured} + a `support_count` field.
+- **Lead's catch — Data-Eng is UNSEATED:** reconciled the ADR's Data-Eng references — P-3 goes to the
+  Director (Lead is routing it); NN-5/§4/§5/§12 note residual cohort duty falls to SDE1 if the universe lane
+  is kept, and vanishes if it drops (recommended). No design stuck on a nonexistent seat.
+- These are the co-sign loop working as designed. Pushed. Still PROPOSED; AIQ co-sign (label/NN-10/baseline)
+  still the outstanding load-bearing gate before canonical absorption.
+- **Also folded AI/ML's nested-CV reading of NN-10 into §6.4** (from its AIQ note, seen on this rebase): if
+  the analysis ever SELECTS a grid point, selection goes through **nested CV** (pick on inner/train folds,
+  score on the held-out outer fold, aggregate OOS) — never best-on-full-sample. Recorded as the recommended
+  procedure **pending the AI/ML↔AIQ confirm** (not locked unilaterally — they're mid-convergence, same as
+  the D-TRADE-021 pattern). Gives them a concrete target without pre-empting.
+
+### [Architect · 2026-08-04] ADR-0001 R2 — AIQ's 3 audit objections ALL addressed (co-sign amendments)
+AIQ's load-bearing audit correctly withheld co-sign on 3 cited methodology gaps. All 3 folded into the ADR
+as additive amendments (AIQ's own framing: additive, not a redesign — the two-leg structure/harness/gate
+mechanism stand):
+- **#1 builder≠judge hole at the feature layer → FIXED.** The import boundary + NN-3 now bar Lane D (AIQ
+  audit) from importing **`helm/screener`** outputs (not just `engine`) — AIQ **re-derives features from the
+  raw `tools/rolling_watchlist.py` primitives itself**, so a lookahead/alignment bug in the AI/ML-owned
+  adapter can't be silently inherited by both engine and audit. This was a real independence gap; good catch.
+- **#2 NN-10 too narrow → BROADENED.** The Leg-B baseline `N` (median trailing holding period) is the same
+  data-derived-parameter leakage class as `trail_pct` — and worse, a test-fold-derived N is not independent
+  of the arm it's compared against (winners ride longer). NN-10 + §6.4 + OP-3 now bind **N and every
+  data-derived label/baseline param** to train-fold-only. Fully pre-registered fixed N noted as the simplest
+  leakage-free option.
+- **#3 grid cherry-pick → BARRED.** OP-1 + R-2 now require **one pre-registered primary grid cell
+  (clearance-eligible); the rest are sensitivity-only**, never a clearance claim. Kills "test 6, report
+  whichever clears." Nested-CV (AI/ML's mechanism) remains the alternative if selection is ever used.
+- §14 + the status line record the amendments. **AIQ re-review is the outstanding load-bearing gate** before
+  canonical absorption; reporting to the Lead + replying to AIQ (AI/ML copied) that all 3 are addressed.
+
+### [Architect · 2026-08-04] OP-5 support-floor value pinned from the AI/ML↔AIQ convergence (≥30 triggers)
+Seen on this rebase: AI/ML + AIQ converged on the UNMEASURED support-floor **value** I'd left TBD at OP-5 —
+**≥30 trigger events**, anchored to D-TRADE-021's own n≥30 seed basis (one statistical-power assumption in
+the pipeline, not two uncoordinated ones). Folded into OP-5 as the recommended value, **pending Lead/Director
+ratification** (same path as D-TRADE-021 — pre-registered before any real trigger count exists, LL-44; not
+self-ruled). Both seats confirm my 3 fixes (#1 import-boundary, #2 N train-fold-only, #3 grid primary-cell)
+match what they asked for; AI/ML will co-sign Leg B + NN-10 on these landing. Reporting to Lead; replying to
+both seats.
