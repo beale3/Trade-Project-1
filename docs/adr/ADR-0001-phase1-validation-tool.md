@@ -1,241 +1,241 @@
 # ADR-0001 — HELM Phase-1: validation-tool structure, stack, lanes & the validation contract
 
-- **Status:** PROPOSED (A0, pre-build) — awaiting oversight co-sign + Director wave-entry GO.
-- **adr_reference id:** `ADR-0001` (cite on every Phase-1 build task, protocol 8).
-- **Author:** Principal Architect (Fable5·Max). **Date:** 2026-08-01.
-- **Governs:** canonical `<1.1>` `<1.4>` `<2.1>` `<2.2>` `<3.1>` `<3.2>` `<3.4>` `<3.5>` `<4.1>` `<4.2>`;
-  D-TRADE-018/019/020; stage-plan P1-0..P1-5; oracle-boundary rows (AI/ML · AIQ · SDE1 · Data-Eng · FinOps
-  · SecOps · DevOps · QA).
+- **Status:** PROPOSED · **Revision 2 (2026-08-04, D-TRADE-028)** — re-authored, not patched (LL-19/protocol 19).
+  Awaiting oversight co-sign + Director wave-entry GO. R2 supersedes R1's options framing entirely; the
+  §14 delta declares every removal/change (ADR-0001 §13 / A6a-A6b).
+- **adr_reference id:** `ADR-0001` (unchanged — build tasks keep citing it; protocol 8).
+- **Author:** Principal Architect (Fable5·Max). **R1:** 2026-08-01 (options). **R2:** 2026-08-04 (equity + trailing-stop).
+- **Governs:** canonical `<1.1>` `<1.4>` `<2.1>` `<2.2>` `<3.1>` `<3.2>` `<3.4>` `<3.5>` `<3.6>` `<4.1>` `<4.2>`;
+  D-TRADE-020/021/022/026/027/**028**; oracle-boundary rows (AI/ML · AIQ · SDE1 · Data-Eng · FinOps · SecOps · DevOps · QA).
 - **This ADR designs; it does not build.** No code is authorized by this document. See **Preconditions**.
 
-> **Two-doc note (protocol 13):** this ADR is design content in my write-lane (`docs/adr/**`). Where it
-> recommends changes to canonical statements (`<3.5>` stack, `<3.2>` spend guard shape) or the charter §3
-> lane cut, those are **recommendations for the Lead to absorb** — I do not edit the canonical doc or the
-> charter. Reference is by `<x.y>` id, never re-description.
+> **Two-doc note (protocol 13):** design content in my write-lane (`docs/adr/**`). Recommendations to
+> canonical statements (`<3.5>`/`<3.6>`/`<2.2>`) or the charter §3 lane cut are **for the Lead to absorb** —
+> I do not edit the canonical doc or the charter. Reference by `<x.y>` id, never re-description.
 
 ---
 
-## 1 · Summary + context
+## 1 · Summary + context (R2)
 
-`<1.1>` is LOCKED (D-TRADE-020): HELM is a **personal** tool that **validates an already-built options
-screener**, not a SaaS. The screener runs a rules-based composite technical score (trend / momentum /
-breakout / volume, with an overextension dampener) over a **liquid, optionable large/mid-cap** universe and
-recommends directional calls/puts near 0.40 delta at ~25–45 DTE. **Phase 1's job is validation, not
-invention** (`<1.1>`): apply the *same* walk-forward-CV, ships-only-if-it-clears discipline already proven
-across four completed equity studies to each screener component, testing **directional correctness** of the
-underlying over the option's DTE window — the Director's explicit choice, **not** full option P&L (`<1.4>`,
-Phase 2).
+`<1.1>` re-locked (D-TRADE-028): HELM is a **personal equity-signal tool** that validates the scanner
+**already in this repo** — `tools/rolling_watchlist.py` (rollover-watchlist + Guardrail #1 + Sykes S3 +
+pump-&-dump phase + intraday pattern/pivot detectors, live-Massive-wired, already powering the D-TRADE-023
+dashboard and the source of all 4 studies' `_gates` flags). **All options framing is DELETED** (no
+calls/puts, delta, DTE, options-chain/IV, 0DTE-engine). HELM produces **plain stock buy signals** exited by
+a **trailing-stop rule**, and validates them with the *same* walk-forward-CV, ships-only-if-it-clears
+discipline (D-TRADE-021, **unchanged**).
 
-**The organizing architectural claim.** The existing scanner already encodes the target end-state: each
-component is guarded by a `_gates` flag whose default *is* its study verdict —
-`short_interest_gates=True` (cleared, "modest but real"), `catalyst_gates=False` (tested null),
-`float_gates=False` (no data behind it) [`Downloads/rolling_watchlist (3).py:330-397`; findings in
-`C:\Users\beale\short-interest-study\SHORT_INTEREST_STUDY_FINDINGS.md`]. The equity studies produce those
-verdicts with a fixed CV harness — `evaluate_loo()` (LOO-CV, linear fit vs. train-mean naive baseline) and
-`evaluate_multiseed_kfold()` (5-fold × 30 seeds, `pct_seeds_beating_naive`) [`short-interest-study/run_analysis.py:31,70,127`].
-The studies' *code* used a ≥50% seed-agreement verdict; **Phase 1 adopts the stricter ratified bar
-D-TRADE-021 / `<3.4>`** (BOTH LOO ∧ ≥90% of ≥30 seeds, OOS; VOID on leakage) — see NN-2. That the
-short-interest winner hit 96.7%/93.3% and the catalyst false-positive only ~68% is precisely why ≥90%.
+**The organizing architectural claim (unchanged, now stronger).** The scanner already encodes the target
+end-state: each component is guarded by a `_gates` flag whose default *is* its study verdict —
+`short_interest_gates=True` (cleared), `catalyst_gates=False` (null), `float_gates=False` (no data)
+[`tools/rolling_watchlist.py:414-484`]. The studies produce those verdicts with a fixed CV harness
+(`evaluate_loo` + `evaluate_multiseed_kfold`; verdict = the D-TRADE-021 bar). ⇒ **Phase 1 runs that harness
+on the components the studies never covered and on the new exit rule, and sets each gate flag from the
+verdict** — "ships only what works" stays mechanical.
 
-⇒ **Phase 1 = run that harness on each *options*-screener component and set its gate flag from the verdict.**
-The deliverable is not "a backtest" — it is a **per-component gate-flag verdict** that flows into the
-screener's existing `_gates` pattern, so the tool "ships with the components that actually work" (`<1.1>`,
-stage-plan P1-exit) *mechanically*, not by opinion. Everything below serves that claim.
+**What is new in R2** (where the design risk now sits):
+1. the **exit rule** changes from a fixed stop/target to a **trailing stop that does not yet exist** —
+   `simulate_day_trades()` has only a fixed stop/target [`tools/rolling_watchlist.py:723`]. Building it +
+   validating it is Phase-1-critical, not a pre-existing artifact to test (§6.2).
+2. the **label** changes from options-DTE directional correctness to **realized stock return under the
+   trailing-stop exit** vs a naive fixed-holding-period baseline (§6.2).
+3. the **components under test** change: drop IV-rank (no options); add the scanner's not-yet-validated
+   entry signals — the pattern detectors (bull-flag/flat-top/ABCD/micro-pullback/round-number/opening-range)
+   and the pivot / red-to-green alignment trigger (`<1.1>(a)`).
+4. the **universe** requirement (`liquid optionable large/mid-cap`) is deleted; `<2.2>` reopens (§9 P-3).
 
-**What is genuinely new vs. the equity studies** (and therefore where the architectural risk sits):
-1. the **target label** changes from "forward equity return at 1d/1w/1m" to **directional correctness over
-   the option's DTE window** — a new modeling contract (§6, OP-1/2/3);
-2. the data substrate adds **options chains + IV history**, which are the classic look-ahead trap and are
-   **not yet confirmed available point-in-time** at the tier in use (`<2.1>`, R-3);
-3. builder≠judge is now **structurally enforced by a second seat** (AIQ), not a single session self-checking.
+## 2 · Approach (R2)
 
-## 2 · Approach (chosen, with the roads not taken)
+**Chosen:** validate-in-place over the in-repo scanner, reusing the studies' CV harness where it transfers
+and extending only the exit-rule + label layer. Results write **file-first** (CSV/parquet, as the studies
+emit `cv_results*.csv`); Supabase read-side only this phase (§7). **The trailing-stop is built as a
+backward-compatible new exit mode inside `tools/rolling_watchlist.py`'s simulator** (default off = today's
+fixed behavior), so the one implementation serves both the D-TRADE-023 dashboard's simulator panel and the
+validation harness — no second copy of the exit logic (§6.3).
 
-**Chosen:** ingest-adapt-validate as a single Python package, reusing the studies' proven CV harness verbatim
-where it transfers, extending only the label layer (§6). Validation output is a structured verdict record
-that drives the screener's gate flags. Results are written **file-first** (CSV/parquet, exactly as the
-studies emit `cv_results*.csv`) with Supabase as an *optional read-side* reference store this phase (§7,
-integration) — deferring any Supabase **write** until the Director opens write access (D-TRADE-014).
+**Rejected — reimplement the scanner inside `helm/`:** violates `<1.1>` ("validate the existing scanner")
+and forks the single source of truth. **Rejected — a separate trailing-stop impl in `helm/`:** would
+double the exit logic and diverge from the dashboard; keep it in the shared scanner. **Rejected — full
+parameter optimization of the trailing stop in Phase 1:** a fit-to-test rabbit hole (§6.4, OP-1); Phase 1
+tests a small **pre-registered** set of trail settings.
 
-**Rejected — rebuild the screener/backtest from scratch:** violates `<1.1>` ("validation, not invention")
-and discards proven, in-hand assets. **Rejected — full option-P&L simulation now:** the Director explicitly
-scoped Phase 1 to directional correctness (`<1.1>`/`<1.4>`); P&L (theta, IV-crush, slippage) is Phase-2 and
-reuses the 0DTE engine. **Rejected — Supabase-write as the primary result sink this phase:** write access is
-closed by default (D-TRADE-014, money-truth posture) and the studies already prove file-based results are
-sufficient and reproducible; taking a write-access dependency onto the Phase-1 critical path buys nothing.
+## 3 · Stack (`<3.5>` — CONFIRMED, unchanged from R1/D-TRADE-022)
+**Python core; Node/Fastify/React dropped (N/A).** Single package `helm/`, disjoint-by-directory. Supabase
+`zyscsnhiymitpfdhjuci` read-only this phase (file-first results). Dependency pinning via
+`pyproject.toml`/`requirements.txt`; `.env` (gitignored) for keys (`<4.1>`). D-TRADE-017's Node absence
+does not bite a Python-only phase.
 
-## 3 · Stack confirmation (`<3.5>` — Architect's call per canonical; recommend Lead absorb)
-
-**CONFIRM: Python core; drop Node/Fastify/React entirely; Supabase retained read-side only this phase.**
-- The screener, the 0DTE engine, and all four studies are Python (pandas/numpy/scipy) — every needed library
-  is installed and importable *now* (charter §1 toolchain row, verified 2026-08-01). D-TRADE-017's
-  Node/Docker/pnpm/gh absence **does not bite** a Python-only Phase 1; re-verify only if a non-Python
-  component is ever pulled in.
-- No web/API surface exists in `<1.1>` ("a Python script/tool I can run") ⇒ `apps/api`, `apps/web`,
-  `packages/{domain,db,contracts,config}` and the Fastify/React stack are **N/A, dropped** (not deferred).
-- Supabase (`zyscsnhiymitpfdhjuci`) is retained as the durable store for scan/verdict history but is used
-  **read-only** in Phase 1 (§7); persistence-write is a later Director-gated step.
-- Dependency pinning: `pyproject.toml` **or** `requirements.txt` with pinned versions; `.env` (gitignored)
-  for keys (`<4.1>`).
-
-## 4 · Module layout & ownership map
-
-Single package `helm/`, disjoint-by-directory (the lane cut, §5). Directories are the write-lanes.
+## 4 · Module layout & ownership map (R2 — screener re-scoped, universe conditional)
 
 | Module | Purpose | Owner | Oracle leg it feeds |
 |---|---|---|---|
-| `helm/ingest/` | provider adapters (Massive, SEC-API.io), **point-in-time** pulls; the **ONLY** place a provider SDK/host may appear (leg T boundary) | SDE1 · Data-Eng | SecOps leg T; SDE1 schema/freshness |
-| `helm/universe/` | liquid-optionable universe construction (OI/volume/bid-ask, point-in-time membership) | Data-Eng | Data-Eng universe-integrity leg |
-| `helm/screener/` | the ingested composite-score + components + `_gates` flags | AI/ML | gate-flag conformance leg (§8 NN-4) |
-| `helm/validation/engine/` | the walk-forward-CV engine: `evaluate_loo`, `evaluate_multiseed_kfold`, the pre-registered bar, verdict records | AI/ML (build) | AI/ML CV pass/fail leg |
-| `helm/validation/audit/` | **AIQ's independent re-derivation** — reads RAW data + its own harness, **must not import `engine`'s results** (builder≠judge seam) | AIQ | AIQ re-derivation leg |
-| `helm/storage/` | result persistence (file-first; Supabase read-side) — name aligns with DevOps's in-flight harness draft | SDE1 | SDE1 schema-conformance |
-| `helm/spend/` | the spend-guard wrapper around every `ingest` call (`<3.2>`) | FinOps · SDE1 | FinOps cap-breach leg |
-| `scripts/gate/` | the gate runner + all legs; import-boundary lint | DevOps | DevOps runner honesty |
-| root config | `pyproject.toml`/`requirements.txt`, `.env.example`, CI | DevOps | leg K secret-scan |
+| `helm/ingest/` | provider adapters (Massive, SEC-API.io), **point-in-time** pulls; the **ONLY** place a provider SDK/host may appear (leg T) | SDE1 · Data-Eng | SecOps leg T; SDE1 schema/freshness |
+| `helm/universe/` | **CONDITIONAL — likely DROPS for Phase 1** (§9 P-3): scanner takes `--tickers`; validation runs over the studies' existing event-defined cohorts, not a maintained live universe | Data-Eng | (drops with the lane if confirmed) |
+| `helm/screener/` | **RE-SCOPED:** a thin **feature-extraction adapter** over `tools/rolling_watchlist.py` — exposes each component's per-bar signal (guardrail pass · S3 score · each pattern fire · pivot alignment) as a tidy feature frame the CV harness consumes. Imports the scanner as a library; **never forks its logic** | AI/ML | gate-flag conformance leg (NN-4) |
+| `helm/validation/engine/` | walk-forward-CV: `evaluate_loo`/`evaluate_multiseed_kfold`, the D-TRADE-021 bar, the two-leg contract (§6.2), verdict records | AI/ML (build) | AI/ML CV pass/fail leg |
+| `helm/validation/audit/` | **AIQ** re-derives from RAW data; **must not import `engine`'s outputs** (builder≠judge as an import rule) | AIQ | AIQ re-derivation leg |
+| `helm/storage/` | file-first results; Supabase read-side | SDE1 | SDE1 schema-conformance |
+| `helm/spend/` | spend-guard wrapper around every `ingest` call (`<3.2>`) | FinOps · SDE1 | FinOps cap-breach leg |
+| `tools/rolling_watchlist.py` | **the scanner — SHARED LIBRARY, single source of truth**, imported by BOTH `helm/screener` and `tools/web/` (D-TRADE-023). Stays a pure library (no import side-effects; `main()` under `__main__`). The trailing-stop exit mode is added here (§6.3) — a shared-file change, coordinate with the D-TRADE-023 seats | AI/ML builds the exit mode | (feeds NN-1/NN-10 via the simulator) |
+| `scripts/gate/` | gate runner + legs; import-boundary lint | DevOps | runner honesty |
 
-**Compiler-adjacent boundary (a DevOps import-boundary leg, §8 NN-4/NN-7):**
-- `helm/screener/` may not import a provider SDK directly — only the `helm/ingest/` adapter interface.
-- `helm/validation/audit/` (AIQ) may not import `helm/validation/engine` **outputs** — it re-derives from
-  raw. This *is* builder≠judge, encoded as an import rule.
-- provider SDK/host imports appear **only** under `helm/ingest/` (leg T).
+**Import boundaries (a DevOps leg):** `helm/screener` reaches the scanner only through `tools/rolling_watchlist.py`'s
+function API; `helm/validation/audit` may not import `engine` outputs (builder≠judge); provider SDK/host imports
+only under `helm/ingest`.
 
-## 5 · Lane re-cut (confirms charter §3 draft; recommend Lead absorb into §3)
+## 5 · Lane re-cut (R2 — absorb into charter §3)
+A ingest+store (SDE1·Data-Eng) — `helm/ingest`,`helm/storage` (**universe conditional, §9 P-3**) · B screener
+adapter (AI/ML) — `helm/screener` · C validation engine (AI/ML) — `helm/validation/engine` · D validation
+audit (AIQ, independent) — `helm/validation/audit` · E infra/CI/gate/spend (DevOps·FinOps). Plus the **shared**
+`tools/rolling_watchlist.py` (AI/ML owns the trailing-stop addition; coordinate with D-TRADE-023).
 
-Disjoint-by-directory, one owner each; AI/ML owns build lanes B+C, AIQ owns the **independent** audit lane D.
+## 6 · Data & label contracts (I author the CONTRACT + invariants; SDE1 authors DDL)
 
-| Lane | Owner | Write-lane |
-|---|---|---|
-| **A · ingest + universe + store** | SDE1 · Data-Eng | `helm/ingest`, `helm/universe`, `helm/storage` |
-| **B · screener** | AI/ML | `helm/screener` |
-| **C · validation engine** | AI/ML | `helm/validation/engine` |
-| **D · validation audit (independent)** | AIQ | `helm/validation/audit` |
-| **E · infra / CI / gate / spend** | DevOps · FinOps | `scripts/gate`, `helm/spend`, root config |
-| Hot files | Lead allocates | LIVE BOARD · `working-log.md` |
+**6.1 Durable entities** (required fields + invariants, not final DDL):
+- `validation_runs(val_id, ts, git_commit, bar_id, cohort_id, n_components, n_exit_configs, n_comparisons)` —
+  `git_commit`+`bar_id` pin the pre-registered bar (LL-41/44); `n_comparisons` records the multiple-comparison count.
+- `validation_verdicts(val_id, subject, subject_kind∈{entry_signal,exit_rule}, horizon_or_config,
+  loo_beats_naive, pct_seeds_beating_naive, effect_sign, effect_size, robustness_json,
+  verdict∈{cleared,dropped}, reproduced_by_aiq)` — **append-only; `cleared` requires `reproduced_by_aiq=TRUE` (NN-3)**.
+- `spend_ledger(ts, provider, endpoint, est_cost, cumulative_day)` — a row per provider call even at $0.00 (D-TRADE-019).
 
-## 6 · Data & label contracts (I author the CONTRACT + invariants; SDE1 authors the DDL)
+**6.2 The validation contract — TWO legs** (the R2 re-design; CRITICAL tier). Both use the studies'
+harness and the D-TRADE-021 bar; both obey NN-1 (point-in-time).
+- **Leg A · entry-signal validation** (per not-yet-validated component). Feature = the component's trigger
+  (binary fire, or continuous score); target = forward stock return over a **fixed evaluation horizon**.
+  Does entering on component-X beat a naive baseline (no-signal / all-bars mean) OOS under the bar? This is
+  the studies' regression/CV discipline applied verbatim to the pattern detectors + pivot trigger. Verdict →
+  the component's `_gates` flag (NN-4).
+- **Leg B · exit-rule validation** (the trailing stop). Over the entry set, compare **realized trade return
+  under the trailing-stop exit** vs the **naive baseline = fixed-holding-period exit** (same entries, exit
+  after a fixed N bars, no trail). Metric = realized return (report both raw and a risk-adjusted variant —
+  return per unit max-adverse-excursion). The D-TRADE-021 seed-agreement bar applies to the paired
+  trailing-vs-fixed comparison across CV folds/seeds. **The holding period is endogenous** (set by when the
+  trail is hit) — there is no fixed DTE/horizon for Leg B; Leg A's fixed horizon is only for entry-signal ranking.
+- **How it plugs into the harness:** Leg A fits `evaluate_loo`/`evaluate_multiseed_kfold` directly
+  (feature,target). Leg B is a small extension — a paired strategy-return comparison per fold/seed, reusing
+  the same "beats-naive-OOS across ≥90% of ≥30 seeds" machinery, RMSE-of-fit swapped for realized-return-of-strategy.
 
-**6.1 Durable entities (required fields + invariants, not final DDL — SDE1's lane):**
-- `scan_runs(run_id, ts, universe_version, screener_version, params_json)`
-- `signals(run_id, ticker, as_of_date, component_scores_json, composite_score, direction, target_delta, target_dte)`
-- `validation_runs(val_id, ts, git_commit, bar_id, universe_version, n_components, n_horizons, n_comparisons)`
-  — **`git_commit` + `bar_id` pin the pre-registered bar at a commit (LL-41/44); `n_comparisons` records
-  the multiple-comparison count (R-5).**
-- `validation_verdicts(val_id, component, horizon_dte, loo_beats_naive, pct_seeds_beating_naive, slope_sign,
-  mean_pct_improvement, robustness_json, verdict∈{cleared,dropped}, reproduced_by_aiq)` — **append-only;
-  a `cleared` verdict requires `reproduced_by_aiq=TRUE` (NN-3).**
-- `spend_ledger(ts, provider, endpoint, est_cost, cumulative_day)` — every provider call writes a row **even
-  at $0.00** (D-TRADE-019: rate/ToS governance + reconciliation, not just dollars).
+**6.3 The trailing-stop rule** (new, built in `tools/rolling_watchlist.py`'s simulator as a mode). Precise
+definition: after entry at `P0`, track `peak = max(High since entry)`; **trailing stop = `peak*(1 - trail_pct/100)`**,
+ratchets up only, never down; exit at the first bar whose `Low ≤ stop` (filled at the stop — the conservative
+tie assumption the existing sim already uses). An **initial hard stop `P0*(1 - init_stop_pct/100)`** governs
+until the peak advances enough for the trail to take over (bounds the loss on a trade that never rises).
+Decision variables: `trail_pct`, `init_stop_pct`, bar interval. **Bar-causal walk (NN-1):** `peak` at bar `i`
+uses only bars `≤ i` — the existing simulator's forward walk already guarantees this; the trailing extension
+must preserve it. Backward-compatible: default mode = today's fixed stop/target.
 
-**6.2 The directional-correctness label (the one genuinely new modeling contract — CRITICAL tier):**
-- Signal at underlying date `t` with composite/component scores. **Label = the underlying's realized move
-  over the option's DTE window** `[t, t+DTE]`, evaluated for *directional correctness* relative to the
-  scored direction (call ⇒ up, put ⇒ down). This is **underlying-move directional correctness, explicitly
-  NOT option P&L** (`<1.1>`/`<1.4>`; the exact trap the Director's own 0DTE backtest surfaced once).
-- **Invariant (NN-1, non-negotiable):** every feature and every label at `t` uses **only** data timestamped
-  `≤ t` — options chain, IV, price, *and universe membership* — joined point-in-time exactly as the
-  short-interest study joined `settlement_date ≤ sample_date` with zero look-ahead
-  [`short-interest-study/SHORT_INTEREST_STUDY_FINDINGS.md:25-29`].
-- **Harness reuse:** `evaluate_loo` + `evaluate_multiseed_kfold` transfer verbatim; only the target vector
-  and horizons change.
+**6.4 Pre-registration of exit parameters (NN-10, new).** `trail_pct`/`init_stop_pct` are **fit on training
+folds only and applied out-of-sample on the test fold** (or drawn from a small pre-registered set) — they are
+**never chosen by looking at test-set outcomes**. This is the specific leakage vector a trailing stop
+introduces and is a first-class non-negotiable (§8).
 
-## 7 · Integration impact
+**Serialization/serializer** rules unchanged: NaN→null, Timestamp→ISO8601, DataFrame→records.
 
-- **Supabase (D-TRADE-014, read-only MCP):** Phase-1 **writes results to files** (CSV/parquet, like the
-  studies) and uses Supabase **read-only** for reference; a Supabase **write** path is a later
-  Director-gated change — **not on the Phase-1 critical path**. (Resolves the write-access question without
-  blocking.)
-- **Toolchain:** Python-ready; dropping Node clears D-TRADE-017 for Phase 1.
-- **Existing assets:** the options-screener ZIP and the 0DTE-engine ZIP are **location-TBD** (P-2) — the
-  exact component decomposition and the reuse surface bind against that source; until located, the component
-  list here is provisional (OP-4).
-- **B5 secrets:** live-key use waits on the B5 approval (`<4.1>`, PROJECT-CONFIG §4).
+## 7 · Integration impact (R2)
+- **Supabase (D-TRADE-014, read-only):** results file-first; Supabase write is a later Director-gated step,
+  off the critical path.
+- **Shared scanner:** `tools/rolling_watchlist.py` is now imported by both `tools/web/` (D-TRADE-023) and
+  `helm/screener`. The trailing-stop addition (§6.3) is backward-compatible but touches this shared file —
+  **coordinate with AI/ML/Designer on the D-TRADE-023 build** (the dashboard's simulator panel can adopt the
+  trailing mode too). Shared-contract change ⇒ **not BYPASS-eligible** (cite ADR-0001).
+- **Providers:** Massive (`<2.1>`, personal-tier confirm pending, SecOps) + SEC-API.io (D-TRADE-026/027,
+  confirmed live, paid personal tier — no longer assume $0). **No options-chain/IV dependency** (deleted).
+- **B5 secrets:** live-key use waits on the B5 approval.
 
-## 8 · Constraints / non-negotiables → others' oracle legs (the core Architect deliverable)
+## 8 · Constraints / non-negotiables → oracle legs (R2)
+Each = a fail-closed assertion + the negative control that must make it bite + the leg owner.
 
-Each is stated as a **fail-closed assertion + the negative control that must make it bite** (admission test,
-oracle-boundary.md) + the seat whose leg carries it. A seat OTHER than the one judged must be able to
-produce the negative control.
-
-| # | Non-negotiable (assertion, fail-closed) | Negative control (proves it bites) | Leg owner |
+| # | Non-negotiable | Negative control | Leg owner |
 |---|---|---|---|
-| **NN-1** | **No look-ahead.** Every feature/label at `t` uses only data `≤ t` (price, chain, IV, universe membership), joined point-in-time | inject a feature computed from `t+k` data → leakage leg RED | AIQ re-derivation + DevOps leakage assert |
-| **NN-2** | **Pre-registered bar, frozen before the run — the ratified bar governs (D-TRADE-021 / `<3.4>`):** CLEARED ⇔ beats naive OOS under **BOTH** LOO-CV **AND** 5-fold CV (≥30 seeds) with **≥90% of seeds agreeing**; NOT-CLEARED otherwise; **VOID** on any leakage/lookahead/contamination regardless. Bar pinned to a git commit BEFORE any component is evaluated | a component that wins in-sample but fails OOS is **dropped**; a nominal LOO "win" that only ~68% of seeds agree with is **dropped** (the catalyst-1d coin-flip precedent — exactly why ≥90%, not ≥50%) | AI/ML runs · AIQ verifies pre-registration · GA audits it ran |
-| **NN-3** | **Builder ≠ judge.** AIQ re-derives every `cleared` verdict from RAW data, not from the engine's summary; `cleared` requires `reproduced_by_aiq=TRUE` | AIQ re-run that disagrees with AI/ML's number → component blocked | AIQ · GA audits independence |
-| **NN-4** | **Gate-flag conformance.** A screener component's `_gates` flag may be `True` only if a matching `cleared` verdict record exists; a `dropped`/absent verdict with `_gates=True` FAILS | set `float_gates=True` with no `cleared` record → conformance leg RED | SDE1/DevOps conformance leg |
-| **NN-5** | **Universe integrity.** Every tested name has a real, liquid options chain (OI/volume/bid-ask) point-in-time at each signal date; a name lacking it is **excluded, not imputed** | inject an illiquid/no-chain name → universe leg excludes it | Data-Eng |
-| **NN-6** | **Data schema/freshness.** Ingested market/options rows conform to schema + freshness bounds; a malformed or stale row FAILS rather than silently feeding the model | plant a stale/malformed row → SDE1 leg RED | SDE1 |
-| **NN-7** | **No secret in repo / provider taint.** Keys in the secret store only (leg K); provider SDK/host only under `helm/ingest/` (leg T) | plant a fake `SEC_API_KEY=`/`MASSIVE_KEY=`, or a provider import in `helm/screener/` → RED | SecOps authors (`docs/security/key-denylist.md`) · DevOps wires |
-| **NN-8** | **Spend guard.** A provider call that would breach the personal daily cap is BLOCKED (`<3.2>`) | simulate over-cap → call blocked | FinOps |
-| **NN-9** | **Reproducibility.** QA re-runs each component's CV end-to-end in its own clone and the numbers reproduce (deterministic given pinned seeds + data) | a non-deterministic script whose numbers move on re-run → QA FAILS it | QA |
+| **NN-1** | **No look-ahead.** Every feature/label/simulated-bar at `t` uses only data `≤ t`, point-in-time (incl. the trailing-stop `peak`) | inject a `t+k` feature, or a peak using a future bar → leakage leg RED | AIQ re-derivation + DevOps leakage assert |
+| **NN-2** | **Ratified clearance bar (D-TRADE-021 / `<3.4>`):** CLEARED ⇔ beats naive OOS under BOTH LOO **and** ≥90% of ≥30-seed 5-fold; VOID on leakage/contamination. Pinned before the run | an in-sample win that fails OOS, or a ~68%-agreement coin-flip → dropped | AI/ML runs · AIQ verifies pre-registration · GA audits |
+| **NN-3** | **Builder ≠ judge.** AIQ re-derives every `cleared` verdict from RAW; `cleared` requires `reproduced_by_aiq` | AIQ re-run disagrees → component/rule blocked | AIQ · GA audits independence |
+| **NN-4** | **Gate-flag conformance.** A scanner component's `_gates=True` requires a matching `cleared` verdict | set a gate `True` with no `cleared` record → conformance leg RED | SDE1/DevOps |
+| **NN-5** | **Cohort integrity** *(re-scoped from options-universe):* the backtest cohort is well-defined + point-in-time; a name/bar without the required history is excluded, not imputed. **No options-chain requirement** | inject a name with insufficient history → excluded | Data-Eng |
+| **NN-6** | **Data schema/freshness.** Malformed/stale ingested row FAILS | plant a stale/malformed row → SDE1 leg RED | SDE1 |
+| **NN-7** | **No secret / provider taint.** Keys server-side only (leg K); provider SDK/host only under `helm/ingest` (leg T) | plant a fake key / an out-of-module provider import → RED | SecOps authors · DevOps wires |
+| **NN-8** | **Spend guard.** A call breaching the daily cap is BLOCKED | simulate over-cap → blocked | FinOps |
+| **NN-9** | **Reproducibility.** QA re-runs each CV end-to-end; numbers reproduce (pinned seeds+data) | a non-deterministic script whose numbers move → QA FAILS | QA |
+| **NN-10** | **Exit-parameter isolation (NEW, R2):** `trail_pct`/`init_stop_pct` fit on train folds only (or a pre-registered set), never chosen on the test fold | fit the trail on the full sample / test fold → leakage leg RED | AIQ + DevOps |
 
-NN-1/2/3/4 are **CRITICAL** (they define what "cleared" *means*) → frontier A6 depth + protocol-17 recurring
-validation. NN-5..9 are standard.
+NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage vector) → frontier A6 depth
++ protocol-17 AIQ validation. NN-5..9 = standard.
 
-## 9 · Preconditions to build dispatch (HARD — none is my call to waive)
-
-- **P-1 · D-TRADE-010 re-scope.** No-build stands until the **Director** explicitly confirms Phase-1
-  quant-research build is outside D-TRADE-010's intent (Lead's recommendation in stage-plan, flagged as
-  *not yet ruled*). This ADR (design) proceeds; **no seat writes production code until P-1 clears.**
-- **P-2 · Locate + read the two ZIPs** (options screener, 0DTE engine). Component decomposition binds
-  against source (OP-4). Owner: Director/Data-Eng to supply location.
-- **P-3 · Provider + data-availability confirmation.** SecOps light-touch: Massive personal-tier compliant
-  + SEC-API.io key identity (`<2.1>`, D-TRADE-018). **DevOps/Data-Eng discovery: is historical
-  options-chain + IV data available point-in-time at the tier in use?** — gates whether IV-rank is testable
-  at all (R-3) and bounds backtest depth for every component.
-- **P-4 · The CV clearance bar is already ratified (D-TRADE-021 / `<3.4>`)** — this precondition is
-  **narrowed** to ratifying the **directional-correctness label FORM** (OP-1: the DTE-window target/metric),
-  which D-TRADE-021 did *not* fix. That form must be pinned before the run (LL-44). "Is the label the right
-  label" is HUMAN residue (Director + AI/ML + AIQ).
+## 9 · Preconditions to build dispatch (R2 — none mine to waive)
+- **P-1 · D-TRADE-010 re-scope.** No-build stands until the Director confirms Phase-1 quant-research build is
+  outside D-TRADE-010's intent (Lead's recommendation; not yet ruled). Design proceeds; **no production code until P-1**.
+- **P-2 · MOOT (D-TRADE-028).** The "missing screener/0DTE ZIPs" were never missing — the scanner is
+  `tools/rolling_watchlist.py`, in-repo. No artifact-location work remains.
+- **P-3 · `<2.2>` universe decision** (Architect/Data-Eng): confirm the Phase-1 backtest cohort = the studies'
+  existing event-defined datasets + user-supplied tickers (⇒ `helm/universe` lane **drops**), vs. a maintained
+  universe (⇒ lane stays). *Recommend drop* — matches the scanner's `--tickers` status quo and the studies' cohorts.
+- **P-4 · Ratify the Leg-A horizon + Leg-B baseline + the pre-registered trail set** (Director + AI/ML + AIQ)
+  before the run (LL-44). The D-TRADE-021 *bar* is already ratified; what's open is the label parameters (OP-1..3).
 - **P-5 · B5 secret approval** before any live-key use.
 
-## 10 · Open points (first-class, LL-31) & non-goals
+## 10 · Open points (LL-31) & non-goals (R2)
+- **OP-1 · the pre-registered trailing-stop set** (Director + AI/ML + AIQ): which `{trail_pct, init_stop_pct}`
+  settings Phase 1 tests. *Recommend* a small fixed grid (e.g. trail ∈ {5,8,12}%, init ∈ {2,3}%) fixed before
+  the run — **not** an optimization (that's Phase 2, `<1.4>`).
+- **OP-2 · Leg-A evaluation horizon** (AI/ML): the fixed forward window for entry-signal ranking. *Recommend*
+  the studies' existing 1d/1w/1m set (directly comparable to the 4 completed studies).
+- **OP-3 · Leg-B naive baseline** (AI/ML + AIQ): fixed-holding-period exit — *recommend* N = the median
+  realized holding period of the trailing-stop arm (so the comparison is horizon-matched), plus a couple of
+  fixed N as sensitivity.
+- **OP-4 · component list** (final): drop IV-rank; test {each pattern detector, pivot/red-to-green trigger}
+  as Leg-A entry signals + the trailing stop as Leg-B. The already-validated study components
+  (short-interest kept, catalyst/float/regime as-ruled) are **not** re-litigated.
+- **Non-goals:** options anything (deleted); trailing-stop **optimization** / adaptive-ATR variants (Phase 2);
+  the from-scratch predictive breakout-occurrence model (Phase 2); any web/API/UI surface **inside `helm/`**
+  (the D-TRADE-023 dashboard is a separate tool); multi-tenant/RLS (`<3.3>` N/A).
 
-**Open (▸ NOT DECIDED — who decides):**
-- **OP-1 · directional-correctness metric FORM** (Director + AI/ML + AIQ): *Recommend BOTH, both bars fixed
-  before the run:* **(a)** continuous forward-underlying-return regression over the DTE window (reuse
-  `evaluate()` verbatim, directly comparable to the studies) as the CV vehicle; **(b)** a **volatility-scaled
-  directional-correctness binary computed on OHLCV alone** as the Phase-1 success criterion. **Converges with
-  AI/ML's independent methodology draft** (`docs/roles/ai-ml/validation-methodology-draft.md`), which
-  proposed exactly this two-tier structure. The OHLCV-only form is deliberate — it removes the *label*'s
-  dependence on options-chain/IV data (see OP-3, R-3). Ratify before the run (LL-44).
-- **OP-2 · DTE horizons** (AI/ML): the studies used 1d/1w/1m; options are ~25–45 DTE. *Recommend* primary
-  horizons at the screener's real target band (~25/35/45 DTE), 1w/1m kept as continuity references.
-- **OP-3 · the "far enough" move threshold** for a ~0.40-delta option. *Recommend (converged with AI/ML):*
-  a **volatility-scaled** move threshold on OHLCV (e.g. a multiple of realized/ATR vol over the DTE window) —
-  computable without options data, so the label doesn't block on `<2.1>`. The delta-implied breakeven move
-  (which needs the 0DTE engine's pricing assumptions) is recorded as an **upgrade path**, not invented now;
-  it sits at the Phase-2 boundary.
-- **OP-4 · exact component list** — provisional {trend, momentum, breakout, volume} (`<1.1>`) + IV-rank
-  (stage-plan P1-3); binds against screener source (P-2). IV-rank may be **untestable** if historical IV
-  is unavailable (R-3) → then it defaults `gates=False`, no data behind it (the **float precedent**).
-
-**Non-goals (explicit):** full option-P&L simulation (theta/IV-crush/slippage) — Phase 2 (`<1.4>`); a
-from-scratch predictive breakout model — Phase 2; any web/API/UI surface; any multi-tenant/RLS machinery
-(`<3.3>` N/A); a SaaS-grade metered-chokepoint/billing-reconciliation system (`<3.2>` is a right-sized
-guard, LL-19).
-
-## 11 · Risks
-
+## 11 · Risks (R2)
 | id | risk | sev | mitigation |
 |---|---|---|---|
-| R-1 | look-ahead / leakage in options+IV data | HIGH | NN-1 + AIQ independent re-derivation (NN-3) |
-| R-2 | screener source not yet in hand → provisional component list | MED | P-2; OP-4 marks provisional |
-| R-3 | historical options-chain/IV not available point-in-time at tier | MED *(de-risked)* | the OHLCV-only volatility-scaled label (OP-1/OP-3, converged w/ AI/ML) removes the dependency for the *label* and for trend/momentum/breakout/volume; only the **IV-rank component** still needs historical IV → if unavailable it defaults `gates=False` (float precedent). P-3 discovery still on the critical path for IV-rank + backtest depth |
-| R-4 | directional correctness ≠ profitability | known/accepted | `<1.1>`/`<1.4>` Phase-2 boundary; carry the magnitude caveat into every verdict (as short-interest FINDINGS did) |
-| R-5 | multiple comparisons (components × horizons × metrics) inflate false positives | MED | seed-robustness bar (NN-2) + AIQ void-on-fragility (LL-47); record `n_comparisons` (§6.1) |
-| R-6 | D-TRADE-010 not re-scoped | blocks build | P-1 (Director) |
+| R-1 | look-ahead/leakage — now incl. the trailing-stop peak + exit-parameter fitting | HIGH | NN-1 + NN-10 + AIQ re-derive (NN-3) |
+| R-2 | multiple comparisons (components × horizons × trail settings) inflate false positives | MED-HIGH | the ≥90%-seed bar (NN-2) + AIQ void-on-fragility; record `n_comparisons` |
+| R-3 | shared-file churn — trailing-stop edit to `tools/rolling_watchlist.py` collides with the live D-TRADE-023 build | MED | backward-compatible mode (default off) + coordinate with AI/ML/Designer (§7) |
+| R-4 | realized-return metric is noisy on small cohorts | MED | report raw + risk-adjusted; seed-robustness bar; magnitude honesty (as short-interest FINDINGS did) |
+| R-5 | D-TRADE-010 not re-scoped | blocks build | P-1 (Director) |
 
-## 12 · Complexity tier & co-sign
-
-- **Tier:** validation contract (NN-1..4 + §6.2 label) = **CRITICAL** → frontier A6/ASR depth + protocol-17
-  independent validation (AIQ). Stack/layout/lane (§3–5) = **STANDARD**.
-- **Co-sign required before wave-entry GO** (each confirms the non-negotiables it will carry as a leg):
-  AI/ML (validation engine + label) · AIQ (re-derivation + bar) · SDE1 (ingest/store/schema) · Data-Eng
-  (universe/data-availability) · DevOps (gate legs + import-boundary) · FinOps (spend guard) · QA
-  (reproducibility) · SecOps (legs K/T). **Director:** GO on the wave-entry gate + P-1 + P-4.
+## 12 · Complexity tier & co-sign (R2)
+- **Tier:** the two-leg label + trailing-stop + NN-10 = **CRITICAL** → frontier A6/ASR depth + protocol-17
+  independent validation (AIQ). Stack/layout/lane = STANDARD.
+- **Co-sign before wave-entry GO:** AI/ML (harness + trailing-stop + Leg-A/B) · **AIQ (the label design +
+  NN-10 + the baseline — this is the CRITICAL methodology leg, its sign-off is load-bearing)** · SDE1
+  (ingest/store/schema) · Data-Eng (cohort/universe P-3) · DevOps (legs + import-boundary + shared-file
+  coordination) · FinOps (spend) · QA (reproducibility) · SecOps (legs K/T). **Director:** GO + P-1 + P-4.
 
 ## 13 · For a later revision (A6a/A6b forward)
-Any ADR-0001 revision must **name every removed decision variable** (A6a predicate-retention) and
-**partition changed inputs** into repairs vs. re-resolutions (A6b) — a threshold that silently stops being
-referenced is a distinction deleted, not partitioned (LL-51).
+Any revision names every removed decision variable (A6a) and partitions changed inputs into repairs vs
+re-resolutions (A6b) — a silently unreferenced threshold is a distinction deleted, not partitioned (LL-51).
+R2's own delta is §14.
+
+## 14 · Revision 2 delta (D-TRADE-028 — the §13 A6a/A6b declaration)
+**A6a · decision variables REMOVED (named, with reason):**
+- options-DTE directional-correctness label · the OHLCV volatility-scaled directional binary (R1 OP-1) —
+  removed: no options, the exit rule is now the object of study, not a directional-move label.
+- DTE horizons 25/35/45 (R1 OP-2) — removed: no options; horizons are now Leg-A's fixed window + Leg-B's
+  endogenous holding period.
+- the delta-implied "far enough" move threshold (R1 OP-3) — removed: no delta/options pricing in scope.
+- the **IV-rank** component (R1 OP-4) — removed: no options/IV data.
+- the historical options-chain/IV **data dependency** (R1 R-3) — removed/moot.
+- the **liquid-optionable large/mid-cap universe** requirement (R1 NN-5) — removed: no options-chain need.
+- **P-2** (locate the screener/0DTE ZIPs) — removed/moot: the scanner is in-repo (`tools/rolling_watchlist.py`).
+- the 0DTE-backtest-engine reuse plan (R1 Phase-2-A) — removed: no 0DTE engine in scope.
+
+**A6b · changed inputs partitioned (repair vs re-resolution):**
+- label (`<3.6>`) — **RE-RESOLVED:** DTE directional correctness → the two-leg contract (Leg A entry-signal;
+  Leg B trailing-stop realized return vs fixed-holding baseline).
+- component list — **RE-RESOLVED:** drop IV-rank; add pattern detectors + pivot/red-to-green trigger.
+- `helm/screener` purpose — **REPAIRED (re-scoped):** "ingest the missing options screener" → thin
+  feature-extraction adapter over the in-repo scanner.
+- `helm/universe` — **RE-RESOLVED (conditional):** likely dropped for Phase 1 (P-3).
+- NN-5 — **REPAIRED:** options-universe integrity → generic cohort integrity (no options-chain clause).
+
+**Carried forward UNCHANGED (explicit — not silently retained):** NN-1 (no-lookahead/point-in-time),
+NN-2 = the D-TRADE-021 bar, NN-3 (AIQ builder≠judge), NN-4 (gate-flag conformance), NN-6/7/8/9; the
+gate-flag organizing claim; the CV harness reuse (`evaluate_loo`/`evaluate_multiseed_kfold`); stack `<3.5>`
+Python core; lanes C/D/E. **NEW in R2:** NN-10 (exit-parameter isolation); the trailing-stop rule (§6.3);
+Leg A/B (§6.2); `tools/rolling_watchlist.py` as a shared library.

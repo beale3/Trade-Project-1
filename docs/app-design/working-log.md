@@ -806,3 +806,35 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   and didn't build against them. My Lane D (`helm/validation/audit`, import-boundary vs. lane C) and the
   NN-1/NN-3 legs in oracle-boundary.md's structure are unaffected regardless of the label rewrite.
 - Still **HOLDING**. Reported once to the Lead (protocol 15).
+
+### [Architect · 2026-08-04] ADR-0001 Revision 2 (D-TRADE-028 — options dropped, equity + trailing-stop)
+Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, protocol 13a) + D-TRADE-024..028.
+**Full re-author** of ADR-0001 to R2 (protocol 19, not patched), keeping the stable adr_reference id.
+- **`<3.6>` label RE-DESIGNED into a two-leg contract** — the key deliverable. **Leg A** = entry-signal
+  validation (each not-yet-validated component's trigger → forward return vs naive, the studies' harness
+  verbatim). **Leg B** = exit-rule validation (realized return under the **trailing stop** vs the naive
+  **fixed-holding-period exit**, D-TRADE-021 bar over the paired comparison). Endogenous holding period; no
+  DTE/horizon for Leg B. Both obey NN-1.
+- **Trailing-stop rule DEFINED (§6.3):** `stop = peak_since_entry*(1-trail_pct)`, ratchets up only, exit on
+  `Low≤stop`; initial hard stop bounds a never-rises trade. **Built as a backward-compatible mode inside
+  `tools/rolling_watchlist.py`'s `simulate_day_trades()`** (default off) — ONE implementation shared by the
+  D-TRADE-023 dashboard sim panel + the validation harness. Bar-causal peak preserves NN-1.
+- **NN-10 NEW:** trailing-stop params (`trail_pct`/`init_stop_pct`) fit on train folds only / pre-registered
+  set — never chosen on the test fold. The specific leakage vector a trailing stop introduces. CRITICAL.
+- **`<3.5>` `helm/screener` RE-SCOPED:** its old "ingest the missing options screener" job is moot (scanner
+  is in-repo). Now = a **thin feature-extraction adapter** over `tools/rolling_watchlist.py`, which becomes a
+  **shared library** imported by both `helm/screener` and `tools/web/` (D-TRADE-023). Shared-file change ⇒
+  not BYPASS-eligible; coordinate the trailing-stop edit with the D-TRADE-023 seats.
+- **`<2.2>` universe:** recommend **DROP `helm/universe` for Phase 1** (P-3) — validation runs over the
+  studies' existing event-defined cohorts + user-supplied `--tickers`, no maintained live universe needed.
+- **`<1.4>` boundary:** trailing-stop validation is Phase-1-critical (agree with Lead). Phase 2 = ONLY the
+  from-scratch predictive-occurrence model (old option-P&L/0DTE Phase-2-A deleted). Trailing-stop
+  *optimization* / adaptive-ATR = Phase 2, not Phase 1 (Phase 1 tests a small pre-registered grid).
+- **§14 delta (ADR-0001 §13 / A6a-A6b):** named every removed variable (options label, DTE horizons,
+  delta threshold, IV-rank, options-chain data dep, optionable-universe req, P-2, 0DTE reuse) + partitioned
+  changes (label/components/universe RE-RESOLVED; screener/NN-5 REPAIRED) + carried-forward unchanged
+  (NN-1/2/3/4/6/7/8/9, gate-flag claim, CV harness, stack, lanes C/D/E).
+- **Carried forward per Lead's dispatch:** D-TRADE-021 bar + NN-1 explicitly NOT reopened. P-2 marked MOOT.
+- **CRITICAL revision** → flagged AIQ's co-sign on the label/NN-10/baseline as load-bearing (protocol 17).
+  Preconditions to build: P-1 (D-TRADE-010 re-scope), P-3 (universe), P-4 (ratify label params), P-5 (B5).
+  Reporting to the Lead; ADR = PROPOSED, awaiting co-sign + GO.
