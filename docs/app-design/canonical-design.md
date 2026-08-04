@@ -106,32 +106,40 @@ must never read as decided (LL-31).
   baseline OOS under BOTH LOO-CV and 5-fold CV (≥30 seeds), **≥90% of seeds agreeing**; **NOT CLEARED**
   otherwise; **VOID** on any leakage/contamination finding regardless. Matches the short-interest
   study's own successful precedent exactly — not a new invention.
-- **`<3.5>` Stack — 🔒 CONFIRMED per ADR-0001 (Architect), Lead-ratified 2026-08-01 (D-TRADE-022);
-  module purpose partially superseded 2026-08-04, structure not yet known to be affected.**
-  **Python core; Node/Fastify/React dropped entirely** (N/A, not deferred — no web/API surface in
-  `<1.1>`). Single package `helm/`, disjoint-by-directory: `helm/ingest` · `helm/universe` ·
-  `helm/screener` · `helm/validation/{engine,audit}` · `helm/storage` · `helm/spend`. Full module
-  ownership map + import-boundary rules: `docs/adr/ADR-0001-phase1-validation-tool.md` §3-4. Supabase
-  (`zyscsnhiymitpfdhjuci`) retained **read-only** this phase — results write to files first (CSV/parquet,
-  matching the 4 studies' own pattern); a Supabase write path is a later, separately-gated step, off the
-  Phase-1 critical path. D-TRADE-017's Node/Docker absence does not bite a Python-only Phase 1.
-  ▸ **NOT DECIDED, dispatched to Architect (2026-08-04):** `helm/screener`'s old job was "ingest the
-  options screener artifact" — that artifact question is moot now (`<1.1>` — the scanner already exists
-  at `tools/rolling_watchlist.py`). Confirm whether `helm/screener` still means something under the new
-  scope (e.g. a thin adapter over `tools/rolling_watchlist.py`) or whether the lane cut itself changes.
-- **`<3.6>` The validation label + contract — 🔴 SUPERSEDED (2026-08-04), ▸ NOT DECIDED pending an
-  ADR-0001 revision.** The old label (underlying's realized move over an *option's* DTE window,
-  call⇒up/put⇒down directional correctness) is **deleted** — no options in scope (`<1.1>`). What
-  survives unchanged and should carry forward into the revision: the **invariant** (every feature/label
-  at `t` uses only data `≤ t`, point-in-time joined exactly as the short-interest study did — NN-1,
-  ADR-0001 §8, still the single most safety-critical non-negotiable) and the **CLEARANCE BAR** (D-TRADE-021:
-  beats naive OOS under BOTH LOO-CV and 5-fold CV ≥30 seeds, ≥90% seed agreement, VOID on leakage — this is
-  a validation-discipline rule, not an options-specific one, and is NOT reopened by this pivot). What needs
-  new design, dispatched to the Architect: the label itself (realized stock return under the new
-  trailing-stop exit rule vs. a naive baseline/fixed-holding-period exit — no DTE band, no delta), the
-  component list (drop IV-rank entirely — no options data; likely add the pattern detectors + pivot/
-  red-to-green trigger, per `<1.1>`), and horizons (no more 25/35/45 DTE — replaced by whatever holding
-  periods the trailing-stop rule actually produces).
+- **`<3.5>` Stack — 🔒 CONFIRMED per ADR-0001 R2 (Architect), Lead-ratified 2026-08-04 (D-TRADE-030,
+  co-signed by AI/ML + AIQ).** **Python core; Node/Fastify/React dropped entirely** (N/A). Single package
+  `helm/`, disjoint-by-directory: `helm/ingest` · `helm/universe` (**conditional — likely drops, P-3,
+  Director to confirm**) · `helm/screener` (**RE-SCOPED: a thin feature-extraction adapter** over
+  `tools/rolling_watchlist.py` — imports the scanner, never forks it) · `helm/validation/{engine,audit}` ·
+  `helm/storage` · `helm/spend`. **`tools/rolling_watchlist.py` is now a SHARED library** — imported by
+  both `helm/screener` and `tools/web/` (D-TRADE-023), a single source of truth, not ingested/forked. Full
+  module ownership map + import-boundary rules: `docs/adr/ADR-0001-phase1-validation-tool.md` §4-5. Supabase
+  (`zyscsnhiymitpfdhjuci`) retained **read-only** this phase. D-TRADE-017's Node/Docker absence does not
+  bite a Python-only Phase 1.
+- **`<3.6>` The validation label + contract — 🔒 CONFIRMED per ADR-0001 R2 (Architect), Lead-ratified
+  2026-08-04 (D-TRADE-030) after a full protocol-17 CRITICAL-tier review (AI/ML + AIQ both co-signed the
+  actual revised text, not a summary — 4 real objections found and fixed along the way, not a rubber
+  stamp).** No options label — a **TWO-LEG contract**: **Leg A** (entry-signal validation) tests each not-
+  yet-validated scanner component (the 8 pattern detectors + pivot/red-to-green trigger) as a trigger →
+  forward stock return vs. naive, the studies' harness verbatim, verdict → the component's `_gates` flag.
+  **Leg B** (exit-rule validation) compares realized trade return under the new **trailing-stop exit**
+  (§6.3: `effective_stop(t) = max(P0·(1−init_stop_pct/100), peak(t)·(1−trail_pct/100))`, monotone
+  non-decreasing by construction) vs. a naive **fixed-holding-period baseline** — holding period is
+  endogenous, no DTE/horizon. Both legs use the unchanged D-TRADE-021 clearance bar and the unchanged NN-1
+  no-lookahead invariant. **Four verdict states** (new): `CLEARED` / `DROPPED` / `VOID` / **`UNMEASURED`**
+  (a component firing below the D-TRADE-029-ratified 30-event support floor — absence is not a judgment,
+  the float-study precedent). **NN-10 (new, CRITICAL):** every data-derived label/baseline parameter
+  (`trail_pct`, `init_stop_pct`, the Leg-B baseline `N`) is fit train-fold-only, never from test-fold
+  outcomes — closes the specific leakage vector a trailing stop introduces. **Builder≠judge extended to
+  the feature layer:** AIQ's audit lane may import neither the validation engine's outputs nor
+  `helm/screener`'s feature frames — it re-derives directly from `tools/rolling_watchlist.py`'s raw
+  primitives. **Anti-cherry-pick:** exactly one pre-registered trailing-stop grid cell is clearance-
+  eligible; the rest are sensitivity-only, never a clearance claim. Full contract, all 10 oracle legs, and
+  the complete A6a/A6b revision delta: `docs/adr/ADR-0001-phase1-validation-tool.md` §6/§8/§14.
+  ▸ **NOT DECIDED — P-4, dispatched to the Director (+AI/ML+AIQ input already gathered as recommendations):**
+  the exact pre-registered trailing-stop grid (OP-1), the Leg-A evaluation horizon (OP-2), and the Leg-B
+  baseline `N`'s precise form (OP-3) must be locked before any real run (LL-44) — recommendations exist,
+  none are ratified yet.
 
 ## 4 · Compliance / risk (bright-lines → armed gates, D-TRADE-006)
 - **`<4.1>` No secret in repo/logs** — provider keys live in the secret store only (B5).
