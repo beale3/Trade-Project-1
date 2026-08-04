@@ -15,16 +15,32 @@
 > **§2's bar is RATIFIED — D-TRADE-021 (Lead, 2026-08-01), propagated to canonical `<3.4>`.** No content
 > change from what was drafted here; the "recommended, not self-ruled" language below is now historical —
 > the bar is binding on every Phase-1 component test, not a proposal awaiting sign-off.
+>
+> **2026-08-04 — D-TRADE-028, second major pivot: options dropped entirely.** `<1.1>` now re-locked —
+> HELM validates `tools/rolling_watchlist.py`'s plain stock buy/sell signals exited via a **new
+> trailing-stop rule** (not yet built), not options directional-correctness. §0's subject description
+> below (screener component / option's DTE window / liquid-optionable universe) is **SUPERSEDED** by this
+> pivot — no calls/puts, no delta, no DTE window, no IV-rank component (no options data at all). The
+> **replacement label/component list/horizons are `▸ NOT DECIDED`**, dispatched to the Architect (ADR-0001
+> revision per canonical `<3.6>`, not yet delivered as of `fb830f1`) — I will not invent it myself.
+> **Explicitly NOT reopened by D-TRADE-028 (its own text) and unchanged below:** §1–4 (the re-derivation
+> sequence, the D-TRADE-021 bar, the verdict format) — this is subject-agnostic validation discipline that
+> applies identically to a trailing-stop-exit stock result. Only the *subject* changes, not the *method*.
 
 ---
 
-## 0 · Scope (per D-TRADE-020 / canonical `<3.4>` / stage-plan P1-3)
+## 0 · Scope (per canonical `<1.1>`/`<3.4>`/`<3.6>`, stage-plan P1-3 — subject updated by D-TRADE-028)
 AI/ML builds a **walk-forward-CV backtest pipeline** — classical statistics/quant research, not
-generative AI — testing each options-screener component (trend / momentum / breakout / volume / IV-rank)
-for **directional correctness** of the underlying within the option's ~25–45 DTE window, against a
-liquid-optionable universe. My mandate re-scopes from "judge generative-AI output for
-anti-fabrication/grounding" to **independently re-derive and audit every CV result before a component is
-called "cleared"** — builder ≠ judge, now on classical-statistics CV discipline, not LLM output.
+generative AI — testing HELM's signal components for whether they predict a real, tradeable move. **The
+exact subject-specific form (which components, what label, what horizons) is `▸ NOT DECIDED`**, pending
+the Architect's ADR-0001 revision (canonical `<3.6>`): under D-TRADE-020 it was options
+directional-correctness over a DTE window; under D-TRADE-028 (2026-08-04, current) it is realized stock
+return under a new trailing-stop exit rule vs. a naive baseline, against `tools/rolling_watchlist.py`'s
+existing guardrail/S3/pattern-detector triggers — no options, no DTE, no IV-rank. **My mandate is
+unchanged across both:** independently re-derive and audit every CV result before a component is called
+"cleared" — builder ≠ judge, on classical-statistics CV discipline, not LLM output. This is deliberately
+written at the level of "a component's signal, whatever its native form, is one isolated predictor" so it
+doesn't need to be rewritten every time the label/subject changes — only §0's context note above does.
 
 **Reference discipline** (Lead-cited template): `C:\Users\beale\catalyst-study\CATALYST_STUDY_FINDINGS.md`
 addendum — a nominal "beats naive" LOO-CV result at the 1-day horizon (+0.04% RMSE improvement, OOS R²
@@ -77,14 +93,16 @@ credit — matches the existing 4-study precedent (short-interest kept; regime, 
 
 ## 5 · What stays HUMAN (oracle-boundary row, re-scoped)
 Per `docs/gate/oracle-boundary.md`: **"is the pre-registered bar itself the right bar"** (e.g., is
-≥90%-of-30-seeds the correct robustness threshold, is directional-correctness-within-DTE the right success
-metric) is a judgment call — **HUMAN, escalates to the Lead/Director**. I certify mechanically whether a
+≥90%-of-30-seeds the correct robustness threshold, is whatever label the Architect's ADR-0001 revision
+lands on — trailing-stop-exit realized return, per D-TRADE-028 — the right success metric) is a judgment
+call — **HUMAN, escalates to the Lead/Director**. I certify mechanically whether a
 component DID or DID NOT clear a stated bar; I do not certify that the bar itself is correct. §2's bar
 started as exactly that kind of recommendation and was ratified by the Lead (D-TRADE-021) precisely
 because it wasn't novel — it matched established precedent rather than resting on my own authority; a
 future bar change would still need the same route, not a self-declared revision.
 
 ## 6 · Status
-**HOLDING.** No AI/ML CV result exists in-repo yet (verified against `git log`/tree at commit `47f6e60` —
-P1-2 screener ingestion and P1-3 validation engine are both unstarted). This protocol is pre-registered
-and ready to fire the moment AI/ML delivers a first CV result on any screener component.
+**HOLDING.** No AI/ML CV result or `helm/validation/` code exists in-repo yet (re-verified against
+`git log`/tree at commit `fb830f1`, 2026-08-04, post-D-TRADE-028 — only `tools/`, the separate D-TRADE-023
+dashboard side-tool, and docs exist; no `helm/` package). This protocol is pre-registered and ready to fire
+the moment AI/ML delivers a first CV result, whatever the label ends up being once ADR-0001 is revised.

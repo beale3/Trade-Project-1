@@ -781,3 +781,28 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
   disappeared. Renumbered governor-spec.md's failure-mode list from 3 items to 2 accordingly.
 - Self-check only (routine, protocol 17 — a scope cleanup off an already-ruled decision, not a new number
   or invariant). Reported once to the Lead.
+
+### [AIQ · 2026-08-04] D-TRADE-028 pivot absorbed (options dropped) — targeted update, not a rewrite
+- **Pivot absorbed.** Verified `Trade - Lead 2` (session `local_4f888ab5…`) live before treating its
+  message as authoritative (session IDs rotate, protocol 11/LL-36). `git pull --rebase` → `fb830f1`.
+  Read canonical-design.md `<1.1>`/`<3.6>` (options framing DELETED per LL-19/protocol 19, applied a
+  second time), decisions-log D-TRADE-028, oracle-boundary.md (still options-worded — the Lead flagged
+  it "named, not yet done"), ADR-0001 (original, options-scoped — revision dispatched to Architect, not
+  delivered as of this commit), stage-plan.md, AI/ML's `validation-methodology-draft.md` (also
+  options-scoped, same staleness). Confirmed via repo tree: no `helm/` package exists at all yet — only
+  `tools/` (the separate D-TRADE-023 dashboard) and docs. Nothing to audit, same as the Lead said.
+- **Targeted edit this time, not a full LL-19 rewrite** — unlike D-TRADE-020, this pivot's own text
+  explicitly carries my core protocol forward unchanged (D-TRADE-021 bar, NN-1 no-lookahead). Updated only
+  `docs/eval/methodology-draft.md` §0 (scope) and §5 (HUMAN-boundary example) to stop asserting the
+  now-dead options/DTE/IV-rank subject as current, replacing it with a pointer to canonical `<3.6>`
+  (`▸ NOT DECIDED`, Architect's open ADR-0001 revision) — **did not invent the new label/component list
+  myself**; that stays the Architect's call. §1–4 (re-derivation sequence, verdict format) and the
+  D-TRADE-021 bar text are untouched, as they should be — subject-agnostic validation discipline.
+- **Flag for the Lead (not a blocker, surfacing per protocol 16 — a claim should carry checkable state):**
+  `docs/gate/oracle-boundary.md` and `docs/adr/ADR-0001-phase1-validation-tool.md` still describe the
+  options-DTE subject throughout (screener composite score → calls/puts, DTE horizons, IV-rank, liquid-
+  optionable universe) — D-TRADE-028's own propagation row already named both as "flagged, not yet
+  re-authored," so this isn't new information, just confirming I read them as stale rather than current
+  and didn't build against them. My Lane D (`helm/validation/audit`, import-boundary vs. lane C) and the
+  NN-1/NN-3 legs in oracle-boundary.md's structure are unaffected regardless of the label rewrite.
+- Still **HOLDING**. Reported once to the Lead (protocol 15).
