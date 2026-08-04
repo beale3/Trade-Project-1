@@ -15,19 +15,19 @@ Read order (repo WINS on conflict): **this file** → `docs/decisions-log.md` �
 
 ---
 
-## §1 · Validated environment (revised 2026-08-01 — D-TRADE-020 pivot to a Python tool)
-Not greenfield in the usual sense: real prior artifacts exist to ingest (the options screener, the 0DTE
-backtest engine, 4 completed studies — all in `Downloads/` and `C:\Users\beale\*-study\`, outside this
-repo). The app tree/gate scripts for the Python project don't exist *in this repo* yet.
+## §1 · Validated environment (revised 2026-08-04 — D-TRADE-028 drops options entirely)
+Not greenfield: the scanner (`tools/rolling_watchlist.py`) and 4 completed equity studies already exist
+**in this repo/on this machine** — no missing artifact, nothing to locate (P-2 is MOOT, not resolved-by-
+search). The `helm/` validation package itself doesn't exist in-repo yet.
 
 | Item | Value |
 |---|---|
 | Lead clone | `…\Trading Project 1\Trade - Lead` · branch `main` · **origin LIVE** → `github.com/beale3/Trade-Project-1` |
 | ✅ **Toolchain — Python is READY** (verified 2026-08-01, Lead) | `python 3.12.10` + `pip` resolve; **pandas 3.0.3, numpy 2.5.1, scipy 1.18.0, yfinance 1.5.2, matplotlib 3.11.1, requests 2.34.2 — every library the existing scripts already use — are installed and importable NOW.** D-TRADE-017's Node/Docker/pnpm/gh blocker is **superseded, not resolved** — those may still be absent but are likely unneeded for a Python-only Phase 1. Re-verify if the stack decision `<3.5>` pulls in a non-Python component. |
-| App tree (Phase 1, TBD by Architect) | Likely a Python package layout (screener + backtest + data-ingestion modules); re-cut lanes at design time, see `<3.5>`, `<3.1>` |
+| App tree (Phase 1, ADR-0001 R2) | Single `helm/` package, disjoint-by-directory; `tools/rolling_watchlist.py` stays a shared library (imported by `helm/screener` AND `tools/web/`, not forked) — full layout `<3.5>` |
 | DB | Supabase `zyscsnhiymitpfdhjuci` — retained as durable store for scan history/signals/backtest results (`<3.5>`); **baseline still not captured** (light task, not a blocker for Phase 1 start) |
 | Gate scripts | none exist yet in-repo — designed at Phase 1 kickoff, lighter than the superseded SaaS gate-spec (B4/B7/B9 dropped, see PROJECT-CONFIG §4) |
-| Existing artifacts to ingest | `Downloads/rolling_watchlist (3).py` (guardrail/S3/PND scanner) · the options screener (delivered as a ZIP, location TBD) · the 0DTE backtest engine (`ZIP`, location TBD) · 4 completed studies in `C:\Users\beale\{regime,catalyst,short-interest,float}-study\` |
+| Existing artifacts (already in-repo/on-machine, confirmed 2026-08-04) | `tools/rolling_watchlist.py` (the scanner — guardrail/S3/PND/pattern-detectors, live-Massive-wired) · 4 completed studies in `C:\Users\beale\{regime,catalyst,short-interest,float}-study\` |
 | Full config of record | `docs/foundation/PROJECT-CONFIG.md` |
 
 ## §2 · Roster (🔒 REVISED 2026-08-01, D-TRADE-020 — personal tool, no SaaS/GTM surface)
@@ -41,7 +41,10 @@ confirmation) · **SDE1** (data ingestion + Supabase storage, was "Backend-Data/
 **Quant-research family (re-scoped from "AI/finance"):** AI/ML — **builds the walk-forward-CV backtest
 pipeline** (classical statistics, not generative AI) · AI Quality — **independently re-derives/audits
 each backtest result** (builder≠judge on the CV discipline) · FinOps — a personal spend guard, not
-per-tenant billing · Data Engineer — the liquid-optionable-universe list + options-chain data discovery.
+per-tenant billing · Data Engineer — **mandate narrowed 2026-08-04 (D-TRADE-028):** no options-chain
+discovery (deleted); cohort/universe question now just confirming whether a maintained ticker list is
+Phase-1-necessary at all vs. the scanner's existing user-supplied `--tickers` status quo (ADR-0001 P-3,
+Architect recommends drop — Director to confirm, no Data-Eng seat exists to do it).
 **N/A — dropped, not deferred (personal tool, no customers, no market to validate):** Backend-API,
 Frontend-Web (no external API/web surface) · the entire GTM/commercial pod · PM/BizOps/Support/Success ·
 the Phase-0 Gauntlet cluster (B9 — no market opportunity to validate).
@@ -52,17 +55,19 @@ confirmatory check now, not a hard pre-build blocker).
 Oversight (Architect·QA·GA·SecOps·FinOps·AIQ) is **independent of builders and reports to the Director**.
 No seat certifies its own work.
 
-## §3 · Lane cut (🔒 CONFIRMED per ADR-0001, D-TRADE-022 — single `helm/` package, disjoint by directory)
+## §3 · Lane cut (🔒 per ADR-0001 R2, D-TRADE-028 — single `helm/` package, disjoint by directory;
+`tools/rolling_watchlist.py` is now a SHARED library, not ingested)
 | Lane | Owner | Write-lane |
 |---|---|---|
-| **A · ingest + universe + store** | SDE1 · Data Engineer | `helm/ingest/` (provider adapters, point-in-time — the ONLY place a provider SDK/host may appear), `helm/universe/` (liquid-optionable construction, point-in-time membership), `helm/storage/` (file-first results, Supabase read-side) |
-| **B · screener** | AI/ML | `helm/screener/` — the ingested composite-score + components + `_gates` flags |
-| **C · validation engine** | AI/ML (build) | `helm/validation/engine/` — `evaluate_loo`/`evaluate_multiseed_kfold`, the pre-registered D-TRADE-021 bar, verdict records |
+| **A · ingest + store** | SDE1 · Data Engineer | `helm/ingest/` (provider adapters, point-in-time — the ONLY place a provider SDK/host may appear), `helm/universe/` (**CONDITIONAL, likely DROPS** — ADR-0001 P-3), `helm/storage/` (file-first results, Supabase read-side) |
+| **B · screener adapter** | AI/ML | `helm/screener/` — **thin feature-extraction adapter** over `tools/rolling_watchlist.py` (imports the shared scanner, never forks its logic) |
+| **C · validation engine** | AI/ML (build) | `helm/validation/engine/` — `evaluate_loo`/`evaluate_multiseed_kfold`, the D-TRADE-021 bar, the two-leg contract (entry-signal + trailing-stop exit-rule), verdict records |
 | **D · validation audit (independent)** | AIQ | `helm/validation/audit/` — re-derives from RAW data; **may not import lane C's outputs** (builder≠judge encoded as an import rule, ADR-0001 §4) |
 | **E · infra / CI / gate / spend** | DevOps · FinOps | `scripts/gate/**` (runner + legs + import-boundary lint), `helm/spend/` (the spend guard wrapping every ingest call), root config |
+| **Shared (not a `helm/` lane)** | AI/ML builds the trailing-stop mode; coordinate with D-TRADE-023 seats | `tools/rolling_watchlist.py` — the scanner itself, imported by BOTH `helm/screener` and `tools/web/` |
 | **Hot files (shared)** | Lead allocates IDs | the LIVE BOARD below · `docs/app-design/working-log.md` |
 
-Full module-ownership map + the 9 non-negotiable oracle legs (NN-1..9): `docs/adr/ADR-0001-phase1-validation-tool.md` §4/§8.
+Full module-ownership map + the 10 non-negotiable oracle legs (NN-1..10): `docs/adr/ADR-0001-phase1-validation-tool.md` §4/§8.
 
 **Hot-file append protocol:** per-lane labelled append blocks · **keep-both on rebase, yours last, remove
 the three conflict markers** (a hot-file rebase conflict is an append collision, not a real conflict —
