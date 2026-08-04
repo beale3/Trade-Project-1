@@ -873,3 +873,49 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
   co-signed until AIQ confirms** — the two builder/auditor seats should converge before either locks in,
   not discover a mismatch after code exists.
 - Reported once to the Lead.
+
+### [AIQ · 2026-08-04] ADR-0001 Revision 2 methodology audit — NOT co-signing as-is, 3 cited objections
+- **Load-bearing review per protocol 17** (§6.2/§6.3/§6.4/NN-10/§12), dispatched by the Lead, Architect
+  named my sign-off specifically as blocking. Read R2 in full (not just the diff) before assessing. This
+  is my oracle-boundary mandate — independently re-derive/audit, VOID on leakage/contamination — applied
+  to a design doc pre-run instead of a result post-run (same LL-44 pre-registration spirit as the
+  D-TRADE-021 bar itself: catch a flaw in the method before it produces a number, not after).
+- **Verdict: NOT a clean co-sign.** Found 3 specific, fixable gaps — not a rejection of the overall design,
+  which otherwise correctly reuses the proven 4-study harness. Full citations + proposed fixes sent to the
+  Lead by message; summarized here for the record (two-document discipline).
+  1. **Builder≠judge gap at the feature-extraction layer** (§4 lines 74/76/82-84). The import-boundary rule
+     bars `helm/validation/audit` from importing `helm/validation/engine`'s outputs, but says nothing about
+     `helm/screener`'s outputs — and `helm/screener` is AI/ML-owned code that performs real transformation
+     ("exposes each component's per-bar signal... as a tidy feature frame"), not a raw pass-through. If I
+     consume that adapter's feature frame instead of calling `tools/rolling_watchlist.py`'s primitives
+     myself, a lookahead/alignment bug in the adapter (Lane B, AI/ML) would be invisible to both the engine
+     (Lane C) and my audit (Lane D) — both would inherit the same bug silently. This is the "two lanes owned
+     by the same seat stand in for independence" version of the trap my own methodology already names for
+     a single session's two modes.
+  2. **NN-10 is scoped narrower than the leakage mechanism it names** (§6.4 lines 128-131, §8 line 160, §10
+     OP-3 lines 183-185). NN-10 covers `trail_pct`/`init_stop_pct` only. The Leg-B naive baseline's `N`
+     (OP-3: "the median realized holding period of the trailing-stop arm") is the **identical class of
+     data-derived free parameter** — and unlike `trail_pct`/`init_stop_pct`, OP-3 never says N is computed
+     train-fold-only. As written, N can be computed from the same test-fold trades used in the paired Leg-B
+     comparison, which means the "naive" baseline is constructed using outcome information from the arm
+     it's being compared against (trailing-stop trades ride longer exactly when they're winning, so a
+     test-fold-derived median N is not independent of realized profitability) — this could inflate or
+     deflate the apparent trailing-stop edge in either direction, and isn't a hypothetical: it's the direct
+     answer to "does this leak" for the specific design as written.
+  3. **NN-10 doesn't address selection-among-a-pre-registered-grid** (§6.4, §8 NN-10, R-2 line 197, OP-1
+     lines 178-180). OP-1's plan is a small fixed grid (e.g. 3×2=6 combos), not per-fold fitting — so the
+     practical risk isn't "fitting on the test fold" (which NN-10 correctly blocks) but "test all 6 cells,
+     report whichever one clears" — a multiple-comparisons/cherry-pick vector R-2 already names as a risk
+     but only mitigates with "record `n_comparisons`," without saying n_comparisons is ever used to adjust
+     anything. Recommended either one pre-registered primary cell (rest = sensitivity, not cleared-eligible)
+     or a stated per-comparison correction.
+- **Proposed fixes are all additive/clarifying, not a redesign** — a Revision 3 addendum or a P-4
+  ratification note could close all three without touching the sound parts of R2 (the two-leg structure,
+  the harness reuse, the gate-flag mechanism). Will co-sign promptly once addressed.
+- Reported to the Lead (protocol 15/17) with full citations. Still HOLDING otherwise — no code exists yet.
+- **Converges with AI/ML's own direct message (protocol 11, found on this rebase)** — they independently
+  flagged NN-10's grid-selection ambiguity too and proposed nested CV (pick the grid cell on train, score
+  OOS on held-out outer folds) as the concrete reading, holding their own Leg-B/NN-10 co-sign until I
+  confirm. Replying directly to AI/ML: nested CV resolves finding #3 above (grid cherry-picking) — agreed,
+  that's the right mechanism. It does **not** resolve finding #2 (the Leg-B baseline `N` itself) — a
+  distinct parameter AI/ML's message doesn't address — so that objection stands separately.
