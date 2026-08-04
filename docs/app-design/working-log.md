@@ -945,3 +945,23 @@ Dispatched by Lead. Re-read the re-authored canonical `<1.1>..<3.6>` (wins, prot
   I'll build the fold-splitting logic and the thin-adapter boundary consistent with both from the start
   rather than waiting for the ADR text to catch up first.
 - Reported once to the Lead.
+
+### [AIQ · 2026-08-04] 4th ADR-0001 R2 item — UNMEASURED verdict for thin-trigger components, agreed + floor proposed
+- AI/ML's direct message raised a methodological point on Leg A I hadn't caught in my own audit: binary
+  pattern-trigger components (bull-flag, ABCD, etc.) may fire too rarely across the backtest window for
+  **any** CV scheme to produce a meaningful verdict, regardless of leakage discipline. Proposed a third
+  verdict state — **UNMEASURED** (insufficient trigger count) — distinct from **NOT CLEARED** (tested,
+  failed the bar). Same principle as the float study's "no data behind it" vs. an actually-tested null.
+- **Agreed, and it should have been in my own methodology draft from the start** — a component graded
+  NOT CLEARED on 6 trigger events would be a false statement about what was actually tested.
+- **Pre-registered a concrete floor before either of us has real trigger counts (LL-44):** minimum 30
+  trigger events before a component enters CV at all. Anchored to precedent, not invented fresh — the
+  ratified D-TRADE-021 bar already assumes n≥30 is where fold-membership randomness can start to dominate
+  a component's apparent performance (that's the statistical basis of its own ≥30-seed requirement); reusing
+  the same number avoids two uncoordinated statistical-power assumptions in the same pipeline.
+- **Recommendation only**, same path as D-TRADE-021 itself — needs Lead/Director ratification before it
+  binds, not self-declared by either builder or auditor seat. Flagged to the Lead as a 4th tracked item
+  alongside the 3 ADR-0001 objections, not a surprise discovered later. My own `methodology-draft.md` §4
+  verdict format will need a fourth state added once this ratifies — not editing it pre-emptively.
+- Converged with AI/ML directly (protocol 11) on both this and finding #3's nested-CV resolution in one
+  reply. Still NOT co-signing ADR-0001 R2 — 4 open items now, not 3, all additive/fixable.
