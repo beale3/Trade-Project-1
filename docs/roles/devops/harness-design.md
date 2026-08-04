@@ -33,7 +33,7 @@ Independently confirmed, not taken on the Lead's word alone (verify-don't-attest
 | **Key libs (importable now)** | pandas 3.0.3 · numpy 2.5.1 · scipy 1.18.0 · yfinance 1.5.2 · matplotlib 3.11.1 · requests 2.34.2 | matches every library the existing screener/backtest/study scripts already use — **zero new-dependency risk for the core analysis stack** |
 | ruff / mypy / pytest | 🟡 **not yet installed** (`No module named ruff/mypy/pytest`) | trivial `pip install ruff mypy pytest`, $0, no PATH/admin friction unlike Node/Docker — this is the one real Phase-1-scaffold prerequisite |
 | Node / npm / npx / pnpm / docker / gh | 🔴 still absent (D-TRADE-017, unchanged) | **superseded, not fixed** — `<3.5>` drops the entire Node/Docker stack; only re-verify if a non-Python piece is ever pulled in |
-| Referenced external artifacts | `Downloads/rolling_watchlist (3).py` ✅ present; `{regime,catalyst,short-interest,float}-study/` ✅ all 4 present at `C:\Users\beale\*-study\`; the options-screener ZIP and 0DTE-backtest-engine ZIP **not yet located** (stage-plan already flags "location TBD") | read-only check, informs P1-1/P1-2 (Data-Eng/AI-ML), not my lane to ingest |
+| Referenced external artifacts | `Downloads/rolling_watchlist (3).py` ✅ present; `{regime,catalyst,short-interest,float}-study/` ✅ all 4 present at `C:\Users\beale\*-study\`; `tools/rolling_watchlist.py` ✅ already in this repo | 🟢 **UPDATED 2026-08-04 (D-TRADE-028):** the earlier "options-screener/0DTE-engine ZIP not yet located" row is stale — canonical `<1.1>` confirms that search was for an artifact that never needed finding (P-2 is MOOT, not resolved-by-search); the real scanner has been `tools/rolling_watchlist.py`, in-repo, the whole time (also the D-TRADE-023 dashboard's backend) |
 | Ports | N/A — no service, no transport leg (`<3.3>` N/A, gate-spec drops transport smoke) | dropped, not carried forward |
 
 ---
@@ -88,8 +88,15 @@ not re-derive it** (builder ≠ judge — SecOps authors, DevOps wires, GA audit
 - **Two structural rules from SecOps's spec, preserved exactly:** (1) value-bearing, not name-bearing — the
   `.env.example` placeholders and `.mcp.json`'s `${SUPABASE_ACCESS_TOKEN}` indirection must stay GREEN; (2)
   no `.env`/`.env.*` (except `.env.example`) is ever git-tracked, checked directly, not just via `.gitignore`.
-- **Negative controls:** SecOps's 7 planted-fake values (K1–K6, K0) — I plant each, prove RED, revert. All
+- **Negative controls:** SecOps's planted-fake values (K1–K6, K0) — I plant each, prove RED, revert. All
   fake/format-only per their spec; never a real secret.
+- **🟢 UPDATED 2026-08-04 (D-TRADE-026/027, SecOps confirm task):** K6 tightened from "issuer TBD" to a
+  **confirmed** SEC-API.io key — now two patterns, not one: (a) env-name assignment (unchanged), (b) a new
+  **in-URL token match** on the confirmed live host: `api\.sec-api\.io/[^\s"']*[?&]token=[A-Za-z0-9_-]{20,}`
+  — both to wire, both with their own negative control. SecOps also flagged a live token found exposed in
+  plaintext **outside this repo** (`C:\Users\beale\float-study\log_pull.txt`) — out of leg K's reach (repo-
+  scoped only) and already escalated by SecOps to the Director for rotation; noted here for awareness, not
+  mine to act on.
 - **Confirmed 2026-08-01 (unchanged):** `.gitignore` blocks `.env`/`.env.*` (`!.env.example` only);
   `.env.example` is placeholders-only. ✅
 

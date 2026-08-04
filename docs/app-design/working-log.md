@@ -711,3 +711,17 @@ decision row itself — no separate mockup round-trip required, per the Lead's d
 - Updated `docs/security/{tos-taint-review,key-denylist,b5-secret-approval-checklist}.md` in place (my
   write-lane). Reported once to the Lead (protocol 15) with all four items (2 closed, 1 unchanged-open,
   1 new). No blocker on my own task — surfaced the exposure as an urgent flag, not a stall.
+
+### [DevOps · 2026-08-04] D-TRADE-028 pivot absorbed — two small corrections, no structural change
+- Read canonical `<1.1>`-`<3.6>` (options framing deleted, trailing-stop equity signals). Verified myself
+  (not just the Lead's assessment) that `harness-design.md`'s legs K/T/G/import-boundary carry forward
+  unchanged — grepped for options/delta/DTE language, found exactly one stale reference, fixed below.
+- **Fixed:** §A's "options-screener/0DTE-engine ZIP not yet located" row was stale — canonical `<1.1>`
+  confirms that search was for an artifact that never needed finding (P-2 MOOT); replaced with the actual
+  state (`tools/rolling_watchlist.py`, in-repo, already the D-TRADE-023 dashboard's backend).
+- **Fixed:** §C's leg K wiring plan updated for SecOps's D-TRADE-026/027 confirm task — K6 tightened from
+  a name-only pattern to a confirmed host+param match (`api.sec-api.io`, `token=`). Noted (not mine to
+  act on, already escalated by SecOps to the Director) the out-of-repo credential-exposure finding in
+  `float-study/log_pull.txt` — outside leg K's reach by design (repo-scoped only).
+- No structural change to the gate harness — legs, module layout, and the co-signed non-negotiables from
+  ADR-0001 all stand. Still holding on actual scaffold files pending P-1.
