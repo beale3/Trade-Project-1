@@ -1114,3 +1114,40 @@ outstanding co-sign gate before canonical absorption.
   portions is now complete. Nothing further needed from this seat on the design — ready to build the
   moment P-1 clears (still Director-pending, unchanged by any of this review).
 - Reported once to the Lead.
+
+### [AI/ML · 2026-08-04] D-TRADE-031 delivered — min_float guardrail param + float-distribution script
+- **Ground-checked the reference implementation before building against it, not just the Lead's paraphrase.**
+  The Lead's message cited `day_trade_toolkit.py:61-67` with `min_float` — the copy already in `Downloads/
+  files (6).zip` (found during the earlier D-TRADE-023 screener search) does NOT have `min_float` at all;
+  that was a stale, unrelated exploratory file sharing a filename by coincidence. Found the actual current
+  ZIP (`Downloads/files 8.zip`, dated 2026-08-04, same day as this dispatch) containing `day_trade_toolkit.py`
+  + `premarket_scan.py` + `analyze_float_distribution.py` matching the Lead's citation exactly. Building
+  against a wrong same-named file would have repeated the exact mistake LL-45 exists to prevent — checked
+  first.
+- **`tools/rolling_watchlist.py`'s `scan_guardrail_criteria()`:** added `min_float: float = 1_000_000`,
+  mirroring the reference's default and range-check pattern (`min_float <= float_shares <= max_float`).
+  **Deliberately did NOT copy the reference's `require_float_data` behavior** (drops a candidate outright
+  when float data is missing) — this scanner never gates on missing data anywhere (`float_gates` defaults
+  False repo-wide); copying that semantic would silently break every real call site, since `float_shares`
+  is never actually populated in this repo. `float_ok` stays `None`/unmeasured absent real data, unchanged
+  from before — min_float only ever fires when `float_gates=True` AND a real value is supplied, same
+  posture as `max_float` always had.
+- **Caveat carried into the docstring itself, per the Lead's explicit instruction, with real citations:**
+  cited both float-study findings by reading the source docs directly — Massive `/stocks/vX/float`
+  (current-only, 77.6% coverage, `SHORT_INTEREST_STUDY_FINDINGS.md` Phase 1 discovery) and SEC-API.io
+  (outstandingShares 36.5% / publicFloat 83.2% unusable point-in-time, `FLOAT_STUDY_PHASE1_FINDINGS.md`
+  §4, NO-GO on both). Explicit in the docstring: adding `min_float` doesn't reopen or contradict either
+  finding — it's dead code absent real float data either way.
+- **`tools/analyze_float_distribution.py`** (new file, sibling to the scanner): adapted the reference's
+  bucket/outcome-report logic, but deliberately decoupled from its assumed `premarket_scan_log.csv` producer
+  — that pipeline (`premarket_scan.py`) doesn't exist in this repo, and D-TRADE-023's `/api/scan` is
+  stateless (no persistence layer anywhere yet). Reads any CSV with `ticker`/`float_shares` (+ optional
+  `result_pct`/`taken`) columns from any source. Same small-sample caution as the reference, additionally
+  anchored to this repo's own D-TRADE-029 (n<30 = too thin to trust) rather than a generic warning.
+- **Verified, not just written:** a 5-case unit test on the new `min_float` logic (default-off · in-range ·
+  below-min · above-max · custom `min_float`) — all pass. Re-ran DevOps's `scripts/smoke_rolling_watchlist_web.py`
+  against the live app — still passes, no regression to the shared-file contract (ADR-0001 §7). Tested the
+  distribution script against synthetic fixtures in all 3 states (no-outcomes / with-outcomes / missing-file).
+- `adr_reference: D-TRADE-031` (dispatch) `+ ADR-0001 §7` (shared-file citation, `tools/rolling_watchlist.py`
+  is a shared library per `<3.5>`).
+- Reported once to the Lead.
