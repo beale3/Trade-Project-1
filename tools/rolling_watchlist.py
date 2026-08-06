@@ -416,6 +416,7 @@ def scan_guardrail_criteria(daily_df: pd.DataFrame,
                              min_relative_volume: float = 2.0,
                              price_range: tuple = (2.0, 20.0),
                              preferred_price_range: tuple = (2.0, 10.0),
+                             min_float: float = 1_000_000,
                              max_float: float = 20_000_000,
                              float_shares: float = None,
                              float_gates: bool = False,
@@ -436,7 +437,25 @@ def scan_guardrail_criteria(daily_df: pd.DataFrame,
     - float_gates defaults to False: no backtest has been run (float has no
       point-in-time historical data source -- see
       C:/Users/beale/short-interest-study/SHORT_INTEREST_STUDY_FINDINGS.md
-      Phase 1 -- so it was never tested, not tested-and-rejected).
+      Phase 1 -- so it was never tested, not tested-and-rejected). min_float
+      (default 1M, D-TRADE-031) bounds the float range alongside max_float --
+      it excludes the thinnest "nano float" names, where a single small print
+      can swing price and inflate relative-volume readings (an extreme case: a
+      1.5M-float stock trading a small multiple of its ENTIRE float reads as a
+      huge relative-volume number but carries real execution risk on the way
+      out). Grounded in a real reference implementation (day_trade_toolkit.py,
+      Director-supplied 2026-08-04) that already uses this exact pattern and
+      default. Like max_float, min_float is CONVENTIONAL day-trading guidance,
+      not a backtested number -- and this repo's own completed float study
+      already found float itself unusable as a point-in-time feature for this
+      cohort on BOTH providers checked: Massive's /stocks/vX/float is
+      current-only with only 77.6% ticker coverage even for "now"
+      (SHORT_INTEREST_STUDY_FINDINGS.md Phase 1 discovery); SEC-API.io's
+      outstandingShares/publicFloat are 36.5%/83.2% unusable respectively once
+      point-in-time-joined (FLOAT_STUDY_PHASE1_FINDINGS.md SS4, NO-GO on both).
+      Adding min_float is low-risk precisely because it's dead code until a
+      real float_shares value + float_gates=True exist together -- it does not
+      reopen or contradict the float study's verdict.
     - catalyst_gates defaults to False: tested and found non-predictive
       (C:/Users/beale/catalyst-study/CATALYST_STUDY_FINDINGS.md).
     - short_interest_gates defaults to True: tested and found predictive,
@@ -459,8 +478,12 @@ def scan_guardrail_criteria(daily_df: pd.DataFrame,
     price_preferred = preferred_price_range[0] <= price <= preferred_price_range[1]
 
     # Each optional check only counted toward passes_all if its own gate is
-    # True -- the raw value is still reported below either way.
-    float_ok = (float_shares <= max_float) if (float_gates and float_shares is not None) else None
+    # True -- the raw value is still reported below either way. Unlike the
+    # reference implementation's require_float_data (which drops a candidate
+    # outright when float_shares is missing), this scanner never gates on
+    # missing data -- float_ok stays None/unmeasured, consistent with
+    # float_gates defaulting False across this whole file.
+    float_ok = (min_float <= float_shares <= max_float) if (float_gates and float_shares is not None) else None
     catalyst_ok = has_catalyst if catalyst_gates else None
     short_interest_ok = (days_to_cover >= min_days_to_cover) if (short_interest_gates and days_to_cover is not None) else None
 
