@@ -141,7 +141,7 @@ scope**, same as any other wave-entry gate.
 
 | Seat | Session | Status | Next-up |
 |---|---|---|---|
-| **Program Lead** | ▶ **LIVE — this session** | ✅ founded · ▶ **active Lead** | `<1.1>` propagated; assigning Phase-1 work by message |
+| **Program Lead** | ▶ **LIVE — this session (resumed 2026-08-14 from the 2026-08-04 handoff)** | ✅ founded · ▶ **active Lead** | HEAD verified against origin (`4bdad4a`); re-raising P-1/P-3/P-4 + the unresolved credential finding with the Director; flagging an unabsorbed `docs/guardrail-v2.1/` commit (landed today, not in any handoff doc) for Director input |
 | Principal Architect | ▶ **LIVE** (`Trade - Architect`, Fable5·Max) | ▶ live · ⏸ holding | **ADR-0001 R2 DELIVERED, CO-SIGNED, and ABSORBED** (D-TRADE-030) — the design work is DONE. Two-leg label (entry-signal + trailing-stop-vs-fixed-holding), trailing-stop as a backward-compat mode in shared `tools/rolling_watchlist.py`, NN-10 (exit-param isolation), `helm/screener`→thin adapter, `helm/universe` likely drops (P-3), 4-state verdict schema incl. UNMEASURED (D-TRADE-029, floor=30). AI/ML + AIQ both co-signed the actual revised text (AIQ found + the Architect fixed 3 real gaps before signing — protocol 17 working as intended). Now canonical `<3.5>`/`<3.6>`. Remaining before a real run: P-1 (D-TRADE-010), P-3 (universe, with Director), P-4 (OP-1/2/3 label params, with Director), P-5 (B5). **Also DELIVERED:** ADR-0002 (D-TRADE-023 web UI) — all 3 build tasks completed and shipped. Holding, nothing further pending on this seat. |
 | QA | — | ⏸ not spawned | independent re-run of each backtest component's CV result before it's called "cleared" |
 | Governance & Audit | — | ⏸ not spawned | audit AIQ's independent-validation discipline; RECONCILE gate |
