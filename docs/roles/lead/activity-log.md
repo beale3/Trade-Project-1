@@ -4,190 +4,209 @@ The Lead's durable context. On any session handoff, the outgoing Lead writes its
 **and pushes it**; the incoming Lead clone **verifies this commit is on origin before resuming** (a clean
 local tree ≠ a fetchable handoff — LL-14). All truth lives in the repo, never in a session's context.
 
-🔒 **Re-authored 2026-08-01, end-of-session handoff** (LL-19 — the founding-day version below was
-badly stale; re-authored wholesale, not patched alongside it).
+🔒 **Re-authored 2026-08-04, end-of-session handoff** (LL-19 — the 2026-08-01 version below was stale
+after a second major product pivot; re-authored wholesale, not patched alongside it).
 
 ## Identity
 - **Role:** Program Lead / Orchestrator (the single seat that edits the canonical design doc; never
   self-dispatches a wave; runs the delivery pipeline). Model **Opus 4.8 · High**.
-- **Owned clone:** `…\Trading Project 1\Trade - Lead`. This session has run from the umbrella parent dir,
-  authoring into the clone by explicit path — the only session touching it (no one-session-per-clone
-  breach, LL-2). **A fresh Lead session opened inside the clone itself should treat this log as truth
-  and verify against the live repo before acting** (protocol 13a — repo wins on conflict).
+- **Owned clone:** `…\Trading Project 1\Trade - Lead`. **A fresh Lead session opened inside the clone
+  should treat this log as truth and verify against the live repo before acting** (protocol 13a — repo
+  wins on conflict).
 - **Session title convention:** other seats verify the ACTIVE Lead by title + owned clone before routing
   a message (session IDs rotate — LL-36). Recommend the new session set its title to
   `HELM (trade) — Program Lead` if not already set.
 
-## State as of 2026-08-01 (end of this session — read this section first)
-- **Origin:** `https://github.com/beale3/Trade-Project-1` · branch `main` · **HEAD `9f938f9`** — verify
-  your clone matches this exact hash before acting (LL-14); if behind, `git pull --rebase` first.
-- **Kit:** v2.3.0, synced in `docs/foundation/kit/`.
-- **The product pivoted hard, once, on 2026-08-01 (D-TRADE-020).** Founding `<1.1>` was a SaaS strawman;
-  it is now LOCKED to something completely different: **a personal options-signal validation tool**, not
-  a commercial product. Read `docs/app-design/canonical-design.md` in full — it was re-authored, not
-  patched, and the old SaaS framing no longer describes anything real. Do not trust any pre-2026-08-01
-  memory of this project's shape; it's wrong now.
-- **What HELM actually is (Phase 1):** validate an existing, already-built options screener (composite
-  trend/momentum/breakout/volume score → directional calls/puts near 0.40 delta, ~25–45 DTE) against a
-  liquid-optionable-stock universe, via directional-correctness walk-forward CV — same discipline already
-  proven across 4 completed equity studies on the Director's machine. Full design: `docs/adr/ADR-0001-
-  phase1-validation-tool.md` (ratified as D-TRADE-022).
-- **Two, and only two, things block HELM Phase-1 real build** (everything else the team resolved itself):
-  - **P-1** — D-TRADE-010 (no-build) has never been explicitly re-scoped by the Director. My stage-plan.md
-    recommendation (quant-research/design work falls outside its original intent) is flagged, not ruled.
-    **Do not treat this as settled — ask, or wait for an explicit answer, before authorizing production
-    pipeline code for Phase-1.**
-  - **P-2** — the options-screener ZIP and the 0DTE-backtest-engine ZIP are confirmed **NOT on this
-    machine** (I searched exhaustively — Downloads, Desktop, Documents, home root). They exist only in
-    the Director's "Build A Stock Chart Algorithm" claude.ai Project and were never downloaded. AI/ML is
-    holding on P1-2 (screener ingestion) until these are delivered.
-- **A separate, actively in-progress side-project exists alongside HELM Phase-1:** `tools/
-  rolling_watchlist.py` — the equity guardrail/S3/pump-and-dump scanner + trade simulator, brought into
-  this repo (was un-versioned in Downloads) and wired to live Massive market data (D-TRADE-020 pivot
-  side-effect). As of this session's end, the Director directed it be rebuilt as a **browser dashboard**
-  (D-TRADE-023), reusing an already-approved "Rolling Watchlist" claude.ai mockup — **4 seats were just
-  dispatched and have not yet reported back** (see "In-flight work" below). This is explicitly scoped
-  separate from HELM Phase-1's own no-UI framing — don't conflate the two.
-- **Two security incidents this session, both resolved, no leak reached GitHub either time:** a Massive
-  API key was twice pasted into `massive_api_key.txt.template` (tracked, not gitignored) instead of
-  `massive_api_key.txt` (gitignored) — caught before any commit both times via `git log -p` history
-  checks. The template now has a loud "DO NOT PASTE HERE" warning. **If a key ever needs handling again,
-  check `massive_api_key.txt.template`'s tracked content first** (`git diff HEAD -- <path>`) before
-  assuming hygiene is fine.
+## State as of 2026-08-04 (end of this session — read this section first)
+- **Origin:** `https://github.com/beale3/Trade-Project-1` · branch `main` · **HEAD
+  `63ca4adeee4a566db3ad8d7da78c135c10a78c07`** — verify your clone matches this exact hash before acting
+  (LL-14); if behind, `git pull --rebase` first.
+- **Kit:** v2.3.0, synced in `docs/foundation/kit/`. Unchanged this session.
+- **The product has now pivoted TWICE. Do not trust any pre-2026-08-04 memory of HELM's shape — the
+  second pivot supersedes framing that was itself already a full rewrite.**
+  1. **D-TRADE-020 (2026-08-01):** SaaS strawman → personal trading-signal tool. Still stands, untouched.
+  2. **D-TRADE-028 (2026-08-04):** the *options* framing from D-TRADE-020 is deleted. Director, direct
+     instruction: *"Ignore all Option language... implement standard trading logic using basic buy/sell
+     signals and trailing-stop rules... Do not apply any Option-related logic."* Confirmed via
+     AskUserQuestion to apply to HELM Phase-1 itself, not just the dashboard side-tool.
+- **What HELM actually is now (Phase 1):** validate the **equity scanner already in this repo**,
+  `tools/rolling_watchlist.py` — no calls/puts, no delta, no DTE. It produces plain stock buy signals
+  (guardrail/S3/pattern-detector/pivot-alignment triggers), exited by a **trailing-stop rule that does
+  not exist yet and is now Phase-1-critical to build**. Read `docs/app-design/canonical-design.md` in
+  full — re-authored twice, wins on any conflict.
+- **The full technical design for this is DONE — ADR-0001 Revision 2 is delivered, co-signed by BOTH
+  required seats, and Lead-absorbed into canonical (D-TRADE-030).** This was a genuine protocol-17
+  CRITICAL-tier review, not a formality: AIQ found 3 real objections against the Architect's first R2
+  draft (an audit-boundary gap letting AIQ's independence be quietly defeated at the feature-adapter
+  layer, a leakage vector in the exit-rule's naive baseline, an unmitigated multiple-comparisons risk in
+  the trailing-stop grid), all three got fixed in the actual ADR text, and AIQ re-read the *text* (not a
+  summary) before co-signing. AI/ML co-signed independently, catching two of its own precision gaps
+  along the way. **Full design: `docs/adr/ADR-0001-phase1-validation-tool.md`.** Read `<3.6>` for the
+  two-leg contract (Leg A = entry-signal validation, Leg B = trailing-stop-vs-fixed-holding exit-rule
+  validation) before assuming you understand the shape of Phase 1.
+- **P-2 is not just resolved, it never should have been a blocker.** The "missing options-screener +
+  0DTE-backtest-engine ZIP" this project spent most of a day treating as an exhaustive-search blocker
+  was never actually missing — the real, already-built screener is `tools/rolling_watchlist.py`, which
+  had been sitting fully in this repo the entire time (confirmed function-for-function against a copy
+  the Director pasted directly). Lesson for the incoming session: **when a "locate this artifact" search
+  keeps failing, seriously entertain that the artifact was never what you assumed it was** — don't just
+  search harder.
+- **Three things now block an actual first CV run — none of them design work, all of them Director
+  input:**
+  - **P-1** — D-TRADE-010 (no-build) has STILL never been explicitly re-scoped by the Director, across
+    two full pivots. My stage-plan.md recommendation (quant-research/design falls outside its original
+    intent) is flagged, not ruled. **This is now the single most-asked-and-unanswered question across
+    this entire project's history — do not treat it as settled, ask again if it's still unresolved.**
+  - **P-3** — keep or drop the planned "maintained universe" module. Architect recommends drop (the
+    scanner already just takes whatever tickers you give it via `--tickers`); routed to the Director
+    directly since no Data-Eng seat exists to confirm it. Asked, not yet answered as of this handoff.
+  - **P-4** — three pre-registration numbers (OP-1 the exact trailing-stop grid, OP-2 the entry-signal
+    evaluation horizon, OP-3 the exit-rule baseline's precise form) must be locked *before* any run, per
+    LL-44 — recommendations exist (see `<3.6>`/ADR-0001 §10), none are ratified. I offered to propose
+    concrete numbers for a yes/no rather than open questions — that offer still stands if unanswered.
+- **The D-TRADE-023 equity-dashboard side-tool (explicitly separate from HELM Phase-1, no D-TRADE-010
+  freeze) is FULLY BUILT, integration-tested, and working end to end.** `tools/web/` — Flask backend
+  (`app.py`/`scan_service.py`/`serialize.py`), the adapted Director-approved mockup
+  (`static/index.html`, now with a real ticker-input + Scan button + a full trade-simulator results
+  panel, D-TRADE-024/025), a light/dark theme toggle (Director-directed mid-session). Every seat that
+  touched it ran real browser round-trips, not fixtures, and two genuine bugs were found and fixed that
+  way. **To run it:** `flask --app tools/web/app run --port 5000` from this clone's root, then
+  `http://127.0.0.1:5000`. **D-TRADE-031 (this session, delivered):** added a `min_float` guardrail
+  parameter mirroring the existing `max_float`, plus `tools/analyze_float_distribution.py` — both
+  correctly, explicitly caveated that float data has no reliable point-in-time source in this project
+  (the completed float study found BOTH Massive and SEC-API.io NO-GO for this), so `min_float` is
+  low-risk but currently inert, same as `max_float` already effectively was.
+- **Two provider/credential facts confirmed this session, both now closed:** `..\Trade\sec_api_key.txt`
+  is a real, live, currently-active **SEC-API.io** subscription key (Personal & Startups tier, $49/55 per
+  month, 50GB/mo included) — verified via a real authenticated API call, not just inspection; the key
+  value itself was never printed, logged, or committed (D-TRADE-026/027).
+- **🔴 UNRESOLVED SECURITY FINDING — carry this forward, do not let it go stale.** SecOps found a live
+  SEC-API.io token sitting in **plaintext** in `C:\Users\beale\float-study\log_pull.txt` (outside this
+  repo — not a leg-K/gitignore violation, but a real credential at rest on the Director's machine,
+  leaked into old DNS-failure exception tracebacks). Recommended to the Director: rotate the token,
+  scrub/delete that log file, install the *rotated* value at B5 (already gated in
+  `docs/security/b5-secret-approval-checklist.md` S6 — "rotate first" is checked before install). **I
+  offered to find and scrub the file directly and never received a follow-up answer on whether the
+  Director rotated it or wants my help.** Ask directly on resume — don't assume this was handled.
+- **A recurring pattern this session worth knowing about before it happens to you too:** the Director
+  repeatedly pasted content from *other*, unrelated Claude conversations into this session (a claude.ai
+  "Build A Stock Chart Algorithm" Project doing separate options-screener/backtest work, a UI-navigation
+  help thread, an "11-Hour Options" third-party strategy backtest) while believing it was relevant/the
+  same context. Every time, the content looked plausible at a glance but was importantly NOT what it
+  first appeared — verify claimed artifacts against the actual local filesystem (`ls`, unzip and read
+  real files, grep for real function signatures) before treating a paste as ground truth, and don't be
+  afraid to ask "is this the right conversation?" directly. This cost real turns twice; asking early was
+  cheaper both times than partially acting on a wrong premise.
 
-## Decisions of record (see `docs/decisions-log.md` for full text + propagation — D-TRADE-001…023)
+## Decisions of record (see `docs/decisions-log.md` for full text + propagation — D-TRADE-001…031)
 The load-bearing ones for a fresh Lead to know before doing anything:
-- **D-TRADE-020** — the pivot (personal tool, not SaaS). Supersedes everything before it product-wise.
-- **D-TRADE-021** — the ratified Phase-1 clearance bar: CLEARED only if a component beats naive baseline
-  OOS under BOTH LOO-CV and 5-fold CV (≥30 seeds) with ≥90% seed agreement; VOID on any leakage finding.
-- **D-TRADE-022** — ADR-0001 ratified: Python core, 5-lane recut (ingest/screener/validation-engine/
-  validation-audit/infra), the directional-correctness label design.
-- **D-TRADE-023** — the browser-UI dispatch for the equity side-tool (in progress, not yet delivered).
+- **D-TRADE-020** — personal tool, not SaaS. Still stands.
+- **D-TRADE-021** — the ratified Phase-1 clearance bar (unchanged across both pivots): CLEARED only if a
+  component beats naive baseline OOS under BOTH LOO-CV and 5-fold CV (≥30 seeds) with ≥90% seed
+  agreement; VOID on any leakage finding.
+- **D-TRADE-022** — ADR-0001 Revision 1 ratified (options-era design). **Superseded by D-TRADE-030.**
+- **D-TRADE-023/024/025** — the browser-UI dashboard, fully delivered (see above).
+- **D-TRADE-026/027** — SEC-API.io key + tier confirmed live/real (Personal & Startups).
+- **D-TRADE-028** — **the second major pivot.** Options deleted from HELM entirely; equity buy/sell +
+  trailing-stop validation instead. P-2 declared moot.
+- **D-TRADE-029** — the 30-event minimum-trigger-count floor for thin-firing Leg-A components (verdict =
+  UNMEASURED below it, not NOT CLEARED) — Lead-ratified against precedent, same path as D-TRADE-021.
+- **D-TRADE-030** — **ADR-0001 Revision 2 ratified + absorbed into canonical `<3.5>`/`<3.6>`.** The
+  current, load-bearing technical design for all of Phase 1.
+- **D-TRADE-031** — `min_float` guardrail parameter + float-distribution analysis script, delivered.
 
-## Live board summary (full detail + Next-up per seat: `docs/AGENT-COORDINATION.md` §LIVE BOARD)
-| Seat | State | What they're actually doing |
-|---|---|---|
-| Architect (Fable5·Max) | live | Delivered ADR-0001 (done, ratified). **New task just sent:** design the browser-UI backend/API contract — paces Designer/DevOps/AI-ML below. Not yet reported back. |
-| SecOps | live | Delivered ToS-taint review + key denylist + B5 checklist. Re-scoped to a light personal-tier confirm; last known idle/holding. |
-| SDE1 | live | Delivered pivot re-scope (data-ingestion framing). Holding on HELM Phase-1 (P-2 blocked); not tasked on the browser-UI work as of this handoff. |
-| DevOps | live | Delivered the Python gate-harness re-author (design-only, held on file creation pending P-1). **New task just sent:** browser-UI web-server scaffolding — prepping, not yet reported back. |
-| AI/ML | live, holding on HELM P1-2 | Delivered the validation-methodology draft; independently converged with Architect on the label design. **New task just sent (unblocked, separate from HELM hold):** wire `rolling_watchlist.py`'s functions as the browser-UI backend API. Not yet reported back. |
-| AIQ | live, holding | Delivered the re-authored methodology doc + D-TRADE-021 ratification sync. Nothing to audit yet — no AI/ML CV result exists. |
-| FinOps | live | Delivered the re-scoped personal spend-guard spec (governor-spec.md, cost-model.md). Idle/holding. |
-| Designer | **just re-activated** (was stood down at D-TRADE-020, no UI surface existed) | **New task just sent:** adapt the real, already-fetched "Rolling Watchlist" mockup source to consume live data — see "In-flight work" below for the exact file path. Not yet reported back. |
-| QA, GA, Legal, Data Engineer | never spawned | Real, unclaimed work exists for Data Engineer (universe construction) once HELM P-2 clears. QA/GA/Legal not yet needed. |
-
-## One more thing that landed while writing this handoff
-`6aab1ce` — DevOps co-signed ADR-0001's non-negotiables (design-review only, not the browser-UI work).
-Not yet consolidated/acknowledged by the Lead. Check `docs/adr/ADR-0001-phase1-validation-tool.md` §12
-co-sign status and DevOps's board row on resume.
-
-## In-flight work — pick this up first if you're the incoming session
-**The browser-UI dashboard (D-TRADE-023) is mid-dispatch.** I sent 4 assignments this session and the
-conversation ended (session handoff) before any of them reported back:
-1. **Architect** — a short design note: backend framework choice, JSON API contract per dashboard
-   section, module layout (likely `tools/web/`). **This is the pacing item** — Designer/DevOps/AI-ML are
-   waiting on it.
-2. **Designer** — adapt the real mockup source (fetched via WebFetch this session, saved locally at
-   `C:\Users\beale\.claude\projects\C--Users-beale-Software-Dev\517ca982-2b50-41cb-ab85-4da846eb94f2\
-   tool-results\artifact-7601fb84-1785090475-b26e.html`, 193KB — the ACTUAL HTML/CSS/JS of the Director's
-   already-approved "Rolling Watchlist" dashboard, not a description) to consume live data instead of its
-   baked-in mock data. Custom TradeSlab/TradeMono embedded fonts, `#faf9f5`/`#141413` color scheme,
-   `tw-s3-*` class convention for the S3 breakdown. **Do not let anyone redesign this from scratch** —
-   it's already Director-approved; this is integration work only.
-3. **DevOps** — web-server scaffolding (Flask/FastAPI, TBD by Architect), dev-run tooling.
-4. **AI/ML** — backend API layer wiring `rolling_watchlist.py`'s existing functions to JSON, per the
-   Architect's contract.
-
-**Next Lead action on resume:** check for reports from these 4 seats (they may have reported mid-session
-via cross-session messages that need consolidating — protocol 15, ONE consolidated report, don't relay
-each as it arrives) and continue driving this to a working dashboard.
+## Live board summary
+Full detail + Next-up per seat: `docs/AGENT-COORDINATION.md` §LIVE BOARD — **refreshed this session**
+(the Architect/AI-ML/AIQ rows and the board banner were stale relative to D-TRADE-028/030/031 until this
+handoff; they're current as of this commit). Read it directly rather than trusting a stale copy here.
+Short version: Architect/AI-ML/AIQ all holding, nothing pending on any of the three after the ADR-0001 R2
+co-sign chain closed cleanly. DevOps/FinOps/SecOps/SDE1 holding, no open asks. Designer's D-TRADE-023
+work is fully delivered. QA/GA/Legal/Data-Eng never spawned — Data-Eng in particular is now likely
+unnecessary given P-3's likely-drop recommendation.
 
 ## Standing Lead practices (unchanged since founding — protocol references in the charter)
-- **Verify-don't-attest — including my own synthesis** (LL-34): re-derive each claim; a different seat
-  audits any synthesis feeding a decision.
-- **Recurring validation of my own output** (LL-64): route critical Lead-authored artifacts (like this
-  log, or a canonical-doc edit) to GA/another seat before presenting as reconciled — GA is not yet
-  spawned, so this hasn't been exercised in practice yet; worth doing once GA exists.
-- **One report per piece of work, at completion** (LL-65): hold, consolidate, present once — don't relay
-  each seat's finding onward as it arrives.
-- **Never self-dispatch a wave; never unilaterally reinterpret an explicit Director ruling** (learned hard
-  this session — see D-TRADE-010's history: I once said "spawn to build" prematurely and was corrected;
-  since then, every "is this build authorized" question gets asked, not assumed).
-- **Sync before every write:** `git pull --rebase` before editing AND before pushing. This session hit
-  several real rebase/stash cycles from concurrent seat activity — normal, not a problem, just don't skip it.
-- **When in doubt about a secret file's git status, check `git log -p` on that exact path** — don't trust
-  that "gitignored" behavior is working without verifying (see the two Massive-key incidents above).
+- **Verify-don't-attest — including my own synthesis** (LL-34): re-derive each claim at source before
+  passing it on. This session did this constantly and it caught real things — a stale ADR line-number
+  citation, a wrong-zip-file citation, an OP-5 ratification that crossed in transit and needed a
+  follow-up fix. Don't skip this because a report "sounds right."
+- **Recurring validation of my own output** (LL-64/protocol 17): route CRITICAL changes to an independent
+  seat before presenting as reconciled. GA is still not spawned — this session used AIQ for the ADR-0001
+  R2 co-sign instead, which worked well and is a reasonable substitute pattern until GA exists.
+  **Recommend actually spawning GA if the project keeps producing CRITICAL-tier changes** — this session
+  had exactly one (ADR-0001 R2) and the ad-hoc AIQ substitution worked, but it's not GA's actual mandate.
+- **One report per piece of work, at completion** (LL-65): hold, consolidate, present once.
+- **Never self-dispatch a wave; never unilaterally reinterpret an explicit Director ruling.** P-1
+  (D-TRADE-010) has now survived two full product pivots unanswered — resist any temptation to treat
+  its long silence as implicit permission. It isn't.
+- **Sync before every write:** `git pull --rebase` before editing AND before pushing, every single time,
+  no exceptions — this session had extremely high concurrent-seat activity (multiple seats pushing
+  within seconds of each other during the ADR-0001 review chain) and this discipline is the only thing
+  that kept the repo coherent through it.
+- **When in doubt about a secret file's git status, check `git log -p` on that exact path.** Three real
+  credential-hygiene incidents across this project's history now (two in-repo near-misses, resolved; one
+  out-of-repo live exposure, unresolved — see above). This class of problem recurs; keep checking.
+- **When verifying a live credential, use it — don't just inspect it.** This session confirmed the
+  SEC-API.io key was real by making an actual authenticated API call (never printing the value), not by
+  reading the file and guessing. A key that "looks like a key" isn't confirmed until it's been used.
 
 ## Full log (chronological, this session)
-### [Lead · 2026-08-01] Founding (Script 1 + Script 2)
-Founded the team on Foundation Kit v2.2.0 → improved to v2.3.0 (LL-69/70/71 harvested). Scaffolded the
-full governance spine against a SaaS strawman `<1.1>` (later completely superseded — see below). Seated
-15 roster seats, authored the charter/decisions-log/gate-spec/oracle-boundary/stage-plan.
+### [Lead · 2026-08-04] Session resumed from the 2026-08-01 handoff
+Verified HEAD match, absorbed the 4-seat D-TRADE-023 dispatch status, claimed the board row. Consolidated
+reports from Architect (ADR-0002 landed), DevOps, AI/ML, Designer as each completed its D-TRADE-023 build
+task — verified every claim at source (grepped for the actual code, not just trusted the commit
+messages) before acknowledging. All three build tasks (backend, frontend, infra) delivered and
+integration-tested via real browser round-trips; two real bugs found and fixed that way, not by review.
 
-### [Lead · 2026-08-01] The pivot — D-TRADE-020
-Director provided real context (a mature quant-research history: 4 completed equity backtests, an
-options screener, a 0DTE backtest engine, a live daily trading routine). Ran a 3-round clarifying
-elicitation (personal-vs-commercial → Phase-1 scope → universe → success metric → final lock). Re-
-authored canonical-design.md, the charter roster/board/lane-cut, stage-plan, oracle-boundary, gate-spec —
-all wholesale, not patched (LL-19). Notified all 8 then-live seats directly with their re-scoped mandate.
+### [Lead · 2026-08-04] SEC-API.io key + tier confirmation (D-TRADE-026/027)
+Director asked to confirm a key file's identity. Verified programmatically — read the key from disk,
+made a real authenticated call to `api.sec-api.io` (two failed attempts first, from sending the whole
+`NAME=VALUE` line instead of just the value; diagnosed and fixed), got back real EDGAR filing data.
+Confirmed via a screenshot the Director shared. Recorded, then the Director confirmed the exact tier
+(Personal & Startups) directly.
 
-### [Lead · 2026-08-01] ADR-0001 + D-TRADE-021/022
-Architect delivered a full Phase-1 design ADR (stack, module layout, lane recut, 9 oracle legs, the
-directional-correctness label design) — independently converged with AI/ML on the label form before
-either reported to me. Ratified AIQ's proposed CV clearance bar as D-TRADE-021 (Lead call, well-
-precedented — matches the short-interest study's own successful methodology exactly). Absorbed ADR-0001
-as D-TRADE-022. Confirmed via direct testing that Python 3.12 + all needed libraries were already
-installed — the D-TRADE-017 toolchain blocker mostly evaporated for this stack.
+### [Lead · 2026-08-04] D-TRADE-023 follow-on features (D-TRADE-024/025) + the credential-exposure finding
+Director asked for a real ticker-input control and a full trade-simulator panel — both dispatched to
+Designer, delivered, verified at source. Separately, SecOps's routine confirm task surfaced a real
+credential at rest in plaintext outside the repo (`float-study/log_pull.txt`) — escalated to the
+Director immediately, recommended rotation + scrub. **No confirmation received that this happened** —
+see "State as of" above, ask again on resume.
 
-### [Lead · 2026-08-01] Massive key wiring + two security incidents
-Director asked to wire a new Massive data source into `rolling_watchlist (3).py`'s trade simulator.
-Brought the script into the repo (`tools/rolling_watchlist.py`, was un-versioned in Downloads). Found and
-resolved a real design conflict (the pre-existing `massive_loader.py` adapter assumed an MCP-tool+CSV
-path the script doesn't support) before building — Director chose direct REST + a raw key instead.
-**Twice**, the real key was pasted into the tracked `.template` file instead of the gitignored real file;
-both times caught and fixed before any commit reached git history; hardened the template's instructions
-after the second occurrence. Verified the full pipeline end-to-end against live data (real AAPL/NVDA
-scan, real simulated trades). Fixed one unrelated pandas deprecation warning on request.
+### [Lead · 2026-08-04] The second major pivot — D-TRADE-028
+After several rounds of cross-session-paste confusion (see the standing-lessons note above), the
+Director gave a direct, explicit instruction to drop all options framing from HELM and validate plain
+stock buy/sell signals with a trailing-stop exit instead — confirmed via AskUserQuestion that this
+applied to HELM Phase-1 itself, not just the dashboard. Re-authored canonical-design.md §1-3/§5 wholesale
+(LL-19), recorded D-TRADE-028, dispatched an ADR-0001 revision to the Architect with the specific design
+questions that needed answering, notified all 7 other live seats of their re-scoped impact. Caught and
+fixed a real propagation gap afterward — `AGENT-COORDINATION.md`'s §1-3 (the first doc any seat reads)
+still described the deleted options framing after the canonical-doc rewrite.
 
-### [Lead · 2026-08-01] Browser-UI dispatch — D-TRADE-023 (session ends here, mid-flight)
-Director asked to rebuild the equity-tool simulator as a browser UI instead of a desktop app, then
-explicitly redirected me to dispatch this to the team rather than build it solo. Found and fetched the
-Director's real, already-approved dashboard mockup source via WebFetch (a genuine, useful discovery — the
-artifact was fetchable, not just describable). Recorded D-TRADE-023, re-activated the Designer seat, and
-sent 4 concrete assignments (Architect, Designer, DevOps, AI/ML) — see "In-flight work" above. **None had
-reported back when this handoff was written.** Director then requested this durable handoff + a clone
-prompt, ending the session.
+### [Lead · 2026-08-04] ADR-0001 Revision 2 — design, review, and ratification (D-TRADE-029/030)
+The Architect delivered a full two-leg validation redesign. Routed AIQ's required protocol-17 co-sign
+before treating it as reconciled — AIQ found 3 real, precisely-cited objections against the actual text
+(not hypothetical concerns), all verified at source by the Lead before relaying to the Architect. AI/ML
+independently converged with AIQ on all of them and added a 4th (a minimum-trigger-count floor for
+thin-firing components), which the Lead ratified directly as D-TRADE-029 (well-precedented against the
+already-ratified D-TRADE-021 bar, not escalated). The Architect folded all 4 fixes into the ADR text;
+AIQ re-read the actual revised text (explicitly not just the chat convergence) before formally
+co-signing; AI/ML did the same. Lead verified the final text at source, then ratified and absorbed the
+whole design into canonical as D-TRADE-030. This was the most rigorous review chain of the session —
+every single claimed fix was checked against the actual file content by at least two parties before
+being accepted, and it caught real problems (not just theoretical ones) before any code existed.
 
-### [Lead · 2026-08-01] Session resumed — handoff verified, D-TRADE-023 status absorbed
-- Fresh Lead session resumed from this handoff. Verified per protocol 13a: `git pull --rebase` clean,
-  local HEAD matched `origin/main` at the handoff hash before reading anything. Read this log,
-  canonical-design.md, the open-items-ledger, AGENT-COORDINATION §LIVE BOARD, and ADR-0001 in full before
-  acting. Claiming the Program Lead board row for this session.
-- **Checked for the 4 dispatched seats' reports (Architect/Designer/DevOps/AI-ML) via repo state +
-  cross-session events, not just the static handoff text** — real activity landed after the handoff was
-  written:
-  - **Architect delivered the pacing item** — `f99967d`, `docs/adr/ADR-0002-rolling-watchlist-web-ui.md`
-    (PROPOSED): Flask, adapt-the-approved-mockup-in-place, the full `/api/scan` contract, `tools/web/`
-    layout, 3 disjoint build tasks (AI/ML backend · Designer frontend wiring · DevOps flask/run-entry/key
-    env). Also messaged the 3 waiting seats directly (protocol 11) and updated its own board row.
-  - **AI/ML** sent the Architect real return-shape grounding from `rolling_watchlist.py` before the
-    contract landed (peer-to-peer, protocol 11) and was standing by on both D-TRADE-023 and the HELM
-    Phase-1 (P-1/P-2) holds when last observed — now unblocked on D-TRADE-023 by the ADR-0002 contract.
-  - **DevOps** was mid-task (checking installed web-framework packages, had pushed a prep note ahead of
-    the contract) — not yet reported complete.
-  - **Designer** verified the adapted mockup rendering standalone in-browser (stat strip, table, Guardrail
-    #1, S3 breakdown, phase stepper, pivot chart — zero console errors) and was moving to commit — not yet
-    reported complete.
-  - No new decisions-log entries or canonical-doc conflicts landed in this window; nothing here needed
-    Lead absorption into canonical-design.md beyond what's already true (ADR-0002 is Architect's own
-    write-lane, doesn't touch `<x.y>` statements).
-- **Per protocol 15, holding — not consolidating a final report yet.** D-TRADE-023 is not complete: DevOps
-  and Designer are both still actively building against the now-landed contract. Next Lead action:
-  re-check for their completion reports, then present ONE consolidated status (not four separate relays).
-- **P-1 (D-TRADE-010 re-scope) and P-2 (screener ZIPs) remain exactly as the outgoing session left them —
-  still Director-pending, not treated as settled.** No HELM Phase-1 production code has been authorized or
-  written in this window; ADR-0002/D-TRADE-023 build activity is the equity side-tool, explicitly scoped
-  separate from HELM Phase-1 (D-TRADE-023's own instance-scope ruling).
+### [Lead · 2026-08-04] D-TRADE-031 — min_float guardrail + float-distribution script
+Director supplied a real reference implementation as a ZIP. Verified it directly (unzipped, read the
+actual source) rather than trusting the paste. Dispatched to AI/ML with the exact spec plus the critical
+caveat that this reprises a data-availability problem the project's own completed float study already
+found NO-GO on twice. AI/ML delivered, and in the process caught a real citation error on the Lead's
+part (a stale, different ZIP with a same-named file that didn't actually match) — verified the correct
+current source before building. Delivered and verified clean.
+
+### [Lead · 2026-08-04] This handoff
+Director asked to save durably and produce a clone-generation prompt. Re-authored this log wholesale
+(LL-19 — too much had changed for a patch to be honest), refreshed the stale portions of
+`AGENT-COORDINATION.md`'s LIVE BOARD that a fresh session would read before this log, verified
+canonical-design.md/decisions-log.md/open-items-ledger.md were already current (they were — kept in sync
+throughout the session as each decision landed, not deferred to handoff time). Pushed everything.
 
 <!-- append new entries below -->
