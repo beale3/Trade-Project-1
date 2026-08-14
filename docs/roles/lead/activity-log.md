@@ -209,4 +209,43 @@ Director asked to save durably and produce a clone-generation prompt. Re-authore
 canonical-design.md/decisions-log.md/open-items-ledger.md were already current (they were — kept in sync
 throughout the session as each decision landed, not deferred to handoff time). Pushed everything.
 
+### [Lead · 2026-08-14] Session resumed from the 2026-08-04 handoff; Guardrail v2.1 provenance + D-TRADE-032
+Verified HEAD against origin (`git pull --rebase`, fast-forward, no conflicts with existing local WIP —
+`tools/rolling_watchlist.py` mods + `modeling/` + `tools/backfill_forward_returns.py` untracked, none of
+it mine, left untouched), claimed the board row. Read all six handoff artifacts (activity-log,
+canonical-design, open-items-ledger, AGENT-COORDINATION board, ADR-0001 R2) — state matches what's recorded
+below, P-1/P-3/P-4 and the `log_pull.txt` credential-rotation question are all **still unanswered**, ask
+again next contact.
+
+Independently discovered `docs/guardrail-v2.1/` — a commit (`c088e44`, same day as this session but
+predating it) not referenced anywhere in activity-log/canonical-design/decisions-log/working-log: real,
+self-validated spec + code work (SI-Gate/Rel-Vol/Tradability/S3/Composite revisions + an EDGAR-mirror
+wrapper with a known field-mapping bug), landed via an ungrouped, non-seat session with no D-TRADE number
+and no protocol-15 report. Flagged it to the Director rather than assume either way — it revises components
+ADR-0001 OP-4 currently treats as settled, which would be protocol-17 CRITICAL-tier if real.
+
+Director pasted that ungrouped session's own transcript as catch-up context — verified its claims against
+the actual filesystem rather than trusting the paste directly (LL-45-class check): confirmed the commit's
+"not pushed" note was stale (it *was* on origin — asked whether the Director pushed it separately) and that
+the corrected Block B code shown in the paste had **not** actually been written to disk anywhere (checked
+both this clone and `Trade - Lead`, both clean) — the committed file still had the original bug.
+
+Director then gave a direct, explicit fix instruction for Block B only. Applied it against the real
+`Trade/edgar_client.py` schema (independently re-verified, not just re-trusted from the paste), caught one
+error the instruction didn't cover (`parents[4]` → `parents[5]`, since this file sits one directory deeper
+than `rolling_watchlist.py`), and verified the fix with a real query against `Trade/edgar_index.duckdb`
+(100 real AAPL filings, fields correctly populated) rather than just inspecting it. Delivered (`382c514`).
+
+Director then ruled directly on the governance question: Guardrail v2.1 §3-§9 stays **exploratory, not
+canonical** — does not enter HELM Leg A/B, does not reopen ADR-0001 OP-4, not dispatch-eligible without an
+explicit D-TRADE assignment + AIQ protocol-17 validation; the Block B fix is explicitly distinguished as
+already-authorized (correcting an ingestion bug in existing production code, not a build-freeze exception).
+Ratified as **D-TRADE-032**, recorded in `decisions-log.md`, propagated to `guardrail-v2.1/README.md`
+(status banner) and `open-items-ledger.md` (§A item 10, closed). Canonical-design.md untouched — correctly,
+since this explicitly doesn't enter HELM.
+
+**Still open, unresolved by any of this:** P-1 (D-TRADE-010), P-3 (universe drop), P-4 (OP-1/2/3
+pre-registration), the `log_pull.txt` credential-rotation confirmation, and whether the Director pushed
+`c088e44` themselves.
+
 <!-- append new entries below -->

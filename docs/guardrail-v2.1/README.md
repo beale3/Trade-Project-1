@@ -1,5 +1,12 @@
 # Guardrail v2.1 — Session Work Product
 
+> 🔒 **D-TRADE-032 (2026-08-14, Director-ruled): EXPLORATORY, NOT CANONICAL.** §3-§9 below (SI-Gate
+> adjustments, Rel-Vol Tail, Tradability Floor, corrected S3, Composite scoring) do **not** enter
+> HELM Leg A/B and do **not** modify ADR-0001 OP-4's already-validated component list. Not eligible
+> for dispatch to any seat without an explicit Director D-TRADE assignment **and** a protocol-17 AIQ
+> validation. (Block B's ingestion-plumbing fix, below, is a separate, already-authorized exception —
+> see its own note.)
+
 Committed from a Claude Code session that reviewed and empirically re-validated the Guardrail
 scan spec (originally v2.0) against `scan_log.csv`, a FINRA short-interest dataset
 (`short-interest-study/raw_short_interest_all.csv`), and a historical price backfill pulled via
