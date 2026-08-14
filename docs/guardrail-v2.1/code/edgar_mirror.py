@@ -2,40 +2,48 @@
 #
 # Block B -- EDGAR Mirror Wrapper (Catalyst-Neutral)
 #
-# *** KNOWN BUG -- DO NOT MERGE AS-IS ***
-# Confirmed against the real Trade/edgar_client.py (query_filings(), lines
-# 104-107): the actual filing dict has columns
+# Fixed 2026-08-14 per Director instruction, against the real
+# Trade/edgar_client.py schema (query_filings(), lines 104-107; re-verified
+# directly, not just from the prior draft's citation):
 #   ["accession", "cik", "company_name", "form_type", "date_filed", "filename", "source"]
-# This file's get_filings() below reads "filedAt" / "formType" / "accessionNo" /
-# "items" -- none of which exist in the real schema (leftover from an earlier
-# sec-api.io-based draft of this module). As written, every EdgarMirrorFiling
-# comes back with empty/None fields for every filing, silently, with no error.
-# Fix: read "date_filed" (already typed as a Python date/datetime by DuckDB --
-# do not string-parse it), "accession" (not "accession_no"), "form_type"
-# (correct key already), and drop "items" (not tracked by this mirror at all).
+# date_filed comes back as a native Python date/datetime (DuckDB DATE column
+# via the Python driver) -- it is type-checked, not string-parsed. "items"
+# (8-K item codes) isn't tracked by this mirror at all and is always [].
 #
-# Also unverified: `from Trade.edgar_client import EdgarClient` assumes Trade
-# is an importable package. The real caller (rolling_watchlist.py:43-57)
-# explicitly avoids this via sys.path manipulation + `from edgar_client import
-# EdgarClient` wrapped in try/except ImportError -- specifically because
-# Trade is "a sibling repo, not a package." This import will likely raise
-# ModuleNotFoundError as written.
+# Import mirrors the established sibling-repo pattern (rolling_watchlist.py:
+# 43-57): Trade is "a sibling repo, not a package," so it's added to
+# sys.path at runtime rather than imported as `Trade.edgar_client`, with a
+# try/except ImportError degrading to None the same way. Note this file sits
+# one directory deeper than rolling_watchlist.py (docs/guardrail-v2.1/code/
+# vs tools/), so the default sibling-repo lookup uses parents[5], not [3].
 #
-# Also: EDGAR_MIRROR_ROOT (this file) vs EDGAR_MIRROR_PATH (established
-# convention in rolling_watchlist.py) -- same concept, different env var name.
+# Env var: EDGAR_MIRROR_PATH (matches rolling_watchlist.py's established
+# convention -- EDGAR_MIRROR_ROOT was a naming mismatch in the prior draft).
 #
-# Architecturally this module is correct: it wraps the existing DuckDB-backed
-# EDGAR mirror already in production (Trade/edgar_client.py +
-# Trade/edgar_index.duckdb) instead of building a redundant sec-api.io
-# connector. Do not build a new EDGAR ingestion path -- fix this one.
+# Verified 2026-08-14 (Lead): ran get_filings("AAPL") against the real
+# Trade/edgar_index.duckdb mirror -- 100 real filings returned, accession_no/
+# form_type populated (not empty), filed_at a real datetime.date, items == [].
+#
+# Architecturally this module wraps the existing DuckDB-backed EDGAR mirror
+# already in production (Trade/edgar_client.py + Trade/edgar_index.duckdb)
+# instead of building a redundant sec-api.io connector -- do not build a new
+# EDGAR ingestion path.
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
 
-from Trade.edgar_client import EdgarClient as _EdgarClient  # see import note above
+_EDGAR_MIRROR_ROOT = Path(os.environ["EDGAR_MIRROR_PATH"]) if os.environ.get("EDGAR_MIRROR_PATH") \
+    else Path(__file__).resolve().parents[5] / "Trade"
+if str(_EDGAR_MIRROR_ROOT) not in sys.path:
+    sys.path.insert(0, str(_EDGAR_MIRROR_ROOT))
+try:
+    from edgar_client import EdgarClient as _EdgarClient
+except ImportError:
+    _EdgarClient = None
 
 
 @dataclass
@@ -45,9 +53,9 @@ class EdgarMirrorConfig:
 
     @staticmethod
     def from_env() -> "EdgarMirrorConfig":
-        root = os.getenv("EDGAR_MIRROR_ROOT")  # see env-var-name note above
+        root = os.getenv("EDGAR_MIRROR_PATH")
         if not root:
-            raise RuntimeError("Missing EDGAR_MIRROR_ROOT environment variable")
+            raise RuntimeError("Missing EDGAR_MIRROR_PATH environment variable")
 
         root_path = Path(root)
         db = root_path / "edgar_index.duckdb"
@@ -68,8 +76,8 @@ class EdgarMirrorFiling:
     accession_no: str
     form_type: str
     filed_at: Optional[datetime]
-    items: List[str]     # NOTE: not tracked by the real mirror -- always empty
-    raw: dict             # full JSON from the mirror
+    items: List[str]     # not tracked by the real mirror -- always empty
+    raw: dict             # full record from the mirror
 
 
 class EdgarMirror:
@@ -79,6 +87,8 @@ class EdgarMirror:
     """
 
     def __init__(self, config: EdgarMirrorConfig):
+        if _EdgarClient is None:
+            raise RuntimeError("edgar_client is not importable -- check EDGAR_MIRROR_PATH")
         self.client = _EdgarClient(
             db_path=str(config.db_path),
             cache_dir=str(config.cache_dir),
@@ -93,9 +103,6 @@ class EdgarMirror:
         """
         Fetch filings from the local EDGAR mirror.
         Uses the project's existing, validated ingestion path.
-
-        KNOWN BUG: field names below do not match the real schema -- see
-        module header. Every result currently comes back empty/None.
         """
         filings = self.client.query_filings(
             ticker=symbol,
@@ -105,24 +112,19 @@ class EdgarMirror:
 
         results = []
         for f in filings:
-            filed_at_raw = f.get("filedAt")  # WRONG KEY -- real key is "date_filed"
-            if filed_at_raw:
-                try:
-                    filed_at = datetime.fromisoformat(
-                        filed_at_raw.replace("Z", "+00:00")
-                    )
-                except Exception:
-                    filed_at = None
+            date_filed_raw = f.get("date_filed")
+            if isinstance(date_filed_raw, (date, datetime)):
+                filed_at = date_filed_raw
             else:
-                filed_at = None
+                filed_at = None  # unexpected type from the mirror -- don't guess-parse it
 
             results.append(
                 EdgarMirrorFiling(
                     symbol=symbol,
-                    accession_no=f.get("accessionNo", ""),  # WRONG KEY -- real key is "accession"
-                    form_type=f.get("formType", ""),        # WRONG KEY -- real key is "form_type"
+                    accession_no=f.get("accession", ""),
+                    form_type=f.get("form_type", ""),
                     filed_at=filed_at,
-                    items=f.get("items", []),               # WRONG -- field doesn't exist in this mirror
+                    items=[],  # not tracked by this mirror
                     raw=f,
                 )
             )

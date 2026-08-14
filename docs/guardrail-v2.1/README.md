@@ -33,15 +33,14 @@ in `analysis/` or `data/` before being accepted.
    unverified placeholder — confirm against real Massive API docs before use.
 3. **Block B (EDGAR mirror wrapper)**: architecturally correct (wraps the existing
    `Trade/edgar_client.py` DuckDB-backed mirror rather than building a redundant sec-api.io
-   connector) but **has a confirmed field-mapping bug**, not yet fixed as of this commit — see
-   `code/edgar_mirror.py`'s header comment for the exact correction needed. As pasted, every
-   `EdgarMirrorFiling` will come back with empty/None fields because it reads `filedAt`/
-   `formType`/`accessionNo` (leftover from an earlier sec-api.io-based draft) instead of the
-   real mirror's actual columns: `date_filed`, `form_type`, `accession` (confirmed directly
-   against `Trade/edgar_client.py:104-107`). Also uses `from Trade.edgar_client import ...`,
-   which will likely raise `ModuleNotFoundError` since `Trade` is a sibling repo added to
-   `sys.path`, not an importable package (see `rolling_watchlist.py:43-57` for the established
-   pattern). Do not merge Block B until these are fixed.
+   connector). **Fixed 2026-08-14** (Lead, per Director instruction) — field mapping corrected
+   to the real mirror columns (`accession`/`form_type`/`date_filed`, `date_filed` type-checked
+   not string-parsed, `items` always `[]`), import switched to the sibling-repo `sys.path`
+   pattern (`rolling_watchlist.py:43-57`), env var renamed to `EDGAR_MIRROR_PATH`. Verified with
+   a real query against `Trade/edgar_index.duckdb` (`AAPL`, 100 filings, fields populated
+   correctly) — see `code/edgar_mirror.py`'s header for the verification note. The
+   population-purity gap (item 1 above) and the S3/Composite-scoring content (§3-§9) are
+   unrelated to this fix and remain open.
 4. **S3 corrected formula** (§7.3): proposed but not independently re-validated through the
    LOO+5-fold×30-seed harness as its own standalone score — only its constituent parts
    (raw `days_to_cover`) were validated directly.
