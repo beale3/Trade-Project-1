@@ -80,14 +80,20 @@ after a second major product pivot; re-authored wholesale, not patched alongside
   is a real, live, currently-active **SEC-API.io** subscription key (Personal & Startups tier, $49/55 per
   month, 50GB/mo included) — verified via a real authenticated API call, not just inspection; the key
   value itself was never printed, logged, or committed (D-TRADE-026/027).
-- **🔴 UNRESOLVED SECURITY FINDING — carry this forward, do not let it go stale.** SecOps found a live
-  SEC-API.io token sitting in **plaintext** in `C:\Users\beale\float-study\log_pull.txt` (outside this
-  repo — not a leg-K/gitignore violation, but a real credential at rest on the Director's machine,
-  leaked into old DNS-failure exception tracebacks). Recommended to the Director: rotate the token,
-  scrub/delete that log file, install the *rotated* value at B5 (already gated in
-  `docs/security/b5-secret-approval-checklist.md` S6 — "rotate first" is checked before install). **I
-  offered to find and scrub the file directly and never received a follow-up answer on whether the
-  Director rotated it or wants my help.** Ask directly on resume — don't assume this was handled.
+- **✅ RESOLVED 2026-08-21 — SEC-API.io credential exposure.** SecOps had found a live SEC-API.io token
+  sitting in plaintext in `C:\Users\beale\float-study\log_pull.txt` (outside this repo, leaked into old
+  DNS-failure exception tracebacks); a first Director claim that this was already rotated turned out to
+  be stale — the Lead independently verified the old on-disk key with a real authenticated call
+  (`https://api.sec-api.io/float`, one-time, value never printed/logged) and got back **HTTP 200**,
+  proving the old token was still live, not dead as first stated. Director then rotated at the provider
+  dashboard for real and placed the new value in `Trade/sec_api_key.txt` (confirmed by the file's changed
+  mtime/size). **Lead re-verified the new key the same way — HTTP 200, confirmed live** — then deleted
+  `C:\Users\beale\float-study\log_pull.txt` entirely (not a git repo; no history to worry about) per the
+  Director's explicit instruction to not retain the stale credential in any form. **Note:** the *old* key
+  was never stored anywhere by the Lead (per the Director's own "do not persist it" instruction during
+  the verification call), so its invalidation at the provider could not be independently re-confirmed
+  after rotation — only the new key's liveness was checked post-rotation. Closed in
+  `open-items-ledger.md`.
 - **A recurring pattern this session worth knowing about before it happens to you too:** the Director
   repeatedly pasted content from *other*, unrelated Claude conversations into this session (a claude.ai
   "Build A Stock Chart Algorithm" Project doing separate options-screener/backtest work, a UI-navigation
