@@ -1656,3 +1656,39 @@ outstanding co-sign gate before canonical absorption.
 - **Not yet proposing intraday scope off the full 651** — that's a real sizing decision (651 calls is ~6.5x
   the already-approved/executed 100-call daily pull), not mine to size unilaterally without surfacing the
   tradeoff. Bringing two options back to the Lead rather than picking one myself.
+
+### [AIQ · 2026-08-31] D-TRADE-038 real-data audit — first real provider data in this project, verified clean
+- Per the Director's explicit build-chain extension (SDE1 executes → AIQ audits → QA reproduces → Lead
+  verifies at source). Read `helm/ingest/massive.py`, `run_gate2_pull.py`, `helm/storage/raw_store.py`
+  directly (source, to understand the claims — not imported for computation). Every check below is my own
+  pandas code run directly against the actual CSVs.
+- **NN-1 (point-in-time):** `fetch_daily_ohlcv` requests an explicit bounded `[start,end]` window, not an
+  unbounded/as-of-today query. Independently confirmed (not just read from source): no row in the actual
+  CSV exceeds the approved `end_date` (max date 2026-07-17, exactly matching `today-45d`). Ingest mechanics
+  are point-in-time-safe by construction for a bounded historical pull.
+- **Data sanity, zero violations across 45,426 rows/100 tickers:** High≥Low, Close/Open within [Low,High],
+  no negative/zero volume or price, no duplicate (ticker,date) pairs, no NaN in any core field.
+- **Ledger-vs-CSV consistency:** 200 ledger rows (100 pre-fix failures + 100 successes, matches the
+  reported history). Cross-checked every successful call's claimed `rows_returned` against the actual
+  per-ticker CSV row count — **zero mismatches**; ledger sum (45,426) = actual CSV total (45,426) exactly.
+  The ledger is honest, not just present.
+- **Row-count variance investigated, not waved off:** 9 tickers under 200 rows checked individually — late
+  starts (uplisting) and early ends (delisting-consistent, e.g. NKLA's real-world bankruptcy/relisting
+  timeline lines up) explain the low counts, not a partial pull. Missing-business-day gap check on the
+  wider set: a handful of tickers show real internal gaps (up to ~40% of business days, plausible trading
+  halts on volatile microcaps) — confirmed no NaN-filled/interpolated rows anywhere, missing days are true
+  absences, matching NN-5's exclude-don't-impute principle already.
+- **2 findings, both forward-looking flags, neither blocks this delivery:**
+  1. `adjusted=true` (matches `tools/rolling_watchlist.py`'s own pre-existing convention exactly, verified
+     by direct comparison — not new) is a genuine, previously-undisclosed point-in-time risk now that it's
+     load-bearing for an actual backtest rather than a live scan: adjusted prices can be retroactively
+     restated by a later split/dividend, a real risk on this volatile-microcap cohort. Recommend an
+     explicit adjusted-vs-raw decision, disclosed, not a silently inherited default from a different
+     use case.
+  2. Real coverage gaps exist within some tickers — the data itself handles this correctly (no fabrication),
+     but whoever builds the Leg A/B point-in-time join must skip missing dates cleanly, not assume
+     continuous coverage.
+- **Verdict: pull independently verified clean.** All sanity/consistency checks pass with zero violations;
+  ingest is point-in-time-safe for its stated purpose; row-count variance is explained by real market
+  history. No blocker. Full audit: `docs/eval/d-trade-038-data-audit.md`.
+- Reporting to the Lead now (staged reporting, Director's directive).
