@@ -254,4 +254,39 @@ since this explicitly doesn't enter HELM.
 pre-registration), the `log_pull.txt` credential-rotation confirmation, and whether the Director pushed
 `c088e44` themselves.
 
+### [Lead · 2026-08-30] D-TRADE-033 — breakout_model / "Predictive Model 7.0" logged and held
+Director raised a scope conflict directly: a separate, active Claude project had been building a
+breakout-prediction pipeline (`config.py`/`data_pipeline.py`/`dataset_builder.py`/`features.py`/
+`labeling.py`/`main.py`/`train_model.py`/`catalyst_features.py`/`test_synthetic.py`) — asked whether this
+is the same work P-1 freezes, and if so what the actual reconciliation process is (log it, hold it, or
+unwind it), rather than let it run invisibly the way Guardrail v2.1 did before being discovered.
+
+First pass: searched the whole machine for the four files named in the Director's initial message — none
+of `data_pipeline.py`/`features.py`/`train_model.py` existed anywhere; only pre-existing `Trade/
+catalyst_features.py` (unrelated, predates this session) was real. Also checked for other live/reachable
+Claude sessions (`ListAgents`) to try to identify "the Trade model training chat" the Director asked
+about — none reachable. Reported both findings plainly rather than guess, and flagged that this Lead
+session has itself been operating out of the `Trade - AI-ML` checkout all along despite `activity-log.md`
+naming `Trade - Lead` as the Lead's own clone — a real identity mismatch worth the Director reconciling,
+not something to paper over.
+
+Answered the Director's 4 questions directly: (1) yes, same freeze — D-TRADE-010 isn't phase-scoped, and
+canonical `<1.4>`/ADR-0001 §10 already name this exact pipeline as Phase 2, out of scope; if anything more
+clearly frozen than Phase 1 since Phase 1 hasn't cleared P-1 either. (2) recommended the D-TRADE-032
+shape — log under a new number, don't unwind real tested work, don't treat unit-test-passing as CV
+clearance, hold pending both P-1 and a Phase-2-specific decision. (3) N/A. (4) could not independently
+confirm what "the Trade model training chat" is.
+
+Director then reported the code landed on disk at `Trade/` and asked to confirm visibility + assign
+D-TRADE-033. **Verified directly, not attested:** all 9 files present (`Trade/`, dated 2026-08-30),
+`Trade/`'s own git status checked (untracked, `.gitignore` diff reviewed — `sec_api_key.txt` still
+correctly ignored, no secret-exposure risk from the change), and **ran `test_synthetic.py` independently**
+— exit code 0, all 8 PASS lines matched the Director's report exactly (labeling correctness, no-lookahead
+checks on features/catalyst/vwap/consolidation/parabolic-curvature, a 6-fold walk-forward smoke run). This
+is unit/synthetic-level verification only, not the D-TRADE-021 OOS/CV bar — recorded as such, not
+oversold. Ratified as **D-TRADE-033**: logged, held, no further build/training authorized. Recorded in
+`decisions-log.md` and `open-items-ledger.md` (item 12). `Trade/` repo itself untouched — separate,
+ungoverned repo from `beale3/Trade-Project-1`; no commits made there, nothing requested there beyond
+confirming visibility.
+
 <!-- append new entries below -->
