@@ -623,4 +623,42 @@ them in item 19's prose, since each needs its own resolution path. Have not yet 
 holding for it to safely confirm (length/existence only) that the new key resolves correctly first, and
 for a decision on whether a retry of the identical approved scope needs fresh Gate-2 approval.
 
+### [Lead · 2026-08-31] D-TRADE-038's 401s: full diagnostic chain, root cause a BOM not a bad credential
+Long back-and-forth with SDE1 to root-cause the 401s, worth recording in full since the eventual answer
+was genuinely non-obvious and several plausible-looking theories had to be ruled out in order:
+
+1. **Theory 1 — dead credential.** Ruled out immediately: independently re-verified the current key live
+   (HTTP 200) before accepting SDE1's report at face value.
+2. **Theory 2 — SDE1's session had a one-time stale cached env var.** Confirmed via cross-side SHA-256
+   hash comparison (SDE1 hashed its own resolved value, Lead independently hashed the authoritative
+   value on its own side — neither read the other's raw file, SDE1 itself flagged that as a real
+   clone-boundary concern and proposed the safer pattern). Hashes didn't match — confirmed.
+3. **The Director restarted SDE1's session. Didn't fix it** — SDE1's hash was unchanged, character-for-
+   character, across pre-rotation, post-rotation, AND post-restart checks. That by itself proved the
+   session wasn't reading live environment state at all, not just missing one update.
+4. **Theory 3 — the env var itself was somehow wrong.** Ruled out: independently re-read the actual
+   Windows User-scope env var directly via fresh PowerShell (not the file) — matched the file-based value
+   exactly. The var was correct on the machine; SDE1's environment just wasn't inheriting it, for reasons
+   that were never resolved and were worked around rather than diagnosed further.
+5. **Pivoted to a file-based fallback** rather than keep chasing the env-var mystery — placed a key file
+   directly in `Trade - SDE1`'s own clone (gitignore-verified first).
+6. **SDE1 found the actual mechanism, content-blind, without being told to look for it:** explicitly
+   cleared its env var and tried the file fallback — resolution returned nothing. Traced
+   `_resolve_massive_api_key()`'s exact parsing logic at source, checked the file's raw bytes (structure
+   only, never the secret value), and found a UTF-8 BOM at the start — Windows PowerShell 5.1's `-Encoding
+   utf8` writes BOM by default, and the resolver's plain `encoding="utf-8"` open doesn't strip it, so its
+   `line.startswith("MASSIVE_API_KEY=")` check silently failed. SDE1 explicitly declined to fix this
+   itself (a byte-level edit to a credential file) and asked for direction instead.
+7. **Checked whether this same defect existed anywhere else Lead-written key files live** — it did:
+   `Trade - Lead\massive_api_key.txt` (written via the identical PowerShell command, days earlier) had the
+   identical BOM, latent and undetected this entire session because the env var always won until SDE1's
+   diagnostic forced the file path. Rewrote both files BOM-free (.NET `UTF8Encoding($false)`, value never
+   displayed at any point in the whole chain) and re-verified both live (HTTP 200) after the rewrite.
+
+**What's still genuinely unexplained:** why SDE1's session doesn't inherit environment-variable updates at
+all, even across a restart. Worked around via the file fallback, not solved — worth knowing this could
+recur for env-var-dependent config generally, not just this one key. Recommended (not applied) a small
+hardening to `_resolve_massive_api_key()` — open with `encoding="utf-8-sig"` so this specific failure mode
+can't recur regardless of how a key file gets written in the future.
+
 <!-- append new entries below -->
