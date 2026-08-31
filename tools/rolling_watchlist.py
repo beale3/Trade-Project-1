@@ -748,19 +748,46 @@ def simulate_day_trades(intraday_df: pd.DataFrame, entry_trigger: pd.Series,
                          shares_per_trade: int = 100,
                          max_loss_per_trade_dollars: float = None,
                          max_daily_loss_dollars: float = None,
-                         profit_giveback_pct: float = 15.0) -> dict:
+                         profit_giveback_pct: float = 15.0,
+                         trail_pct: float = None,
+                         init_stop_pct: float = None) -> dict:
     """
     Walks through intraday_df bar by bar. On each bar where entry_trigger is
     True and no position is open and trading hasn't been halted for the day,
-    opens a long at that bar's Close, with:
+    opens a long at that bar's Close.
+
+    Two mutually exclusive exit modes, selected by whether trail_pct is set
+    (both None -- the default -- is the original fixed mode; behavior is
+    byte-for-byte unchanged from before this parameter pair existed):
+
+    FIXED mode (trail_pct is None, the default):
       - stop = entry * (1 - stop_loss_pct/100)
       - target = entry + (entry - stop) * min_risk_reward   (enforces the
         2:1 -- or whatever ratio you set -- by construction)
+      Each subsequent bar checks whether High reached the target or Low hit
+      the stop (stop wins on a same-bar tie, the conservative assumption).
 
-    Each subsequent bar checks whether High reached the target or Low hit
-    the stop (stop assumed to win if both occur in the same bar, the
-    conservative assumption). Any position still open at the last bar of
-    the day is force-closed at that bar's Close.
+    TRAILING mode (trail_pct is not None; init_stop_pct is then required --
+    ADR-0001 SS6.3, D-TRADE-036 ratified primary cell trail_pct=8/
+    init_stop_pct=3, sensitivity grid trail_pct in {5,8,12}/init_stop_pct in
+    {2,3}): the fixed target is UNUSED -- letting winners run is the whole
+    point of a trailing vs. fixed-R:R exit. Tracks peak(t) = the highest
+    High seen from entry through bar t (inclusive; same-bar data at entry,
+    not a lookahead -- NN-1), and computes a single monotonically
+    non-decreasing effective stop:
+
+        effective_stop(t) = max(P0*(1 - init_stop_pct/100),
+                                 peak(t)*(1 - trail_pct/100))
+
+    Because peak(t) never decreases, effective_stop(t) is non-decreasing by
+    construction -- the stop can never silently retreat -- and it can never
+    fall below the initial floor, so the loss is bounded at init_stop_pct
+    regardless of what the trail does. Exits the first bar whose Low <=
+    effective_stop (reason "trailing_stop"), same conservative fill-at-stop
+    assumption as fixed mode.
+
+    Either mode: any position still open at the last bar of the day is
+    force-closed at that bar's Close (reason "eod_close").
 
     Trading halts for the rest of the day (no new entries, existing
     position still managed normally) if:
@@ -768,18 +795,25 @@ def simulate_day_trades(intraday_df: pd.DataFrame, entry_trigger: pd.Series,
       - cumulative daily P&L drops to/below -max_daily_loss_dollars, or
       - daily P&L has pulled back by >= profit_giveback_pct from its
         peak-so-far (only once that peak is positive)
+    These are per-DAY circuit breakers and are orthogonal to -- compose
+    with, do not replace -- either per-trade exit mode above; do not
+    conflate a per-trade stop with the daily peak-giveback halt.
 
     max_loss_per_trade_dollars / max_daily_loss_dollars: pass None to
     disable that particular circuit breaker.
     """
+    if trail_pct is not None and init_stop_pct is None:
+        raise ValueError("init_stop_pct is required when trail_pct is set (ADR-0001 SS6.3)")
+
     closes = intraday_df["Close"].values
     highs = intraday_df["High"].values
     lows = intraday_df["Low"].values
     trigger = entry_trigger.reindex(intraday_df.index).fillna(False).values
     n = len(intraday_df)
+    trailing_mode = trail_pct is not None
 
     trades = []
-    position = None  # dict: entry_price, stop_price, target_price, entry_time
+    position = None  # dict: entry_price, stop_price, target_price, entry_time, peak (trailing mode only)
     daily_pnl = 0.0
     peak_pnl = 0.0
     halted = False
@@ -790,10 +824,17 @@ def simulate_day_trades(intraday_df: pd.DataFrame, entry_trigger: pd.Series,
         price, high, low = closes[i], highs[i], lows[i]
 
         if position is not None:
+            if trailing_mode:
+                # peak(t) uses only bars entry..t inclusive -- bar-causal, NN-1.
+                position["peak"] = max(position["peak"], high)
+                position["stop_price"] = max(position["stop_price"],
+                                              position["peak"] * (1 - trail_pct / 100))
+
             exit_price, reason = None, None
             if low <= position["stop_price"]:
-                exit_price, reason = position["stop_price"], "stop"
-            elif high >= position["target_price"]:
+                exit_price = position["stop_price"]
+                reason = "trailing_stop" if trailing_mode else "stop"
+            elif position["target_price"] is not None and high >= position["target_price"]:
                 exit_price, reason = position["target_price"], "target"
             elif i == n - 1:
                 exit_price, reason = price, "eod_close"
@@ -819,11 +860,20 @@ def simulate_day_trades(intraday_df: pd.DataFrame, entry_trigger: pd.Series,
 
         elif not halted and trigger[i]:
             entry_price = price
-            stop_price = entry_price * (1 - stop_loss_pct / 100)
-            risk = entry_price - stop_price
-            target_price = entry_price + risk * min_risk_reward
-            position = {"entry_price": entry_price, "stop_price": stop_price,
-                        "target_price": target_price, "entry_time": intraday_df.index[i]}
+            if trailing_mode:
+                position = {
+                    "entry_price": entry_price,
+                    "stop_price": entry_price * (1 - init_stop_pct / 100),
+                    "target_price": None,
+                    "peak": high,  # this bar's own High -- same-bar data, not a lookahead
+                    "entry_time": intraday_df.index[i],
+                }
+            else:
+                stop_price = entry_price * (1 - stop_loss_pct / 100)
+                risk = entry_price - stop_price
+                target_price = entry_price + risk * min_risk_reward
+                position = {"entry_price": entry_price, "stop_price": stop_price,
+                            "target_price": target_price, "entry_time": intraday_df.index[i]}
 
         pnl_curve.append(daily_pnl + (0 if position is None else (price - position["entry_price"]) * shares_per_trade))
 
