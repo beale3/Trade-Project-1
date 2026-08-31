@@ -1,18 +1,18 @@
-# DevOps — gate-harness + Phase-1 repo/CI design-of-record (DESIGN ONLY)
+# DevOps — gate-harness + Phase-1 repo/CI design-of-record
 
 > 🔒 **Re-authored 2026-08-01 for the personal-tool pivot (D-TRADE-020, LL-19 — re-author, not patch).**
 > The prior version of this document (Node/TS · Fastify · React · Docker-Postgres · RLS/tenant-isolation ·
 > the SaaS-scale money-truth chokepoint) **no longer describes HELM** and is deleted below, not parked —
 > `<3.5>` drops Node/Fastify/React entirely; there is no service, no web surface, no multi-tenant DB.
 >
-> **Still DESIGN, not build.** The Architect's `ADR-0001-phase1-validation-tool.md` landed 2026-08-01
-> (Status: PROPOSED) — its own **P-1 precondition confirms my hold was correct, not resolved**: *"No-build
-> stands until the Director explicitly confirms Phase-1 quant-research build is outside D-TRADE-010's
-> intent... no seat writes production code until P-1 clears."* **I hold on creating actual repo/CI files
-> (`pyproject.toml`, `.github/workflows/*`, `scripts/gate/*`) until P-1 clears** — this document is a
-> one-shot execution plan for the moment it does. What I *can* and do here: **co-sign the ADR's
-> non-negotiables** (§12 requires it before wave-entry GO) and **re-align this design's module names to the
-> now-Architect-confirmed layout** (§4 of the ADR) — both design-review actions, not build. See §F/§H.
+> **⚠️ STALE BANNER, kept for history — P-1 cleared long ago (2026-08-30, D-TRADE-034) and build is
+> underway (Stages 1–4 of the AI/ML→AIQ→QA→DevOps chain, `scripts/gate/{run.py,legs/*.py}` and
+> `helm/validation/{engine,audit}/` are real, shipped code as of 2026-08-31).** The "hold, design-only"
+> framing below described 2026-08-01's state, not today's — left as-is per this project's append-don't-
+> rewrite discipline rather than silently edited. §B/§C/§D/§E/§F below are correspondingly dated; treat
+> `scripts/gate/run.py` and its legs as the actual source of truth for what's armed right now, this
+> document as the historical design rationale for why. Individual sections updated where a specific build
+> task (e.g. leg 3, below) required correcting them.
 
 Author: DevOps seat (clone `Trade - DevOps`). Reviewers on Phase-1 GO: Lead (infra tradeoffs) · QA
 (re-runs the harness + every CV script) · GA (leg-coverage audit) · SecOps (owns leg K/T rule content,
@@ -63,7 +63,7 @@ exit non-zero. Fixture is planted, shown to bite, then reverted — never left i
 |---|---|---|---|
 | lint/type-check (`ruff`+`mypy`) | DevOps/B3 | Phase-1 scaffold | style + type errors FAIL |
 | unit tests (`pytest`) | DevOps/B3 | Phase-1 scaffold | indicator/scoring-math unit tests (mirrors the screener's own existing synthetic-data tests) |
-| **leg 3 · CV reproducibility** | QA VERIFIER (I wire, QA runs) | P1-3 | a `run_analysis.py`-style script re-derives every reported backtest number from raw data end-to-end; a number that doesn't reproduce FAILS |
+| **leg 3 · CV reproducibility** | QA VERIFIER (I wire, QA runs) | Stage 4 (D-TRADE build-chain), **ARMED 2026-08-31** | 🔒 **Design superseded by what actually shipped (`scripts/gate/legs/cv_reproducibility.py`) — see F-1 below, not a re-derivation script.** Imports the real `helm/validation/engine/{leg_b,bar}.py` and re-runs QA's own already-independently-reproduced fixtures (`docs/roles/qa/stage3-reproducibility-report.md` §4) against it as a mechanical regression trip-wire — NOT a second independent audit (that's AIQ's job, NN-3 forbids DevOps from re-deriving/judging). Self-test reproduces QA's exact manual finding: reintroduce the pre-Finding-1-fix bug in `leg_b.py` (working tree only) → RED → `git checkout --` → GREEN. |
 | **leg K · secret-scan** | SecOps ORACLE (DevOps wires) | Phase-1 scaffold, day one | SecOps's fully-authored 7-pattern denylist (`docs/security/key-denylist.md`) — see §C, I do not re-derive it |
 | **leg T · provider-taint (static)** | SecOps ORACLE (DevOps wires) | Phase-1 scaffold | SecOps's sanctioned-module rule (`docs/security/tos-taint-review.md`) adapted to the Python module layout — see §D |
 | **leg G · spend guard** | FinOps PARTIAL (DevOps wires) | Phase-1 data-ingestion | a call that would breach the daily cap is BLOCKED, not silently allowed — see §E (⚠️ FinOps's spec needs a light re-author first) |

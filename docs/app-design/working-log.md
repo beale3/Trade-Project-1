@@ -1475,3 +1475,34 @@ outstanding co-sign gate before canonical absorption.
   future correctness; the trailing-stop against real market bars; project packaging (`helm.*` needs a
   manual `PYTHONPATH`). Nothing here fixed by me — I never touch the code under test.
 - Full report: `docs/roles/qa/stage3-reproducibility-report.md`. Reporting to the Lead now.
+
+### [DevOps · 2026-08-31] Stage 4 — armed leg 3 (F-1) + computed SKIP reasons (F-2)
+- Pulled `96b90c0`, read QA's Stage-3 report in full (`docs/roles/qa/stage3-reproducibility-report.md`)
+  and the actual shipped `helm/validation/engine/{bar,leg_b}.py` / `helm/validation/audit/
+  stage2_audit.py` before touching anything, per the message's own instruction.
+- **F-1 fixed: `scripts/gate/legs/cv_reproducibility.py` (new) arms leg 3.** Imports the real, shipped
+  `helm.validation.engine.{leg_b,bar}` and re-runs QA's own already-independently-reproduced fixtures
+  (Stage-3 §4) against it — a mechanical regression trip-wire, **not** a second independent audit (NN-3
+  forbids me from re-deriving/judging the engine's methodology; that's AIQ's job, already done twice).
+  This is the one place in the chain allowed to import the engine at all, per the Lead's own framing —
+  DevOps is neither builder (AI/ML) nor judge (AIQ).
+- **Self-test reproduces QA's exact manual finding, now permanently, mechanically:** reintroduces the
+  pre-Finding-1-fix bug into `leg_b.py` (working tree only, regex-located and patched, never staged/
+  committed), re-runs, confirms RED with the exact diagnostic QA described by hand
+  (`beats_naive_baseline` flips from `False` to `True` on the outlier fixture), reverts via `git checkout
+  --`, confirms GREEN again. Verified both standalone and through the actual `run.py` code path (leg 3's
+  `run_fn` is the identical function `run.py` calls when armed — no separate wiring to drift).
+- **F-2 fixed: `scripts/gate/run.py` redesigned so every SKIP reason is computed from live repo state**,
+  not a hardcoded string — the specific stale line QA caught (leg 3's "no validation engine yet") is now
+  structurally impossible to go stale the same way again: each leg's checker function inspects the actual
+  filesystem (`helm/ingest/` exists? `pyproject.toml` exists? a pytest-discoverable file exists?) at run
+  time. Also picked up QA's softer, not-pressed note in the same pass (line 28's false "no test suite
+  yet"): the new `check_unit_tests()` correctly found a real pytest-discoverable file
+  (`docs/guardrail-v2.1/analysis/sub2_backfill_test.py`) and reports that accurately instead.
+- Verified end-to-end before committing: `secret_scan.py --selftest` still passes (no regression from
+  the `run.py` refactor), `cv_reproducibility.py --selftest` passes, full `run.py` run is GREEN with leg
+  K and leg 3 both ARMED+PASS and every SKIP reason now live-computed and accurate.
+- Corrected `harness-design.md`'s leg-3 row (was describing a from-scratch re-derivation script that was
+  never what got built) and flagged its top banner as stale (still said "holding pending P-1" — P-1
+  cleared 2026-08-30) rather than silently rewriting the historical design rationale.
+- Reported once to the Lead. No blocker.
