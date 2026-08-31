@@ -1506,3 +1506,45 @@ outstanding co-sign gate before canonical absorption.
   never what got built) and flagged its top banner as stale (still said "holding pending P-1" — P-1
   cleared 2026-08-30) rather than silently rewriting the historical design rationale.
 - Reported once to the Lead. No blocker.
+
+### [SDE1 · 2026-08-31] D-TRADE-037 Gate-1 proposal — ticker universe + date-range for the first real-data pull (PROPOSAL ONLY, no pull executed)
+- Verified D-TRADE-037 at source (`c1afae6`) before acting; confirmed `helm/ingest`/`helm/storage`/`helm/spend`
+  all still absent from the tree — nothing built, nothing to revise.
+- **Grounded in the actual precedent, not invented:** read `C:\Users\beale\short-interest-study\
+  SHORT_INTEREST_STUDY_FINDINGS.md` (measured, not estimated) — the same guardrail/S3 gain+volume-spike
+  cohort the scanner's own defaults define (`--guardrail-price-min 2.0 --guardrail-price-max 20.0
+  --guardrail-min-gain-pct 10.0 --guardrail-min-rel-volume 2.0`) already produced **917 qualifying events
+  across 754 unique tickers, 2024-06-13 → ~2026-04** (≈1.2 events/ticker over ~22 months) — a real, already-
+  measured base rate for exactly this cohort, not a guess.
+- **Proposal:**
+  - **Tickers: a 100-ticker subset of the same 754-ticker short-interest-study cohort** (list in
+    `raw_short_interest_all.csv`, exact 100 TBD — a straightforward reasonable-coverage selection, e.g.
+    every 7th-8th ticker in the file to avoid any manual cherry-picking bias) — reuses a *proven*
+    event-producing universe instead of guessing a fresh one; a fresh-guess universe risks near-zero
+    guardrail firings and an UNMEASURED verdict for reasons unrelated to the component being tested.
+  - **Date range: 2024-06-01 → 45 days before actual pull execution** (illustrative, if executed promptly:
+    ≈2024-06-01 → 2026-07-17). The 45-day buffer, not a fixed calendar date, is the actual rule — it
+    guarantees the longest Leg-A horizon (1-month forward, per ADR-0001 OP-2) is fully realized for every
+    signal even if Gate-2 approval is delayed; a fixed end-date would silently violate NN-1 point-in-time
+    discipline if the pull slips past it.
+  - **Expected yield: ≈120 guardrail-qualifying events** (100 × 1.2/ticker, same base rate) — clears
+    D-TRADE-029's 30-event floor with ~4x margin for the *aggregate* guardrail trigger. **Flagged
+    explicitly, not hidden:** a specific Leg-A sub-pattern (bull-flag, ABCD, etc.) fires at some unknown
+    fraction of that base rate — some components may still land UNMEASURED at this size, which is
+    D-TRADE-029's own correct, by-design outcome for a thin-firing pattern, not a proposal defect.
+- **Sizing logic (why 100 tickers, not 754 or 10):** the "keep it bounded" constraint the Lead raised binds
+  on **API call count** (Massive rate-limit/quota risk, `helm/spend` doesn't exist yet), not on date-range
+  length — a multi-year daily-bar pull is typically one call per ticker regardless of how many months of
+  history it returns (per the scanner's own `--period`-style single-request pattern). So ticker count is
+  the real lever; 100 (≈13% of the proven cohort) is a deliberate order-of-magnitude cut from the original
+  study's 754 while keeping several-fold margin over the 30-event floor.
+- **Unmeasured, flagged not assumed:** the exact Massive rate-limit for the confirmed "Non-Professional"/
+  individual self-serve tier (`docs/security/tos-taint-review.md:70,286`) was not found as a hard number in
+  this repo — taint/tier is resolved (LOW-MEDIUM), but the calls-per-minute ceiling isn't. Recommend DevOps/
+  FinOps confirm it before Gate-2 execution; doesn't block the scope proposal itself (100 calls is small
+  under any plausible self-serve rate limit).
+- Componen­t choice (which specific Leg-A/Leg-B component gets the first real verdict) is explicitly NOT
+  part of this proposal — that's the build step after Gate-2, likely AI/ML's call given the existing
+  synthetic-only pipeline in `helm/validation/engine`.
+- Reported once to the Lead (this entry + a direct message) — first of D-TRADE-037's two required
+  report-backs. No pull executed; no code written. Holding for Gate 2 (Director approval).
