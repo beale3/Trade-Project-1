@@ -1291,3 +1291,51 @@ outstanding co-sign gate before canonical absorption.
   dispatch-freshness, but let a chat *status reply* go stale across a long gap without the same check.
   The discipline needs to cover what I say out loud, not just what I commit.
 - Reporting to the Lead now.
+
+### [AI/ML · 2026-08-31] Resumed after ~27-day gap, caught up honestly, then delivered Stage 1
+- **External flag, same pattern as AIQ's entry above.** A peer session (Lead, different messaging fabric
+  than `ccd_session_mgmt`) asked me to confirm identity before treating anything as authorized. Did NOT
+  take the message as sufficient grounding — pulled clean and independently verified D-TRADE-034 (P-1
+  lifted, Phase-1 scope), D-TRADE-035 (`helm/universe` drops), D-TRADE-036 (P-4 locked: trail∈{5,8,12}%,
+  init∈{2,3}%, primary=trail8/init3; Leg-B baseline N=5 days, fixed not train-fold-derived) all at source
+  before starting anything.
+- **🔴 Found unexplained uncommitted WIP in my own working directory before touching anything:** a
+  `lookup_edgar_catalyst()` addition wired into the LIVE `tools/rolling_watchlist.py` (sys.path/EdgarClient
+  import), plus empty `modeling/diagnostics/*.py` stubs and `tools/backfill_forward_returns.py`. Traced
+  against D-TRADE-032 (2026-08-14, bars new Guardrail-v2.1-style scanner signals from any dispatch without
+  explicit Director authorization + AIQ validation) — the only separately-authorized touch from that
+  episode was a narrow EDGAR-mirror plumbing fix (`382c514`), verified to touch exclusively
+  `docs/guardrail-v2.1/{README.md,code/edgar_mirror.py}`, never the live scanner (confirmed: the current
+  committed `tools/rolling_watchlist.py` has zero EDGAR references). This stash isn't that fix — no
+  D-TRADE number, no working-log entry, unlogged. **Stashed it safely (`git stash -u`), not discarded, not
+  built on, not folded into Stage 1.** The Lead independently corroborated (same WIP, carried since session
+  start, already escalating to the Director as its own tracked item) — two independent sessions hitting the
+  identical unexplained content in the same clone.
+- **Stage 1 delivered on a clean base**, pushed → origin/main (`006db52`, `f8f685e`):
+  1. **Trailing-stop exit mode** in `simulate_day_trades()` — backward-compatible opt-in
+     (`trail_pct`/`init_stop_pct` both `None` = today's fixed behavior, byte-identical). §6.3's
+     `effective_stop(t) = max(P0*(1-init_stop_pct/100), peak(t)*(1-trail_pct/100))` formula implemented
+     exactly, monotonic by construction, bar-causal `peak(t)` (NN-1). Fixed target unused in trail mode.
+     Verified: backward-compat, the ValueError guard, exact numerical verification of the ratchet on a
+     rise-then-drop fixture, a never-rising trade correctly bounded at the init hard stop.
+  2. **`helm/screener/adapter.py`** — thin adapter over the scanner, OP-4's final Leg-A component list (8
+     pattern detectors + pivot/red-to-green trigger), deliberately excluding the already-validated
+     guardrail/S3/short-interest/catalyst factors. Verified against synthetic intraday data.
+  3. **`helm/validation/engine/`** — the CV harness (`evaluate_loo`/`evaluate_multiseed_kfold`, proven
+     template reused verbatim), the D-TRADE-021/029 clearance bar, Leg A orchestration, and Leg B
+     orchestration against D-TRADE-036's locked primary cell + sensitivity grid. **Leg B required a genuine
+     methodology judgment call** (no fitted model exists once trail/init/N are fixed constants, not
+     train-fold-derived) — documented explicitly in the module docstring for AIQ's independent judgment
+     rather than silently baked in, per protocol 17. Verified end-to-end with PLANTED effects (a real
+     signal correctly CLEARS, pure noise correctly NOT_CLEARS even when a single LOO draw beats naive by
+     chance — the exact failure mode the ≥90%-seed bar exists to catch, mirroring the catalyst study's own
+     documented near-miss), a thin-support component correctly reads UNMEASURED not NOT_CLEARED, and a
+     sensitivity-grid cell with a real planted edge is correctly downgraded rather than silently CLEARED.
+  4. Re-ran DevOps's `scripts/smoke_rolling_watchlist_web.py` after each shared-file change — no regression.
+- **What Stage 1 does NOT include, stated plainly, not silently under the rug:** wiring Leg-A verdicts back
+  into `_gates` flags on the live scanner (no such flags exist yet for these components — a separate, later
+  step) and an actual real-market-data backtest run (no cohort/ingest pipeline exists yet; this is the
+  reusable, verified ENGINE code per the Stage-1 dispatch's own framing — "build the logic" — not the run
+  itself, which needs data assembly outside this build's stated scope).
+- Reported to the Lead (staged reporting per the Director's explicit dispatch, not held for a final
+  summary) at each milestone: identity + verification, the WIP finding, and now Stage 1 complete.
