@@ -47,6 +47,7 @@ def evaluate_component(fired_flags, forward_returns, component, horizon):
         return {
             "component": component, "horizon": horizon, "n_support": n_support,
             "verdict": "UNMEASURED", "loo": None, "kfold": None,
+            "validation_kind": "held_out_prediction",
         }
 
     X = fired.astype(float).reshape(-1, 1)
@@ -57,6 +58,10 @@ def evaluate_component(fired_flags, forward_returns, component, horizon):
     return {
         "component": component, "horizon": horizon, "n_support": n_support,
         "verdict": verdict, "loo": loo_result, "kfold": kfold_result,
+        # Stage-2 audit (AIQ finding #2): this travels with every record, not just
+        # a docstring -- Leg A genuinely predicts forward-return on data the fit
+        # never saw (a real holdout), unlike Leg B's stability check (see leg_b.py).
+        "validation_kind": "held_out_prediction",
     }
 
 

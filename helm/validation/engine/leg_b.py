@@ -38,6 +38,29 @@ a rule-comparison that has no model to fit -- correct if AIQ's independent
 re-derivation agrees "beats naive, robustly" is the right question to ask
 this way; if AIQ's audit finds this translation unsound, the METHOD is the
 defect, not the trailing-stop rule or the D-TRADE-036 numbers.
+
+**Stage-2 audit fixes (AIQ, 2026-08-31)** -- the adaptation above was
+confirmed methodologically sound; these fix two execution gaps AIQ found,
+not the design:
+  - **Finding 2 (verdict doesn't disclose stability-vs-generalization):**
+    every record now carries `"validation_kind": "stability_check"` --
+    Leg B asks "does the observed advantage survive being viewed through
+    different partitions of the SAME already-fully-known trades," not
+    "does it predict unseen data" (Leg A's `"held_out_prediction"`, see
+    leg_a.py). The distinction now travels with the number, not just the
+    docstring.
+  - **Finding 4 (undocumented 5th verdict state):** removed
+    `"SENSITIVITY_ONLY_WOULD_CLEAR"`. `evaluate_exit_config` now returns
+    only the ratified 4-state verdict (CLEARED/DROPPED/VOID/UNMEASURED);
+    `is_primary` (already a field on every record) is the ONLY signal for
+    clearance-eligibility. **Binding rule for every consumer of this
+    record: a CLEARED verdict is a real clearance claim ONLY when
+    is_primary is True. A CLEARED record with is_primary=False is
+    sensitivity evidence and must never be reported, gated on, or wired
+    into a `_gates` flag as if it were a clearance (OP-1 anti-cherry-pick)
+    -- this module does not enforce that at the type level, so whoever
+    reads/persists/reports these records (validation_verdicts, a future
+    report generator, QA's Stage-3 re-run) must carry it forward.**
 """
 import numpy as np
 
@@ -56,17 +79,48 @@ BASELINE_N_SENSITIVITY = (1, 21)
 
 
 def _loo_paired(y_treatment, y_baseline):
+    """
+    Stage-2 audit fix (AIQ finding #1): the ORIGINAL statistic here was the
+    MEAN of the n leave-one-out estimates -- AIQ built a concrete fixture
+    (35 trades: 34 with a small consistent disadvantage for treatment,
+    1 outlier with a large advantage that alone flips the full-sample mean
+    positive) and showed the mean-of-LOO-estimates stays positive too,
+    because each individual estimate only removes 1/n of one trade's
+    influence -- n-1 of the n estimates still contain the outlier and stay
+    biased the same direction as the full sample; only the single estimate
+    that actually excludes the outlier flips. Averaging them together
+    dilutes the one estimate that would have caught it, making the
+    statistic close to redundant with just checking the full-sample sign.
+
+    Fixed by requiring UNANIMOUS agreement: every one of the n leave-one-out
+    estimates must agree in sign with the full-sample direction for the
+    result to count as "beats naive" -- if excluding even ONE trade flips
+    the direction, that single trade is driving the conclusion, and this
+    correctly reports that as not robust. This directly resolves AIQ's
+    fixture: the outlier-excluding estimate disagrees in sign, so
+    beats_naive_baseline is correctly False despite the positive
+    full-sample mean.
+    """
     n = len(y_treatment)
+    full_sample_diff = float(y_treatment.mean() - y_baseline.mean())
     diffs = np.empty(n)
     for i in range(n):
         mask = np.ones(n, dtype=bool)
         mask[i] = False
         diffs[i] = y_treatment[mask].mean() - y_baseline[mask].mean()
-    loo_mean_diff = float(diffs.mean())
+
+    if full_sample_diff > 0:
+        pct_agreeing = float(np.mean(diffs > 0)) * 100
+    elif full_sample_diff < 0:
+        pct_agreeing = float(np.mean(diffs < 0)) * 100
+    else:
+        pct_agreeing = 0.0
+
     return {
         "n": n,
-        "loo_mean_diff": round(loo_mean_diff, 6),
-        "beats_naive_baseline": bool(loo_mean_diff > 0),
+        "full_sample_diff": round(full_sample_diff, 6),
+        "pct_loo_estimates_agreeing": round(pct_agreeing, 1),
+        "beats_naive_baseline": bool(full_sample_diff > 0 and pct_agreeing == 100.0),
     }
 
 
@@ -109,13 +163,17 @@ def evaluate_exit_config(trailing_returns, fixed_returns, config_label, is_prima
         loo_result = _loo_paired(y_t, y_f)
         kfold_result = _multiseed_kfold_paired(y_t, y_f)
         verdict = clearance_verdict(loo_result, kfold_result, n_support)
-        # Sensitivity cells are reported but never a clearance claim (OP-1) --
-        # downgrade a would-be CLEARED to NOT_ELIGIBLE_SENSITIVITY rather than
-        # silently keep CLEARED on a cell that was never pre-registered as primary.
-        if not is_primary and verdict == "CLEARED":
-            verdict = "SENSITIVITY_ONLY_WOULD_CLEAR"
+        # Stage-2 audit fix (AIQ finding #4): no verdict-string downgrade here
+        # anymore -- the true 4-state verdict is always returned. is_primary is
+        # the ONLY clearance-eligibility signal (see module docstring's binding
+        # rule for consumers: CLEARED + is_primary=False is sensitivity evidence,
+        # never a real clearance).
 
     return {
         "config": config_label, "is_primary": is_primary, "n_support": n_support,
         "verdict": verdict, "loo": loo_result, "kfold": kfold_result,
+        # Stage-2 audit (AIQ finding #2): Leg B checks whether the observed
+        # advantage survives resampling the SAME known trades, not whether it
+        # predicts unseen ones (contrast leg_a.py's "held_out_prediction").
+        "validation_kind": "stability_check",
     }
