@@ -1151,3 +1151,25 @@ outstanding co-sign gate before canonical absorption.
 - `adr_reference: D-TRADE-031` (dispatch) `+ ADR-0001 §7` (shared-file citation, `tools/rolling_watchlist.py`
   is a shared library per `<3.5>`).
 - Reported once to the Lead.
+
+### [SecOps · 2026-08-30] P-5 Step 2 review complete for all six secrets — co-signed Step 3
+- Dispatched by the Lead via a peer-session cross-message (open-items-ledger item 13); verified my own
+  identity + the assignment before acting rather than taking it on faith — checked `ListAgents` (exactly
+  one peer session, matched the sender), re-read item 13, re-confirmed my oracle-boundary row unchanged.
+- Ran Step 2 for S1–S6 in `docs/security/b5-secret-approval-checklist.md`: classification+blast-radius,
+  least-privilege-at-generation, ToS-tier match, storage, rotation policy — each documented with evidence
+  (re-verified `.gitignore`/`git ls-files` myself, didn't trust the prior "verified" note). Notable: S1/S2
+  have no finer-grained credential to request at generation (Supabase design limit, not a hygiene gap) —
+  named this explicitly rather than checking a box that implies more precision was available. S6's rotation
+  (item 11) has one honestly-flagged residual — the old exposed token's dashboard-side invalidation was
+  never independently re-confirmed (only the new value's liveness was) — not a live risk (the only exposure
+  site is deleted) but surfaced per protocol 15/16, not smoothed over.
+- **Fail-closed/loud and post-install-leg-K criteria marked NOT-YET-VERIFIABLE, not checked off** — no
+  ingestion code exists yet to test fail-closed behavior against, and leg K re-run was explicitly out of
+  scope (blocked on DevOps's harness build). Refused to attest to either without evidence.
+- **Checked my SecOps co-sign in Step 3 for all six** — this is my own duty per the checklist's own rule
+  (PROFILE: co-signs B5, Lead may not self-approve), not something to punt back up. No blocking finding;
+  residual recommendations (proactive rotation cadence for S1/S2 CRITICAL pair, one-key confirmation for
+  S5, old-token dashboard re-check for S6) noted but don't gate the co-sign. **Installed** and **Leg K
+  re-run GREEN** columns left genuinely open — did not check either, both still block full P-5 closure.
+- Reported once to the Lead (protocol 15), consolidated, not per-secret. No blocker hit.

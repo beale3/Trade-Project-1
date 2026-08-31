@@ -47,30 +47,53 @@ second slow approval round. Batch it.* Current known set:
       Director-approves + SecOps-co-signs for S6 is still unchecked below.
 
 ## Step 2 — Per-secret approval (repeat for each S#)
-For every secret in the inventory:
-- [ ] **Classified** (CRITICAL / HIGH / LOW) and its **blast radius** stated (what it can do if leaked).
-- [ ] **Least privilege at generation:** narrowest scope, correct env, read-only where possible (S3 is
-      read-only + single-project already). **Fresh, per-environment** values — no shared dev/prod secret.
-- [ ] **Provider terms honoured:** the credential's use matches the ToS tier read in `tos-taint-review.md`
-      (esp. S5 Business-tier; S1/S2 RLS-bypass stays server-side per Supabase's customer-credential duty).
-- [ ] **Storage = secret store / gitignored `.env`** — **never** in chat, a tracked file, a commit message,
-      a log, or a screenshot. The Director installs the value directly.
-- [ ] **Rotation policy** set (owner + cadence; immediate rotation if ever exposed — `docs/infra/supabase.md`).
-- [ ] **Fail-closed + loud:** a job that cannot authenticate with this secret **stops and says so** — no
-      silent failure that eats data/evidence (SecOps lessons block).
-- [ ] **Post-install proof:** after install, leg K is re-run and stays **GREEN** (no value leaked into the
-      tree); connectivity verified by the **human in their own terminal** (`docs/infra/supabase.md` curl
-      pattern) so the key stays local, never in chat.
+
+**2026-08-30 — SecOps review, dispatched by the Lead (open-items-ledger item 13), executed this session.**
+Scope as assigned: classification+blast-radius, least-privilege-at-generation, ToS-tier match, storage
+location, rotation policy — for all six secrets. **Leg K re-run and "Installed" verification explicitly
+OUT of scope** (leg K blocked on DevOps's gate-harness build, not yet done; "Installed" is a separate
+artifact-check I wasn't asked to verify and didn't). Method: re-read `tos-taint-review.md` and
+`docs/infra/supabase.md` fresh rather than relying on memory (dispatch-freshness); verified `.gitignore`
+and `git ls-files` myself rather than trusting the prior "verified" note (verify-don't-attest).
+
+| # | Classification + blast radius | Least privilege at generation | ToS-tier match | Storage | Rotation policy |
+|---|---|---|---|---|---|
+| **S1** service_role | **CRITICAL.** Bypasses RLS entirely — full read/write/delete on every table in project `zyscsnhiymitpfdhjuci` if leaked. No scoped/read-only variant exists for this key type (Supabase design, not a gap here). | **Structural limit, not a gap:** Supabase issues `service_role` pre-scoped to one project only — there is no finer grain to request at generation. The compensating control is entirely at *use*-time: server-only, never `apps/web`/client, never CI logs (leg T). Confirmed: no code in this repo references it yet (`<3.5>` — Supabase retained **read-only** this phase; a write path is a later, separately-gated step) — so today's actual exposure surface is zero beyond "sits in the store." | N/A (Supabase has no purchased tier concept; the applicable ToS duty is *"security and use of access credentials... with or without Customer's knowledge or consent"* is 100% ours — `tos-taint-review.md` Provider 3, re-confirmed this session). | ✅ `.gitignore` covers `.env`/`.env.*` (excl. `.env.example`); `git ls-files` confirms **no `.env*` tracked** (checked fresh, not assumed). Director-only install per `docs/infra/supabase.md`. | Owner: Director. Policy on file (`supabase.md`): *"Rotate the key if it is ever exposed"* — **exposure-triggered only, no proactive cadence set.** Given CRITICAL blast radius, I recommend the Director consider a periodic (e.g. annual) rotation on top of exposure-triggered — **recommendation, not a blocker.** |
+| **S2** DB password / `DATABASE_URL` | **CRITICAL.** DB-superuser equivalent if leaked — same blast radius class as S1, different path (direct Postgres vs. REST). | Same structural note as S1 — Supabase doesn't offer a scoped DB credential; use-time confinement (migration runner + server data layer only) is the real control, and no migration runner exists in this repo yet. | Same as S1 — no tier; credential-security duty is ours entirely. | Same verification as S1 — ✅ gitignored, untracked, Director-only install. | Same as S1 — exposure-triggered only; same recommendation for a proactive cadence. |
+| **S3** MCP Personal Access Token | **HIGH.** Scoped to one project already (`--project-ref=zyscsnhiymitpfdhjuci`), **read-only** (D-TRADE-014) — blast radius is data *exposure* (schema/data read), not data *loss/corruption*. Meaningfully smaller than S1/S2. | ✅ **Best practice already applied at generation** — this is the one secret in the set where least-privilege was designed in up front (read-only + single-project), not left to use-time discipline alone. Nothing further to recommend. | N/A (Supabase PAT, not a purchased tier). Read-only scope itself is the ToS-relevant control — write access opening is a separately-gated future change (D-TRADE-014), not silently expanded. | ✅ Same verification as S1/S2 — delivered via `${SUPABASE_ACCESS_TOKEN}` env-indirection in `.mcp.json` (confirmed: the committed file holds only the `${...}` placeholder, never a literal). | Owner: Director. Same exposure-triggered policy; lower urgency given read-only scope already caps the downside. |
+| **S4** anon / publishable key | **LOW.** RLS-enforced by design — Supabase's own model expects this key to be client-visible; a leak doesn't bypass any control RLS already provides. | ✅ Designed for exposure — the *only* least-privilege lever left is "don't also commit it to git for no reason," which is already the leg K rule. | N/A. | ✅ Same verification — kept out of tracked files by convention even though runtime client exposure is expected/safe. | Not exposure-sensitive in the same sense as S1-S3; standard rotation only if RLS policies themselves are found unsound (a different, non-SecOps review). |
+| **S5** Massive (Polygon) key | **HIGH (billed), taint LOW-MEDIUM (re-confirmed).** Blast radius if leaked = **spend abuse** (someone runs up the Director's bill) more than data exposure — Massive market data isn't sensitive in the way DB credentials are. Taint re-confirmed against `tos-taint-review.md`'s live-updated verdict (personal/individual tier matches `<1.2>`, entitlement-checked non-real-time). | Massive issues one key per account at the plan-tier's fixed scope — no finer grain available at generation (same structural note as S1/S2, different provider). Recommend confirming only **one** live key exists (not stale duplicates from earlier research scripts) — I did not verify this myself (would require account-dashboard access, B5-restricted); flagging as a Director/DevOps check, not claiming it's done. | ✅ Matches the compliant personal/individual tier per `tos-taint-review.md`'s LOW-MEDIUM verdict — no commercial-use incompatibility found. | ✅ `.gitignore` now also covers `massive_api_key.txt` + generic `*api-key*`/`*api_key*` patterns (verified — broader than at my first review). | Owner: Director. Billing-abuse risk is better mitigated by FinOps's spend guard (`<3.2>`, NN-8) than by rotation cadence alone — recommend FinOps confirm the guard covers this key's calls once `helm/spend/` exists. Exposure-triggered rotation stands as the baseline. |
+| **S6** SEC-API.io key | **Taint LOW (confirmed), blast radius HIGH-ish (billed, quota).** This is the one secret with a **closed, verified exposure incident** (item 11): found in plaintext in `float-study/log_pull.txt`, Director rotated at the provider, Lead independently re-verified the *new* value live (HTTP 200) — real, checkable evidence, not an unverified claim. | Personal & Startups tier (D-TRADE-026/027) — no finer grain offered by the provider. **One residual gap, surfaced for completeness (protocol 15/16 — nothing under the rug):** the *old*, exposed token's actual invalidation at the provider dashboard was never independently re-confirmed (only the new token's liveness was checked post-rotation, per the Director's own "do not persist the old value" instruction during the verification call — a reasonable tradeoff, not a mistake). **Practical risk is already low** — the only place the old value was ever exposed (`log_pull.txt`) is deleted, so re-confirming its dashboard-side death is a nice-to-have, not a live threat. Not a blocker. | ✅ Matches confirmed Personal & Startups tier — redistribution-exclusion terms satisfied under `<1.2>` personal use, per `tos-taint-review.md`. | ✅ Same gitignore verification; exposure site (`log_pull.txt`) confirmed **deleted entirely**, not just excluded from tracking. | **Already exercised once, successfully** (item 11) — the working model for future exposures. Standing policy: exposure-triggered, Director-executed, Lead/SecOps-verified post-rotation via a real authenticated call (not a claim). |
+
+**Fail-closed + loud** (all six): no code path exists yet for any of these (Phase 1 hasn't reached `helm/ingest/`
+build) — this criterion is **not yet applicable/testable**, not satisfied-and-verified. Flagging honestly
+rather than checking a box I can't back with evidence; re-verify once ingestion code exists (SDE1/Data-Eng
+build, NN-6/NN-7).
+
+**Post-install proof** (all six): **explicitly OUT of scope this pass** per the Lead's dispatch — leg K
+re-run is blocked on DevOps's gate-harness build (not yet done). Human connectivity-verification (the
+`docs/infra/supabase.md` curl pattern) is the Director's own action, not something I can attest to.
+
+**SecOps assessment: no blocking finding on any of the six.** All residual items above are recommendations
+(proactive rotation cadence for S1/S2, one-key confirmation for S5, old-token dashboard re-check for S6) —
+none blocks the co-sign below. Two items are honestly marked not-yet-verifiable (fail-closed behavior,
+post-install leg K) rather than checked off without evidence.
 
 ## Step 3 — Sign-off matrix (both required; Lead may not self-approve)
 | Secret | Director approves | SecOps co-signs | Installed (store/`.env`) | Leg K re-run GREEN | Date |
 |---|---|---|---|---|---|
-| S1 service_role | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
-| S2 DB password | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
-| S3 MCP PAT | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
-| S4 anon key | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
-| S5 Massive/Polygon | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
-| S6 SEC-API.io (rotate first) | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+| S1 service_role | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+| S2 DB password | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+| S3 MCP PAT | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+| S4 anon key | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+| S5 Massive/Polygon | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+| S6 SEC-API.io (rotate first) | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+
+> **SecOps co-sign basis:** Step 2 review above (classification/blast-radius, least-privilege,
+> ToS-tier match, storage, rotation policy — all six, this session). No blocking finding; residual
+> recommendations noted inline, none gate the co-sign. **Installed** and **Leg K re-run GREEN** remain
+> genuinely open — I did not check either (out of scope per the Lead's dispatch; leg K is blocked on
+> DevOps's gate-harness build). P-5 is still not fully closed by this pass — see the note below.
 
 > **2026-08-30 — Director approves all six, in chat: "all six secrets are stored properly, none has been
 > exposed in the command bar or anywhere insecure."** Recorded as the Director-approves column above.
