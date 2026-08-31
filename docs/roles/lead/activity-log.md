@@ -386,4 +386,24 @@ installed but in the wrong repo for this project's purposes (new finding — a r
 oversight). Logged S1/S2/S4 and S6 as their own items (15, 16) rather than burying them in item 13's prose,
 since both need an actual Director decision, not just acknowledgment.
 
+### [Lead · 2026-08-30] S5 closed via a second rotation — supersedes, doesn't answer, the transcript question
+Director provided a new Massive key at `Trade\MASSIVE_api_key.txt`. Verified before touching anything:
+existence/format confirmed, live via a real authenticated call (value never printed), and — via SHA-256
+hash comparison against the prior value, neither value ever displayed — confirmed genuinely different, not
+the same value relocated. Flagged two things before acting: the file's location/casing mirrors DevOps's
+"wrong repo" finding for S6, and asked explicitly whether this closes item 14 or is a separate action,
+rather than assume.
+
+Director confirmed: install to both real locations and close S5 on this basis regardless of the transcript
+question's answer. Updated the User-scope `MASSIVE_API_KEY` env var and `Trade - Lead\massive_api_key.txt`
+directly (value read from source file into memory and written straight across, never appearing in any
+visible command or output), then independently re-verified each live post-update — env var via a fresh
+`[Environment]::GetEnvironmentVariable` read-back into a real API call, the file via the same pattern used
+throughout this session. Both HTTP 200.
+
+Closed item 14, explicit in the record that this **supersedes rather than resolves** the transcript
+candidate (`517ca982-...jsonl`) — that stays genuinely unanswered as a factual matter, just no longer
+current-risk-relevant. Kept SecOps's co-sign as-is (it was never tied to a specific value) rather than
+solicit a redundant re-confirmation for a rotation that doesn't change the secret's classification/handling.
+
 <!-- append new entries below -->

@@ -47,11 +47,18 @@ second slow approval round. Batch it.* Current known set:
       the new value live (HTTP 200) after — see `activity-log.md`. Exposure site deleted entirely. No
       evidence surfaced, at any point, of third-party use of the old value — this closure states that
       plainly rather than leaving it implied. Director + SecOps sign-off both recorded in Step 3 below.
-- [ ] **S5 — REOPENED 2026-08-30 (was briefly closed same day).** Command-bar/rotation history below still
-      stands as described. **Reopened specifically because of the unresolved transcript candidate found in
-      the follow-up check directly below** — closing this while a real, unruled-out candidate sits open
-      would be exactly the "checked a box without evidence" pattern this project's culture exists to
-      prevent. Will re-close once that candidate is resolved either way.
+- [x] **S5 — CLOSED 2026-08-30 (second rotation, supersedes the transcript question rather than resolving
+      it).** Director provided a genuinely new key (`Trade\MASSIVE_api_key.txt`) — Lead-verified: live
+      (HTTP 200, value never printed) and, via SHA-256 hash comparison against the prior value (never
+      displaying either), **confirmed different from what was in `Trade - Lead\massive_api_key.txt`
+      before this rotation** — this is a real new value, not the same one relocated. **Installed to both
+      locations the running code actually reads and re-verified live at each:** the User-scope
+      `MASSIVE_API_KEY` env var (`[Environment]::GetEnvironmentVariable` read-back → live call → HTTP 200)
+      and `Trade - Lead\massive_api_key.txt` (HTTP 200). **The unresolved transcript candidate
+      (`517ca982-...jsonl`, below) is explicitly NOT resolved by this — it's superseded:** whatever that
+      candidate was, real or placeholder, the key it might describe is no longer the live one either way.
+      Director's explicit instruction: this rotation closes S5 regardless of what the transcript
+      question's answer would have been.
 - [x] **S5 command-bar/rotation history — Exposure confirmed, no evidence of malicious use, proactively and fully
       remediated.** Director-reported (initially misattributed to S6, corrected same session): the
       Massive API key was pasted into a command bar the first time it was used; the Director's partner
@@ -67,7 +74,10 @@ second slow approval round. Batch it.* Current known set:
       the post-rotation replacement — the Director's account is the source for that link. Logged, not
       hidden. SecOps's original Step 2/co-sign predated this information — re-confirmation requested
       separately (see `activity-log.md`).
-- [ ] **S5 shell/transcript history check — PARTIALLY DONE, ONE UNRESOLVED CANDIDATE, 2026-08-30.** Acting
+- [ ] **S5 shell/transcript history check — left genuinely unresolved, but no longer blocking (superseded
+      2026-08-30 by the second rotation above).** Kept open rather than marked done — the candidate below
+      was never actually ruled in or out; closing S5 didn't answer this question, it made the answer stop
+      mattering for current risk. Historical record only from here. Acting
       on SecOps's re-confirmation recommendation (above): checked PowerShell `ConsoleHost_history.txt`
       (0 matches), bash/zsh history (no such file exists on this machine), and Windows Run-box MRU
       (0 entries) — all clean, count/existence-only checks, nothing printed. Also scanned this project's
@@ -121,7 +131,7 @@ post-install leg K) rather than checked off without evidence.
 | S2 DB password | ☑ | ☑ | ☐ **NOT FOUND** | ☑ | 2026-08-30 |
 | S3 MCP PAT | ☑ | ☑ | ☑ **FOUND** | ☑ | 2026-08-30 |
 | S4 anon key | ☑ | ☑ | ☐ **NOT FOUND** | ☑ | 2026-08-30 |
-| S5 Massive/Polygon | ☑ | ☑ *(stands per SecOps re-confirmation; see reopening note below)* | 🟡 **PRESENT, not confirmed safe** | ☑ | 2026-08-30 |
+| S5 Massive/Polygon | ☑ | ☑ *(on secret class, not tied to a specific value; see note below)* | ☑ **CONFIRMED (2nd rotation)** | ☑ | 2026-08-30 |
 | S6 SEC-API.io (rotate first) | ☑ | ☑ | 🟡 **FOUND, wrong scope** | ☑ | 2026-08-30 |
 
 > **DevOps artifact-check basis (2026-08-30, open-items-ledger item 13 — leg K + "Installed," this session).**
@@ -209,6 +219,14 @@ post-install leg K) rather than checked off without evidence.
 > and found an unresolved candidate** (Step 1's new bullet above). This postdates SecOps's co-sign, which
 > was given without it. S5 reopened. Not un-checking SecOps's co-sign unilaterally — that's their
 > signature — but flagging it may need a second look once the candidate is resolved.
+>
+> **2026-08-30 — S5 CLOSED, second rotation supersedes the open question rather than answering it.**
+> Director provided a genuinely new key, installed and verified live in both places the running code
+> actually reads (User-scope env var + `Trade - Lead\massive_api_key.txt`) — full detail in Step 1's S5
+> entry above. SecOps's co-sign, given on the prior (now-superseded) value, is not being asked to
+> re-confirm again for this — the co-sign was never about a specific value, it's about the classification/
+> handling of the secret class, which is unchanged. The transcript candidate remains genuinely unresolved,
+> not retroactively cleared — see Step 1 for the honest distinction between "closed" and "answered."
 
 > **2026-08-30 — Director approves all six, in chat: "all six secrets are stored properly, none has been
 > exposed in the command bar or anywhere insecure."** Recorded as the Director-approves column above.
