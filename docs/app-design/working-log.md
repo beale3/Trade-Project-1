@@ -1248,3 +1248,13 @@ outstanding co-sign gate before canonical absorption.
   "P-5 closed" claim, and explicitly not overriding SecOps's S5 reopening with a stale "found = fine"
   read. No blocker; the S6 scope question and the S5 tension are flags for the Director, not a stall on
   my end.
+
+### [DevOps · 2026-08-30] Post-push catch: leg K self-triggered on its own tracked fixtures
+- Re-ran leg K immediately after pushing `0fedd75` (habit, not required) — caught it going RED against
+  its own file: once `secret_scan.py` was tracked, its own `POSITIVE_CONTROLS` literals matched its own
+  patterns (15 findings). Same self-reference class as key-denylist.md, but a path-based exemption here
+  would blind leg K to a real secret accidentally pasted into its own source later — a worse blind spot
+  than exempting a spec doc. Fixed by storing each fixture base64-encoded, decoded only at self-test
+  runtime — no exemption, no blind spot, same decoded values, self-test still PASSES. Re-verified
+  end-to-end (live plant/revert) before pushing the fix (`b028207`).
+- Reported once to the Lead, folded into the same completion report as item 13 rather than a second ping.
