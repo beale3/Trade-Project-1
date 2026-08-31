@@ -47,8 +47,23 @@ second slow approval round. Batch it.* Current known set:
       the new value live (HTTP 200) after — see `activity-log.md`. Exposure site deleted entirely. No
       evidence surfaced, at any point, of third-party use of the old value — this closure states that
       plainly rather than leaving it implied. Director + SecOps sign-off both recorded in Step 3 below.
-- [x] **S5 — CLOSED 2026-08-30 (second rotation, supersedes the transcript question rather than resolving
-      it).** Director provided a genuinely new key (`Trade\MASSIVE_api_key.txt`) — Lead-verified: live
+- [x] **S5 — third rotation, 2026-08-31, CLOSED. Exposure this time was the Lead's own mistake — logged
+      plainly, not smoothed over.** While investigating why SDE1's D-TRADE-038 pull was hitting HTTP 401
+      (a separate, unrelated blocker — see `open-items-ledger.md` item 20), the Lead ran `env | grep -i
+      MASSIVE` in the Bash tool to check whether the env var was propagating, without first considering
+      that grep's output would include the actual value — it did, and the live key value was printed
+      directly into this session's own transcript. **Disclosed to the Director immediately, no attempt to
+      hide or minimize it.** Director provided a new key (`Trade\MASSIVE_api_key.txt`) — Lead-verified:
+      live (HTTP 200, value never printed this time), and via SHA-256 hash comparison (neither value
+      displayed) confirmed genuinely different from the prior value. Installed to both real locations and
+      re-verified live at each: the User-scope `MASSIVE_API_KEY` env var and `Trade - Lead\
+      massive_api_key.txt`. **Exposure site this time is a Claude Code session transcript, not a
+      deletable log file like `log_pull.txt` was** — the Lead flagged this distinction to the Director
+      explicitly and did not unilaterally decide how to handle the transcript itself; rotation makes the
+      exposed value harmless regardless of where it sits, and no further transcript-specific action has
+      been requested.
+- [x] **S5 — second rotation, 2026-08-30, CLOSED (supersedes the transcript-candidate question rather than
+      resolving it).** Director provided a genuinely new key (`Trade\MASSIVE_api_key.txt`) — Lead-verified: live
       (HTTP 200, value never printed) and, via SHA-256 hash comparison against the prior value (never
       displaying either), **confirmed different from what was in `Trade - Lead\massive_api_key.txt`
       before this rotation** — this is a real new value, not the same one relocated. **Installed to both

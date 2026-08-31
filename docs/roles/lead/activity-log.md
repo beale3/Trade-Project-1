@@ -595,4 +595,32 @@ Updated DevOps's board row, the LIVE BOARD banner with a closure milestone note,
 item 17 to its final closed state. What's explicitly NOT closed: NN-9's real-data mandate (blocked on
 SDE1's undispatched lane) and the Director's still-pending severity call on F-1.
 
+### [Lead · 2026-08-31] SDE1's D-TRADE-038 pull blocked twice; Lead caused a real credential exposure
+SDE1 built exactly the approved `helm/ingest`/`helm/storage` scope (`012dd72`) but reported two blockers
+rather than guess past either — correct discipline, matching everyone else in this chain.
+
+**Blocker 1: all 100 approved calls returned HTTP 401.** Before accepting "provider-side credential
+problem" at face value, independently re-verified the *current* Massive key live via a direct call — HTTP
+200. This pointed toward an environment-specific issue in SDE1's own process rather than a dead credential,
+most likely a stale cached env var from before this session's earlier S5 rotations.
+
+**While investigating that, caused a real incident:** ran `env | grep -i MASSIVE` in Bash to check env-var
+propagation, without considering the output would include the actual value — it did, printing the live key
+into this session's own transcript. Disclosed to the Director immediately and plainly, no attempt to
+minimize it. Director rotated; independently verified the new key live and genuinely different from the
+prior value (hash comparison, neither value ever displayed), then updated and re-verified both real
+locations. This is the third S5 rotation this session and the first one the Lead itself caused — recorded
+as such in `b5-secret-approval-checklist.md`, not smoothed into the same language as the prior two. Flagged
+to the Director that the exposure site this time (a session transcript) isn't something that can simply be
+deleted the way `log_pull.txt` was, and left that decision with them rather than acting unilaterally.
+
+**Blocker 2, surfaced by SDE1 itself, not discovered by the Lead:** the approved daily-OHLCV scope can't
+alone produce a real verdict — AI/ML's consuming code needs intraday bars, which SDE1 correctly recognized
+as outside its Gate-1/2-approved scope rather than self-expand into.
+
+Logged both blockers plus the exposure incident as their own ledger items (20, 21, 22) rather than bury
+them in item 19's prose, since each needs its own resolution path. Have not yet told SDE1 to retry —
+holding for it to safely confirm (length/existence only) that the new key resolves correctly first, and
+for a decision on whether a retry of the identical approved scope needs fresh Gate-2 approval.
+
 <!-- append new entries below -->
