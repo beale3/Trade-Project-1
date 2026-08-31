@@ -289,4 +289,46 @@ oversold. Ratified as **D-TRADE-033**: logged, held, no further build/training a
 ungoverned repo from `beale3/Trade-Project-1`; no commits made there, nothing requested there beyond
 confirming visibility.
 
+### [Lead · 2026-08-30] BUILD-GO — P-1/P-3/P-4 ratified, P-5 checked (D-TRADE-034/035/036)
+Director asked what's still outstanding to close canonical Phase 1 and whether Phase 2 had a timeline.
+Answered directly from the existing record (ADR-0001 R2 fully designed, zero Phase-1 code written yet
+because of P-1/P-3/P-4; no Phase-2 timeline exists, `<1.4>`'s own boundary still open, D-TRADE-033 is the
+one piece of Phase-2 work already ahead of that).
+
+Director then authorized, in one message: lift P-1 for Phase-1 work specifically (not Phase 2 — D-TRADE-010
+was never phase-scoped, so this needed explicit scoping, not an implied blanket lift); ratify P-3 per the
+Architect's drop recommendation; lock P-4's three numbers using the Lead's own recommended defaults; check
+whether P-5 (B5) is closed given the SEC-API.io rotation.
+
+**P-5, checked first:** read `b5-secret-approval-checklist.md` directly. The rotation satisfies Step 1's
+named pre-condition ("rotate S6 before installing") — marked done, with a citation to the earlier
+independently-verified rotation. But **Step 3's sign-off matrix is entirely unchecked for all 6 secrets**,
+including S6, and the checklist's own rule is explicit: "the Lead may not self-approve." Reported P-5 as
+NOT closed — pre-condition done, Director+SecOps sign-off and a post-install leg-K re-run (which requires
+code that doesn't exist yet) both still outstanding.
+
+**P-1 → D-TRADE-034:** lifted, scoped strictly to Phase 1, recorded with an explicit carve-out that
+D-TRADE-033 (`breakout_model`) is NOT covered — silence on scope would have been exactly the kind of thing
+LL-31 exists to prevent. **P-3 → D-TRADE-035:** `helm/universe` drops entirely, Architect's recommendation
+ratified as-is. **P-4 → D-TRADE-036:** converted ADR-0001 §10's "e.g." ranges into fixed pre-registered
+numbers per the Director's explicit request to use the Lead's own defaults — OP-1 grid trail∈{5,8,12}%/
+init∈{2,3}%, primary clearance-eligible cell trail=8%/init=3% (middle trail setting, looser init floor to
+reduce early whipsaw); OP-2 unchanged (1d/1w/1m, already concrete in the ADR); OP-3 = fixed N=5 trading
+days (horizon-matched to the 1w window, "the leakage-free simplest option" per the ADR's own text, not the
+train-fold-median alternative), N=1/21 as sensitivity only. **Flagged plainly, not buried:** this
+explicitly bypasses ADR-0001 §12's own stated expectation that AIQ co-signs "the label design + NN-10 +
+the baseline" before wave-entry GO — recorded as Director-authorized shortcut, not an independent
+validation standing in for one.
+
+Propagated all three: canonical `<2.2>`/`<3.6>`'s NOT-DECIDED markers resolved (Lead's own write-lane);
+`open-items-ledger.md` items 1/8/9 closed; `b5-secret-approval-checklist.md`'s one factual line updated;
+`AGENT-COORDINATION.md`'s LIVE BOARD banner rewritten for the build-GO, Program Lead/Architect/DevOps/
+AI/ML rows updated to reflect cleared-to-build status, and the Data-Eng row's stale options-era text
+(missed across two prior pivots) corrected to N/A now that universe drops. **Did not touch ADR-0001.md
+itself** — that's the Architect's write-lane per protocol 13's two-doc note; named the needed text-only
+update (drop language, locked numbers) rather than editing it directly. **Did not attempt to build anything
+myself** — module ownership (`helm/screener`/`validation/engine` = AI/ML, `validation/audit` = AIQ, etc.)
+stays with the named seats; checked `ListAgents` and found no other live session reachable right now, so
+actual building is blocked on those seats' sessions existing, not on any remaining ratification.
+
 <!-- append new entries below -->

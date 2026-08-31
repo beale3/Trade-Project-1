@@ -40,9 +40,11 @@ second slow approval round. Batch it.* Current known set:
 - [x] ~~Open blockers: S5 tier, S6 issuer confirmation~~ — **CLEARED 2026-08-01** (D-TRADE-020 pivot +
       SecOps confirmation, `docs/security/tos-taint-review.md`). Residual, non-blocking: Director may
       optionally verify the exact Massive plan name on the account dashboard.
-- [ ] **Before installing S6:** the Director should **rotate** the SEC-API.io token first — a live value
-      was found exposed in plaintext outside this repo (`float-study/log_pull.txt`); install the *rotated*
-      value, not the current one, so the exposed value never becomes the one live in the secret store.
+- [x] **S6 rotation — DONE 2026-08-30.** The Director rotated the SEC-API.io token at the provider
+      dashboard; the Lead independently verified the old value was still live (HTTP 200) before rotation
+      and the new value is live (HTTP 200) after — see `activity-log.md`. `float-study/log_pull.txt`
+      (the exposure site) deleted entirely. **This closes the pre-condition, not Step 3's sign-off** —
+      Director-approves + SecOps-co-signs for S6 is still unchecked below.
 
 ## Step 2 — Per-secret approval (repeat for each S#)
 For every secret in the inventory:

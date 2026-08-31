@@ -79,9 +79,10 @@ must never read as decided (LL-31).
   large/mid-cap" requirement is **deleted** with the options framing — no real-options-chain/tight-spread
   need remains. Reverts toward the cohort `tools/rolling_watchlist.py` and all 4 completed studies already
   use (low-priced, volatile, gap-and-hold microcaps; no options-chain requirement). The script itself takes
-  a **user-supplied ticker list** (`--tickers`, no built-in discovery) — ▸ **NOT DECIDED, dispatched to
-  Architect/Data-Eng:** confirm whether a maintained universe list is still Phase-1-necessary at all, or
-  whether user-supplied tickers (the status quo) is sufficient and this lane drops.
+  a **user-supplied ticker list** (`--tickers`, no built-in discovery) — 🔒 **RESOLVED (D-TRADE-035,
+  2026-08-30): no maintained universe list.** The Phase-1 cohort is the studies' existing event-defined
+  datasets + user-supplied `--tickers` — the status quo. `helm/universe` drops from scope entirely, not
+  deferred; NN-5/Data-Eng references drop with it.
 
 ## 3 · Architecture (planned; ADRs author the binding form at build time)
 - **`<3.1>` Modular monolith / simple Python project** — no SaaS-scale modular-monolith machinery
@@ -136,10 +137,14 @@ must never read as decided (LL-31).
   primitives. **Anti-cherry-pick:** exactly one pre-registered trailing-stop grid cell is clearance-
   eligible; the rest are sensitivity-only, never a clearance claim. Full contract, all 10 oracle legs, and
   the complete A6a/A6b revision delta: `docs/adr/ADR-0001-phase1-validation-tool.md` §6/§8/§14.
-  ▸ **NOT DECIDED — P-4, dispatched to the Director (+AI/ML+AIQ input already gathered as recommendations):**
-  the exact pre-registered trailing-stop grid (OP-1), the Leg-A evaluation horizon (OP-2), and the Leg-B
-  baseline `N`'s precise form (OP-3) must be locked before any real run (LL-44) — recommendations exist,
-  none are ratified yet.
+  🔒 **RESOLVED (D-TRADE-036, 2026-08-30) — P-4 LOCKED, Director-authorized Lead defaults, NOT
+  AIQ-cosigned.** **OP-1:** grid `trail_pct ∈ {5,8,12}%` × `init_stop_pct ∈ {2,3}%`; primary
+  clearance-eligible cell = **trail=8%, init=3%**, remaining 5 cells sensitivity-only. **OP-2:** the
+  studies' existing **1d/1w/1m** set (unchanged from the ADR's recommendation). **OP-3:** a fully
+  pre-registered fixed **N=5 trading days** (horizon-matched to the 1w Leg-A window), with N=1/N=21 as
+  fixed-N sensitivity only — the leakage-free-simplest option per ADR-0001 §10, not the train-fold-median
+  alternative. This explicitly bypassed ADR-0001 §12's own stated AIQ co-sign expectation for these three
+  numbers, at the Director's direct instruction — flagged, not hidden.
 
 ## 4 · Compliance / risk (bright-lines → armed gates, D-TRADE-006)
 - **`<4.1>` No secret in repo/logs** — provider keys live in the secret store only (B5).
