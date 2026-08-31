@@ -201,18 +201,30 @@ def main_scan():
 # delete it -- never staged, never committed (LL-48 done-bar).
 # ---------------------------------------------------------------------------
 
-POSITIVE_CONTROLS = [
-    ("K1a", 'SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.FAKE_sig_do_not_use'),
-    ("K1c", "sb_secret_FAKEFAKEFAKEFAKEFAKE1234567890"),
-    ("K2", "DATABASE_URL=postgresql://postgres:Sup3rS3cr3tFAKE@db.zyscsnhiymitpfdhjuci.supabase.co:5432/postgres"),
-    ("K3", "SUPABASE_ACCESS_TOKEN=sbp_faketoken0123456789abcdef0123456789"),
-    ("K4b", "SUPABASE_ANON_KEY=sb_publishable_FAKEpublishable1234567890"),
-    ("K5a", "POLYGON_API_KEY=aB3xK9fakeKEYfakeKEYfakeKEY0000"),
-    ("K5b", "https://api.massive.com/v2/aggs?apiKey=aB3xK9fakeKEYfakeKEY0000"),
-    ("K6a", "SEC_API_KEY=fakeSECkey0123456789abcdef0123"),
-    ("K6b", "https://api.sec-api.io/float?ticker=AAPL&token=fake0123456789abcdef0123456789ab"),
-    ("K0b", "SOME_NEW_TOKEN=Zx9Q2pL7vT4mN1kR8sW3yB6dF0hJ5aE"),
+# Stored base64-encoded, decoded only at self-test runtime -- NOT an obfuscation of a real secret (every
+# decoded value is the same well-known FAKE example from key-denylist.md), but a fix for a real bug this
+# leg's own self-verification caught: once this file is TRACKED, leg K's static scan (correctly) matches
+# its own literal K0-K6 fixture strings -- the same self-reference problem key-denylist.md has, but here
+# in the gate runner's own source, where a path-based exemption (as used for key-denylist.md) would create
+# a real blind spot in the leg's own code, not just its spec doc. Base64 keeps the fixtures categorically
+# non-matching in tracked text (no path exemption needed, no blind spot) while the decoded runtime value
+# is still the exact positive control the self-test needs to prove RED.
+POSITIVE_CONTROLS_B64 = [
+    ("K1a", "U1VQQUJBU0VfU0VSVklDRV9ST0xFX0tFWT1leUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKeWIyeGxJam9pYzJWeWRtbGpaVjl5YjJ4bEluMC5GQUtFX3NpZ19kb19ub3RfdXNl"),
+    ("K1c", "c2Jfc2VjcmV0X0ZBS0VGQUtFRkFLRUZBS0VGQUtFMTIzNDU2Nzg5MA=="),
+    ("K2", "REFUQUJBU0VfVVJMPXBvc3RncmVzcWw6Ly9wb3N0Z3JlczpTdXAzclMzY3IzdEZBS0VAZGIuenlzY3NuaGl5bWl0cGZkaGp1Y2kuc3VwYWJhc2UuY286NTQzMi9wb3N0Z3Jlcw=="),
+    ("K3", "U1VQQUJBU0VfQUNDRVNTX1RPS0VOPXNicF9mYWtldG9rZW4wMTIzNDU2Nzg5YWJjZGVmMDEyMzQ1Njc4OQ=="),
+    ("K4b", "U1VQQUJBU0VfQU5PTl9LRVk9c2JfcHVibGlzaGFibGVfRkFLRXB1Ymxpc2hhYmxlMTIzNDU2Nzg5MA=="),
+    ("K5a", "UE9MWUdPTl9BUElfS0VZPWFCM3hLOWZha2VLRVlmYWtlS0VZZmFrZUtFWTAwMDA="),
+    ("K5b", "aHR0cHM6Ly9hcGkubWFzc2l2ZS5jb20vdjIvYWdncz9hcGlLZXk9YUIzeEs5ZmFrZUtFWWZha2VLRVkwMDAw"),
+    ("K6a", "U0VDX0FQSV9LRVk9ZmFrZVNFQ2tleTAxMjM0NTY3ODlhYmNkZWYwMTIz"),
+    ("K6b", "aHR0cHM6Ly9hcGkuc2VjLWFwaS5pby9mbG9hdD90aWNrZXI9QUFQTCZ0b2tlbj1mYWtlMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYg=="),
+    ("K0b", "U09NRV9ORVdfVE9LRU49Wng5UTJwTDd2VDRtTjFrUjhzVzN5QjZkRjBoSjVhRQ=="),
 ]
+
+
+def _decode_fixture(b64_value):
+    return base64.b64decode(b64_value).decode("utf-8")
 
 NEGATIVE_CONTROLS_MUST_STAY_GREEN = [
     ("env.example service_role placeholder", "SUPABASE_SERVICE_ROLE_KEY="),
@@ -225,7 +237,8 @@ NEGATIVE_CONTROLS_MUST_STAY_GREEN = [
 def run_selftest():
     print("leg K self-test: planting each K0-K6 positive control (untracked temp file), proving RED...")
     ok = True
-    for rule, content in POSITIVE_CONTROLS:
+    for rule, b64_content in POSITIVE_CONTROLS_B64:
+        content = _decode_fixture(b64_content)
         findings = []
         _scan_text("<selftest temp file>", content, findings)
         if any(f[1] == rule for f in findings):
