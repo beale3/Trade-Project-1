@@ -1548,3 +1548,46 @@ outstanding co-sign gate before canonical absorption.
   synthetic-only pipeline in `helm/validation/engine`.
 - Reported once to the Lead (this entry + a direct message) — first of D-TRADE-037's two required
   report-backs. No pull executed; no code written. Holding for Gate 2 (Director approval).
+
+### [SDE1 · 2026-08-31] D-TRADE-038 Gate-2 execution — built `helm/ingest`/`helm/storage`, ran the approved pull: BLOCKED, two findings, neither guessed past
+- Verified D-TRADE-038 at source (`b5da3b5`) before acting. Built exactly the approved scope, nothing more:
+  `helm/ingest/massive.py` (point-in-time daily-OHLCV adapter, explicit `[start,end]` — reuses
+  `tools.rolling_watchlist._resolve_massive_api_key` for key resolution only, not the provider-host call
+  itself, which lives here per the leg-T boundary), `helm/storage/raw_store.py` (file-first CSV persistence
+  + a per-call `spend_ledger` row, D-TRADE-019 — `cumulative_day` is a genuine per-UTC-day running count,
+  not a global row index, so a future spend guard can read it directly without a migration),
+  `helm/ingest/run_gate2_pull.py` (the approved-scope driver: the same 100-ticker deterministic even-sample
+  of the short-interest-study's 754-ticker cohort my Gate-1 proposal specified, `2024-06-01` →
+  `execution_date − 45d` = `2026-07-17`).
+- **Finding 1 — scope gap discovered before executing, not after:** reading `helm/screener/adapter.py`
+  (`extract_intraday_features(intraday_df, ...)`) and `helm/validation/engine/leg_b.py`
+  (`simulate_day_trades(intraday_df, ...)`) shows **both Leg A and Leg B genuinely require historical
+  INTRADAY bars**, not just daily OHLCV — my Gate-1 proposal (and its Gate-2 approval) was sized entirely
+  around the short-interest study's *daily*-cohort precedent; I had not accounted for this. Daily bars are
+  still necessary (forward-return labels at 1d/1w/1m, `prior_high/prior_low/prior_close` context) but **not
+  sufficient** — proceeding with the daily-only pull as approved cannot by itself produce a real Leg-A/B
+  verdict. Did not silently expand into an intraday pull (a materially bigger, differently-shaped request
+  that needs its own Gate-1/2-style sizing and approval per D-TRADE-038's standing condition) — flagging
+  for the Lead + AI/ML instead.
+- **Finding 2 — the approved pull executed and BLOCKED, not silently retried:** ran exactly 100 calls
+  (verified: `spend_ledger.csv` has 100 rows, matching the approved count) against the approved tickers/
+  date-range. **All 100 returned HTTP 401 Unauthorized** — `ohlcv_daily.csv` has zero data rows. Not a bug
+  in this new code: the request uses the scanner's own already-proven URL template, key-resolution helper,
+  and query-param shape verbatim (`tools.rolling_watchlist._massive_aggs`'s pattern) — only the date-range
+  values are parameterized instead of "N days back from today." **Diagnosed the key's format only, per the
+  D-TRADE-026 precedent (length/structure, never the value):** 32 characters, no leading/trailing
+  whitespace or quote characters, no embedded newline — not an obviously mangled env var. Did not attempt
+  further live calls, alternate auth-header formats, or any workaround — credential validity/entitlement is
+  outside what I should self-diagnose by guessing against a live provider. **Zero rows returned, zero
+  dollars spent (personal-tier flat sub, an unauthorized call carries no charge) — but 100 real calls were
+  made against the approved budget and are now spent on this attempt.**
+- **Both output files committed as the honest, checkable record of what happened** (protocol 16 applies to
+  a failed result too) — `helm/storage/data/ohlcv_daily.csv` (header only, 0 rows) and
+  `helm/storage/data/spend_ledger.csv` (100 rows, `ok=False` throughout, no secret value in either file).
+- **Not guessing past either finding.** Reported both to the Lead as blockers, same message — this is the
+  first of D-TRADE-038's two report-backs, but as a BLOCKER report, not a completion report (no verdict is
+  possible yet; the pull itself didn't yield usable data). Awaiting: (1) credential re-verification (Massive
+  key validity/tier/entitlement for the `/v2/aggs/ticker/.../range/...` endpoint specifically — SecOps/
+  Director territory, not mine to work around) before any re-attempt: at 100 calls already spent, a blind
+  retry against the same possibly-bad key would burn more of the approved budget for the same result; (2)
+  coordination with AI/ML on the intraday-data requirement before proposing a revised scope.
