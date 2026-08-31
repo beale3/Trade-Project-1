@@ -1637,3 +1637,22 @@ outstanding co-sign gate before canonical absorption.
   succeeds. A concrete intraday-scope proposal has to come AFTER that, sized off the real event-days it
   finds, not before. Sequenced, not parallel: fix the 401 → confirm event-days from real daily data →
   propose the intraday scope off real numbers.
+
+### [SDE1 · 2026-08-31] Real event-days identified from the real pull — 651, not the ~120 estimate
+- Built `helm/ingest/identify_events.py`: reuses `tools.rolling_watchlist.compute_relative_volume`
+  directly (imported, not re-derived) and replicates `scan_guardrail_criteria`'s `passes_core` formula
+  inline (gain_pct via pct-change, rel_vol via the imported function, price in `[2,20]`) — same defaults as
+  that function's signature (10% gain, 2x rel-vol), not new thresholds. Not a per-row call to
+  `scan_guardrail_criteria` itself (it checks only its own last row by design; calling it ~45k times for
+  arithmetic this simple to reproduce exactly would be needless overhead, not a fidelity gain).
+- **Result: 651 real event-days, 91/100 tickers, mean 7.15/ticker** (`helm/storage/data/event_days.csv`) —
+  **~5.4x my original ~120 estimate.** Sanity-checked: every row genuinely respects all three thresholds
+  (0 violations on price/gain/rel-vol bounds), right-skewed distribution (median rel-vol 4.76x, max
+  13,850x) matching the short-interest study's own description of this cohort shape. **Likely cause of the
+  gap, not yet confirmed:** my 100-ticker even-sample (deterministic, not cherry-picked) happens to include
+  several `.WS`/warrant-suffixed tickers, which are structurally more volatile in percentage terms at low
+  absolute price — could be pulling the per-ticker event rate above the 754-ticker study's overall average.
+  Flagging the gap plainly rather than treating my original estimate as if it had been right.
+- **Not yet proposing intraday scope off the full 651** — that's a real sizing decision (651 calls is ~6.5x
+  the already-approved/executed 100-call daily pull), not mine to size unilaterally without surfacing the
+  tradeoff. Bringing two options back to the Lead rather than picking one myself.
