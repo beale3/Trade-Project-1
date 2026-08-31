@@ -1434,3 +1434,44 @@ outstanding co-sign gate before canonical absorption.
   re-verification appended to `docs/eval/stage2-audit-findings.md`.
 - Pushed. Reporting to the Lead now (staged reporting, Director's directive) — Stage 3 (QA) can proceed
   once a QA seat exists (open-items-ledger item 17, not mine to resolve).
+
+## 2026-08-31 — QA (Stage 3: independent reproducibility re-run) — verified at `7d0919c`
+- **Blocker hit and resolved first (protocol 11):** the `Trade - QA` clone did not exist — empty
+  directory, no `.git`, while all 9 other seat dirs had populated clones. Bootstrapped it myself rather
+  than borrow another seat's working tree, which would have destroyed the seat's independence.
+- **Every armed leg re-run on exit codes, in my own clone:** `scripts/gate/run.py` → **0**;
+  `scripts/gate/legs/secret_scan.py --selftest` → **0** (10/10 K0-K6 positive controls RED, 4/4
+  documented placeholders GREEN, self-reference + K0a checks pass).
+- **My own end-to-end negative control (LL-10/LL-48).** DevOps's self-test calls `_scan_text()` on
+  synthetic strings — it never exercises the real `run_scan()`→`git ls-files`→exit-code path, so it
+  cannot answer "show me the input this green would reject" for the gate as actually invoked. Planted a
+  synthetic `SEC_API_KEY`-shaped value (never a real credential) in **tracked** `README.md`, working tree
+  only: `run.py` → **exit 1**, leg K RED (K6a + K0b), value redacted. Reverted → **exit 0**, tree clean,
+  HEAD unchanged, nothing ever staged. **Leg K is genuinely armed on the real path.**
+- **AIQ's extended audit reproduced exactly:** 8/8 pass, exit 0, every documented number matches on my
+  machine (`full_sample_diff=0.001886`, `97.1%`, `False`; `0.005`/`100.0%`/`True`; ratchet `101.2`; init
+  floor `100.0→97.0`; harness `100.0%` signal vs `0.0%` noise). **Determinism — NN-9's actual assertion:**
+  byte-identical across 3 consecutive runs AND across `PYTHONHASHSEED ∈ {0,1,42,12345}`.
+- **NN-3 verified mechanically, not by reading:** ran the audit under `runpy` and diffed `sys.modules` —
+  it loads **zero** `helm.*` modules, loads `tools.rolling_watchlist` as expected. Independence honored.
+- **Confirmed the SHIPPED engine carries all 4 Stage-2 fixes** by importing `helm.validation.engine.leg_b`
+  / `bar` directly (which AIQ is forbidden to do): AIQ's fixtures reproduce exactly against the real code,
+  `_multiseed_kfold_paired` identical across 10 calls, and `clearance_verdict` returns the ratified 4-state
+  enum (`UNMEASURED`/`DROPPED`/`DROPPED`/`CLEARED`). **AI/ML's fixes are real; AIQ's verdict is correct.**
+- 🟠 **F-1 (SEV2 proposed) → DevOps Stage 4.** Reverting AI/ML's Finding-1 fix in `leg_b.py:123` (working
+  tree only) leaves the audit at **8/8 PASS, exit 0** — the defect Stage 2 exists to certify as fixed was
+  reintroduced and every check stayed green. Cause is structural, **not AIQ's defect**: NN-3 forbids the
+  audit importing the engine (it says so at line 275), so nothing armed binds
+  `helm/validation/engine/`. Stage 2's closure and the Lead's confirming re-run are both invariant to the
+  engine's content — LL-48's vacuous green. Correctness is fine; **coverage is the gap.** Severity is a
+  HUMAN/GA call per my oracle-boundary row, routed via the Lead, not ruled by me.
+- 🟡 **F-2 (SEV3) → DevOps.** `run.py:29` hardcodes `"SKIP (no validation engine yet)"` for the QA leg;
+  the engine has existed since Stage 1. `LEG_TABLE`'s reasons are hardcoded strings, not computed
+  conditions, so a stale reason can never self-correct — boundary-honesty defect.
+- **NOT COVERED (LL-35), stated plainly:** **NN-9's real-data mandate remains OPEN** — no `helm/ingest/`,
+  no OHLCV pulled, no real CLEARED/DROPPED verdict to re-derive; all of the above is mechanism +
+  determinism on synthetic fixtures. Blocked on SDE1's `helm/ingest` lane, **not mine to fix, only to
+  name.** Also not covered: `adapter.py`/`harness.py`/`leg_a.py` end-to-end (no data); the 6 SKIP legs'
+  future correctness; the trailing-stop against real market bars; project packaging (`helm.*` needs a
+  manual `PYTHONPATH`). Nothing here fixed by me — I never touch the code under test.
+- Full report: `docs/roles/qa/stage3-reproducibility-report.md`. Reporting to the Lead now.
