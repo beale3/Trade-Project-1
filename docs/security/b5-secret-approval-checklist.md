@@ -117,12 +117,63 @@ post-install leg K) rather than checked off without evidence.
 ## Step 3 — Sign-off matrix (both required; Lead may not self-approve)
 | Secret | Director approves | SecOps co-signs | Installed (store/`.env`) | Leg K re-run GREEN | Date |
 |---|---|---|---|---|---|
-| S1 service_role | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
-| S2 DB password | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
-| S3 MCP PAT | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
-| S4 anon key | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
-| S5 Massive/Polygon | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
-| S6 SEC-API.io (rotate first) | ☑ | ☑ | ☐ | ☐ | 2026-08-30 |
+| S1 service_role | ☑ | ☑ | ☐ **NOT FOUND** | ☑ | 2026-08-30 |
+| S2 DB password | ☑ | ☑ | ☐ **NOT FOUND** | ☑ | 2026-08-30 |
+| S3 MCP PAT | ☑ | ☑ | ☑ **FOUND** | ☑ | 2026-08-30 |
+| S4 anon key | ☑ | ☑ | ☐ **NOT FOUND** | ☑ | 2026-08-30 |
+| S5 Massive/Polygon | ☑ | ☑ *(stands per SecOps re-confirmation; see reopening note below)* | 🟡 **PRESENT, not confirmed safe** | ☑ | 2026-08-30 |
+| S6 SEC-API.io (rotate first) | ☑ | ☑ | 🟡 **FOUND, wrong scope** | ☑ | 2026-08-30 |
+
+> **DevOps artifact-check basis (2026-08-30, open-items-ledger item 13 — leg K + "Installed," this session).**
+> Per B5's own rule: this is a **presence/location check only** — no secret value was ever read, printed,
+> or logged. Method: `git ls-files` / filesystem existence checks across every live clone
+> (`Trade - Lead`, `Trade - DevOps`, `SecOps`, `AI-ML`, `AIQ`, `Architect`, `Designer`, `FinOps`, `SDE1`)
+> plus `[Environment]::GetEnvironmentVariable` at `User`/`Machine`/`Process` scope (boolean presence only).
+>
+> - **Leg K re-run GREEN — all six, unconditionally.** Leg K scans the full tracked repo regardless of
+>   which secrets exist where; it is now built (`scripts/gate/{run.py,legs/secret_scan.py}`), self-test
+>   PASSED (every K0-K6 positive control goes RED, every documented placeholder/env-indirection stays
+>   GREEN, `key-denylist.md`'s own examples don't self-trip), the real tracked-repo scan is GREEN, and a
+>   live end-to-end check (stage a real K5-shaped violation → RED → unstage/delete → GREEN again, nothing
+>   ever committed) confirms the runner is honest, not vacuous (LL-48).
+> - **S3 (MCP PAT) — FOUND.** `SUPABASE_ACCESS_TOKEN` is a persistent **User**-scope environment variable
+>   (survives new sessions, not just this one) — matches D-TRADE-014's env-indirection design exactly.
+> - **S5 (Massive) — PRESENT in two places, but this is a different question from "confirmed safe."** A
+>   persistent **User**-scope `MASSIVE_API_KEY` env var, **and** a real (non-template) `massive_api_key.txt`
+>   in the `Trade - Lead` clone specifically (not in any other clone I checked) —
+>   `_resolve_massive_api_key()` checks the env var first, so this is redundant-safe *as an install*. **This
+>   check ran before I rebased onto SecOps's same-day S5 REOPENING** (Step 1 above — an unresolved
+>   transcript-history candidate the Lead couldn't rule in or out, blocked by a permission classifier).
+>   Presence/location — what I was asked to check — is not the same question as "is the value sitting in
+>   these locations the exposed one or the rotated one" — my artifact-check has no way to answer that (and
+>   per B5 I never read the value to try). **Not marking this a clean "Installed" close** — see the Step 3
+>   row above, deliberately marked PRESENT-not-confirmed-safe rather than a flat ☑, until S5's reopening
+>   resolves.
+> - **S1 / S2 / S4 (Supabase service_role / DB password / anon) — NOT FOUND anywhere I checked.** No `.env`
+>   file exists in any of the nine clones above, and none of `SUPABASE_URL` / `SUPABASE_ANON_KEY` /
+>   `SUPABASE_SERVICE_ROLE_KEY` / `DATABASE_URL` are set as an environment variable at any scope. **Leaving
+>   these three unchecked rather than marking "Installed" without evidence** (same discipline SecOps used
+>   in Step 2 for the fail-closed/post-install rows) — this is an honest gap, not a claim of completion.
+>   Consistent with `<3.5>`: Supabase is read-only this phase and no code references these yet, so this is
+>   low-urgency, but it is genuinely open, not closed.
+> - **S6 (SEC-API.io) — FOUND, but not in this project.** The real, rotated key (`sec_api_key.txt`, 78
+>   bytes) exists only in the **separate, standalone `C:\Users\beale\Software Dev\Trade\` repo** — not
+>   anywhere under `Trading Project 1` (this project's clones), and no `SEC_API_KEY`/`SEC_API_TOKEN`/
+>   `EDGAR_API_KEY` env var is set at any scope either. **No code in this repo currently reads it** (`grep`
+>   for `SEC_API_KEY`/`sec_api_key` across `tools/` and `docs/guardrail-v2.1/` returns nothing) — canonical
+>   `<2.1>`'s "Sanctioned module (leg T): Data-Eng ingestion module" doesn't exist yet (`helm/ingest/` not
+>   built), so there is genuinely no consumption path in this project to check the key *against* yet.
+>   **Open question for the Lead/Director, not mine to resolve unilaterally:** once `helm/ingest/` is
+>   built, where should this project's copy of S6 actually live — installed fresh into a `Trading Project 1`
+>   clone (Director-only, per B5), or does HELM's ingestion code deliberately reach across to the separate
+>   `Trade/` repo's copy (which would be a cross-project dependency worth naming explicitly, not assuming)?
+>   Flagging now so it doesn't surface as a last-minute blocker when `helm/ingest/` actually gets built.
+>
+> **Net: leg K itself is fully armed and re-run GREEN for all six. Of the per-secret Installed checks: S3
+> cleanly closes. S5 is present but explicitly NOT closed — flagged against the live S5 reopening, not
+> presented as fine. S1/S2/S4 remain genuinely open — no `.env` exists anywhere yet. S6 exists but in the
+> wrong project, with an open scope question.** Not presenting this as "P-5 fully closed" — reporting
+> exactly what's checkable, per protocol 15.
 
 > **SecOps co-sign basis:** Step 2 review above (classification/blast-radius, least-privilege,
 > ToS-tier match, storage, rotation policy — all six, this session). No blocking finding; residual

@@ -1199,3 +1199,52 @@ outstanding co-sign gate before canonical absorption.
   Treated as sufficient for co-sign (same standard the Director's own approval already relies on) but kept
   visibly distinct from "independently verified," not blended together.
 - Reported once to the Lead (protocol 15). No blocker.
+
+### [DevOps · 2026-08-30] Leg K scaffold built + armed; six-secret artifact-check (item 13, closes 4/6)
+- Assignment dispatched via a peer session's raw message (not the ccd_session_mgmt channel this project
+  otherwise uses) — verified against the repo before acting (`5675c4a`/`d9690c7`/`338e81e`,
+  open-items-ledger item 13) rather than trusting the message alone; confirmed genuine, replied to the
+  peer confirming DevOps identity. Large gap since my last sync: `<1.1>` dropped options entirely
+  (D-TRADE-028), P-1/P-3/P-4 ratified and build-GO issued (D-TRADE-034/035/036) — pulled and read all of
+  it before touching anything.
+- **Built `scripts/gate/run.py` + `scripts/gate/legs/secret_scan.py`** — leg K wired verbatim against
+  SecOps's key-denylist.md (K0-K6), the rest of the leg table declared SKIP-visible (not silently
+  omitted) so the runner already states its own eventual shape. **Self-reference bug caught and fixed
+  during build:** an early design used a value-based allowlist ("exempt any string that also appears in
+  key-denylist.md") to keep that spec's own documented FAKE examples from self-triggering — this
+  backfired by also exempting my self-test's positive controls, which correctly reuse those same
+  documented values as the planted negative controls SecOps's spec instructs DevOps to plant. Fixed by
+  scoping the exemption to ONE path (key-denylist.md itself), not a value-based allowlist — narrower,
+  avoids the collision, and doesn't create a blind spot for a real secret elsewhere that happens to share
+  a demo value. **Second bug caught live against the real repo:** K0b's generic backstop tripped on
+  `docs/AGENT-COORDINATION.md` prose ("secrets: classification/blast-radius/...") because "secrets"
+  contains "SECRET" case-insensitively — tightened the name-side match to SCREAMING_SNAKE_CASE-only
+  (matches every real example in key-denylist.md), which fixed the false positive without weakening
+  real-assignment detection.
+- **Verified the full LL-48 done-bar, not just the isolated self-test:** self-test PASSED (all 10 K0-K6
+  positive controls go RED, all 4 documented placeholders/env-indirection stay GREEN, key-denylist.md's
+  own examples don't self-trip); real scan against the actual tracked repo is GREEN; then staged (never
+  committed) a genuine K5-shaped violation, confirmed the top-level runner goes RED end-to-end through
+  the real `git ls-files` path (not just the in-memory self-test), unstaged + deleted it, confirmed GREEN
+  again — no trace left, nothing ever touched git history.
+- **Six-secret artifact/location check (presence only, values never read/printed/logged) across all 9
+  live clones + env vars at User/Machine/Process scope:** S3 (MCP PAT) FOUND — a persistent User env var,
+  nothing outstanding against it. S5 (Massive) FOUND present — a persistent User env var, also redundantly
+  a real file in `Trade - Lead` only — **but this artifact-check ran before rebasing onto SecOps's
+  same-day S5 REOPENING** (an unresolved transcript-history candidate, see SecOps's entry directly above)
+  and I do not treat "present" as "closed" for S5 now that I've read it: presence answers a different
+  question (is a key installed where the code would read it) than the reopened one (is *that specific
+  value* the safe, non-exposed one) — my check cannot speak to the latter at all, and I'm not conflating
+  the two in the checklist update below. S1/S2/S4 (Supabase service_role/DB-password/anon) **NOT FOUND
+  anywhere** — no `.env` exists in any of the 9 clones, no env var set at any scope. S6 (SEC-API.io) FOUND
+  but in the wrong project — the real key lives only in the separate standalone `Trade/` repo, nothing in
+  `Trading Project 1` reads it (no `helm/ingest/` yet), and no env var is set here either; flagged as an
+  open scope question for the Lead/Director (install fresh here vs. a deliberate cross-project
+  dependency), not something I resolved unilaterally. Recorded in `docs/security/b5-secret-approval-
+  checklist.md` Step 3 — leg K re-run GREEN for all six; S3 marked cleanly Installed; S5 marked present
+  but explicitly flagged against the reopened exposure question, not presented as closed; S1/S2/S4 left
+  honestly unchecked; S6 marked found-wrong-scope rather than either checked or silently ignored.
+- Reported once to the Lead (protocol 15) — leg K armed + all six secrets' precise state, not a blanket
+  "P-5 closed" claim, and explicitly not overriding SecOps's S5 reopening with a stale "found = fine"
+  read. No blocker; the S6 scope question and the S5 tension are flags for the Director, not a stall on
+  my end.
