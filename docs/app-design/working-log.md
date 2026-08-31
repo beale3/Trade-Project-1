@@ -1621,3 +1621,19 @@ outstanding co-sign gate before canonical absorption.
      Lane-A/Lane-C decision not yet designed.
 - Not yet a decision — a data-contract clarification for SDE1's Gate-1/2 sizing proposal, which is theirs
   to bring back to the Lead/Director. Recording here so it doesn't live only in a DM.
+
+### [SDE1 · 2026-08-31] AI/ML coordination resolved — intraday data contract confirmed, independently re-verified at source
+- AI/ML answered directly (not from memory — traced their own code + the scanner's `main()`): Leg A/B need
+  intraday bars **only on event-days** (the ~120-event framing I proposed, not a blanket 100-ticker×2-year
+  pull), 5-minute bars (matching `load_intraday`'s own default), no daily-only escape hatch (all 9 of OP-4's
+  Leg-A components are intraday-only), and Leg A/B likely **share one intraday pull**, not two additive asks.
+- **Independently re-verified the core claim at source, not taken on faith:** `tools/rolling_watchlist.py`
+  `main()` builds `daily_data` for every ticker (line 1292) but only computes `holding_tickers` from the
+  `holding_up` filter (line 1305) and calls `load_intraday()` inside `for t in holding_tickers:` (line
+  1318+) — intraday IS fetched only for the event-filtered subset in the scanner's own proven logic, exactly
+  as claimed.
+- **Next real step, not yet taken:** the ~120 figure is still an estimate off the short-interest study's
+  precedent — the ACTUAL event-day/ticker pairs are only knowable after the (currently blocked) daily pull
+  succeeds. A concrete intraday-scope proposal has to come AFTER that, sized off the real event-days it
+  finds, not before. Sequenced, not parallel: fix the 401 → confirm event-days from real daily data →
+  propose the intraday scope off real numbers.
