@@ -406,4 +406,21 @@ candidate (`517ca982-...jsonl`) — that stays genuinely unanswered as a factual
 current-risk-relevant. Kept SecOps's co-sign as-is (it was never tied to a specific value) rather than
 solicit a redundant re-confirmation for a rotation that doesn't change the secret's classification/handling.
 
+### [Lead · 2026-08-30] Phase-1 build chain formally dispatched — AI/ML → AIQ → QA → DevOps
+Director authorized the actual build, sequenced: AI/ML (Leg A/B) → AIQ (independent audit) → QA
+(reproducibility) → DevOps (arm remaining gate legs), with staged reporting at each handoff rather than one
+report at the end — noted this as an explicit, Director-requested override of the usual protocol-15 default
+for this chain specifically, not a new standing practice.
+
+Checked `ListAgents` before doing anything — no AI/ML or AIQ session reachable, matching "currently idle"
+in the Director's message. Recorded full task specs in `AGENT-COORDINATION.md`'s AI/ML (Stage 1, the actual
+build task: trailing-stop mode + `helm/screener` + `helm/validation/engine`, referencing the locked §6.3
+formula and D-TRADE-036 numbers directly, `helm/universe` explicitly excluded per D-TRADE-035), AIQ (Stage
+2, queued), and DevOps (Stage 4, queued — arm the LEG_TABLE's remaining SKIP legs) rows, ready to dispatch
+by message the moment those sessions are live, same pattern as SecOps/DevOps earlier this session.
+
+**Surfaced a real blocker immediately rather than let the chain discover it at Stage 3:** QA has never been
+spawned. The Director's own dispatch names QA as Stage 3; that seat doesn't exist. Logged as open-items-
+ledger item 17's explicit status line rather than wait for Stages 1-2 to complete and hit this cold.
+
 <!-- append new entries below -->
