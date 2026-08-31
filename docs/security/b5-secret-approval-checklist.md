@@ -47,15 +47,21 @@ second slow approval round. Batch it.* Current known set:
       the new value live (HTTP 200) after — see `activity-log.md`. Exposure site deleted entirely. No
       evidence surfaced, at any point, of third-party use of the old value — this closure states that
       plainly rather than leaving it implied. Director + SecOps sign-off both recorded in Step 3 below.
-- [ ] **S5 — command-bar exposure, logged 2026-08-30, NOT YET independently verified.** Director-reported
-      (initially misattributed to S6, corrected same session): the Massive API key was pasted into a
-      command bar the first time it was used; the Director's partner flagged this as bad practice at the
-      time. **Open question, blocking this item's closure:** was the key rotated after that flagged
-      incident, or is the value currently in the secret store the same one that was exposed? Nothing in
-      SecOps's 2026-08-30 Step 2 review (above) surfaced this — it predates that review's information.
-      Needs: (1) the Director's answer on rotation status, (2) if not yet rotated, treat as a live,
-      unremediated exposure needing the same rotate-and-verify sequence S6 went through, not just a
-      historical note.
+- [x] **S5 — CLOSED 2026-08-30. Exposure confirmed, no evidence of malicious use, proactively and fully
+      remediated.** Director-reported (initially misattributed to S6, corrected same session): the
+      Massive API key was pasted into a command bar the first time it was used; the Director's partner
+      flagged this as bad practice at the time; Director confirms the key was rotated afterward. **Mixed
+      evidentiary basis, stated plainly — not identical to S6's:** the rotation-in-response-to-the-flag
+      itself is Director-attested, not independently checkable (no persistent artifact like `log_pull.txt`
+      to inspect before/after). What the Lead did independently verify: (1) `massive_api_key.txt.template`
+      in `Trade - Lead` has never had a real key committed to it across its git history (`git log -p`
+      checked directly, despite the template's own header noting this "has happened twice already" as a
+      general caution); (2) the real `massive_api_key.txt` is properly gitignored and was never committed;
+      (3) the **current** key is live — one authenticated call to `api.massive.com`, value never printed,
+      returned **HTTP 200**. That confirms today's value is real and working, not that it's specifically
+      the post-rotation replacement — the Director's account is the source for that link. Logged, not
+      hidden. SecOps's original Step 2/co-sign predated this information — re-confirmation requested
+      separately (see `activity-log.md`).
 
 ## Step 2 — Per-secret approval (repeat for each S#)
 
