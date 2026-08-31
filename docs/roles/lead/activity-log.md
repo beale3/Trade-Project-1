@@ -369,4 +369,21 @@ as its own item (14) — explicitly caveated as Director-reported, not independe
 artifact to check the way `log_pull.txt` was), and flagged the open, blocking question of whether that key
 was ever rotated since. Noted SecOps's S5 co-sign predates this information and may need re-confirming.
 
+### [Lead · 2026-08-30] DevOps delivers leg K + six-secret artifact-check, Lead-verified by running it
+DevOps (`software-dev-2f`, confirmed identity via the same check-before-act discipline as SecOps) delivered
+the assigned leg K scaffold + six-secret Installed check (`9c6f841`). Verified at source before relaying:
+pulled the actual push and read `scripts/gate/{run.py,legs/secret_scan.py}` directly, then went further
+than reading — **ran both the gate runner and leg K's own `--selftest` myself**, matching the precedent set
+verifying `test_synthetic.py` earlier this session. Exact match: 10/10 positive controls RED, 4/4
+placeholders GREEN, 2 more checks PASS, real repo scan GREEN, exit 0 on both. No discrepancy anywhere.
+
+DevOps's own report was appropriately conservative — did not claim "P-5 closed." Leg K is unconditionally
+GREEN for all six now. Installed is per-secret: S3 clean; S5 present but explicitly not confirmed safe
+(DevOps correctly rebased onto the live S5 reopening mid-task rather than close over it — good corroboration
+that seat-to-seat awareness of in-flight findings is actually working, not just claimed); S1/S2/S4 genuinely
+missing entirely (new finding — no `.env` anywhere, no env var at any scope, across all 9 clones); S6
+installed but in the wrong repo for this project's purposes (new finding — a real scope question, not an
+oversight). Logged S1/S2/S4 and S6 as their own items (15, 16) rather than burying them in item 13's prose,
+since both need an actual Director decision, not just acknowledgment.
+
 <!-- append new entries below -->
