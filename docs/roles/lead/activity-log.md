@@ -481,4 +481,25 @@ reported completion, didn't rebuild. Clarified directly with AI/ML that this was
 title both plausibly match a target, they may be the same process — cross-check before dispatching via a
 second channel, rather than assume redundancy is harmless. This time it was.
 
+### [Lead · 2026-08-31] Stage 2 delivered — real findings, independently verified, Stage 3 held pending fixes
+AIQ delivered Stage 2 (`cd079eb`): a real audit script (`helm/validation/audit/stage2_audit.py`), 6/6 own
+tests confirming the core mechanism sound, and 4 concrete findings against AI/ML's Stage 1 code. Verified
+at source before treating any of it as fact — confirmed the import boundary directly (imports only
+`tools.rolling_watchlist`'s raw primitives, never `helm/screener`/`engine`, honoring NN-3), independently
+confirmed Finding 3's schema claim against the actual ADR-0001 text (`verdict∈{cleared,dropped,void,
+unmeasured}` — grepped it myself, not trusted from memory), and **ran the full audit script myself** — 6/6
+pass, exit 0, Finding 1's reproduced numbers matched AIQ's report exactly (0.001886 vs. -0.001).
+
+This is genuinely rigorous work: AIQ directly answered AI/ML's explicit methodology question (the Leg-B
+paired-comparison translation is sound; the defects are execution gaps, not the method's existence),
+constructed a real fixture to empirically prove Finding 1 rather than assert it, and caught two real schema
+deviations (a wrong verdict string, an undocumented 5th state) against the ratified 4-state enum. AIQ
+messaged AI/ML directly with the findings (protocol 11 — not routing a peer-to-peer technical handoff
+through the Lead as middleman), which is correct practice.
+
+Judgment call, not yet run past the Director: **holding Stage 3 (QA) until AI/ML addresses these findings**
+rather than let QA reproduce verdicts from code with a known-wrong schema state name and a weak outlier
+statistic — reproducing the wrong thing correctly isn't progress. Updated AI/ML's, AIQ's board rows and
+ledger item 17 to reflect this sequencing.
+
 <!-- append new entries below -->
