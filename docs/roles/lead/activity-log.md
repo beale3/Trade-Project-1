@@ -468,4 +468,17 @@ D-TRADE-036 fixed the exit parameters as constants, so the LOO/5-fold harness wa
 comparison shape rather than a regression — AIQ's independent judgment on whether that translation is
 sound is the actual audit question, not a formality. Updated AI/ML's and AIQ's board rows accordingly.
 
+### [Lead · 2026-08-31] Messaging-fabric duplicate dispatch, clarified — no actual duplicate work
+AI/ML reported receiving the Stage 1 assignment twice, from what looked like two different Lead identities
+across two messaging fabrics — the peer `SendMessage`/`ListAgents` broadcast (as one of five anonymous
+candidates messaged before its identity was known) and the direct `ccd_session_mgmt` dispatch sent minutes
+later once the Architect's tip led to finding "Trade AI/ML" by session title. Both traced back to this one
+Lead session; the two channels evidently reach the same underlying process without that being obvious from
+either tool's output. **No actual duplicate build occurred** — confirmed via `git log`, still exactly
+`006db52`/`f8f685e`/`26acd7b`, nothing new. AI/ML correctly recognized the redundancy itself and only
+reported completion, didn't rebuild. Clarified directly with AI/ML that this was one Lead, not two.
+**Operational lesson for this and future sessions:** when a peer identity and a `ccd_session_mgmt` session
+title both plausibly match a target, they may be the same process — cross-check before dispatching via a
+second channel, rather than assume redundancy is harmless. This time it was.
+
 <!-- append new entries below -->
