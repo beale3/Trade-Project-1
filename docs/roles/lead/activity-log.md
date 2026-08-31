@@ -524,4 +524,23 @@ AI/ML messaged AIQ directly for re-verification (protocol 11, same pattern as th
 holding for that rather than re-dispatching myself, given the duplicate-messaging confusion earlier this
 session. Updated AI/ML's row and ledger item 17.
 
+### [Lead · 2026-08-31] Stage 2 fully closed — AIQ's re-verification independently confirmed
+AIQ closed Stage 2 (`dcb5264`) — re-read AI/ML's actual fix diff (not the summary), independently
+re-derived Finding 1's fix from scratch (own reimplementation of the unanimous-agreement logic, not
+imported from `leg_b.py`) against both the original 35-trade outlier fixture and a fresh no-outlier
+fixture built specifically to check the fix doesn't overcorrect into a false-negative machine. Findings
+2/3/4 confirmed by direct diff comparison. 8/8 own tests pass, no outstanding findings.
+
+**Ran the full extended audit script myself before accepting any of this** — exact match, including both
+new re-verification tests (`test_finding1_fix_rejects_my_original_outlier_fixture`,
+`test_finding1_fix_still_clears_a_genuinely_robust_case`), exit 0. This closes the loop on a chain where
+every single delivery — AI/ML's build, AIQ's audit, AI/ML's fixes, AIQ's re-verification — was
+independently checked at source by the Lead, not taken on report alone; several of those checks (Finding
+1's fixture reproduction in particular) genuinely could have surfaced a problem and didn't, which is itself
+useful signal, not just process box-ticking.
+
+Consolidated open-items-ledger item 17, which had grown into nine appended clauses across the whole chain,
+into a single current-state summary now that Stages 1-2 are actually done — the play-by-play stays in this
+log, the ledger just needs to say what's true now. Stage 3 (QA) remains the sole blocker, unchanged.
+
 <!-- append new entries below -->
