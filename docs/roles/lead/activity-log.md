@@ -502,4 +502,26 @@ rather than let QA reproduce verdicts from code with a known-wrong schema state 
 statistic — reproducing the wrong thing correctly isn't progress. Updated AI/ML's, AIQ's board rows and
 ledger item 17 to reflect this sequencing.
 
+### [Lead · 2026-08-31] AI/ML fixed all 4 Stage-2 findings — independently re-verified, not just relayed
+AI/ML reported fixing all 4 of AIQ's Stage 2 findings (`468ca2a`). Read the actual diffs before treating
+the report as fact: Finding 1's fix changes `_loo_paired` from "mean of LOO estimates" to "unanimous sign
+agreement across every estimate" — a materially stronger fix than a patch, and I independently re-ran
+AIQ's exact 35-trade fixture directly against the new function myself (not trusting AI/ML's or AIQ's
+numbers) — confirms `beats_naive_baseline` now correctly reads `False` (97.1% agreement, not unanimous).
+Finding 3's fix is exactly the recommended rename (`bar.py` now returns `DROPPED`). Findings 2 and 4 both
+resolved by adding a `validation_kind` field that travels with every verdict record and removing the
+invented 5th state entirely, with `is_primary` made the sole eligibility signal and an explicit binding-
+rule comment for downstream consumers.
+
+One thing worth noting for anyone reading the audit script later: re-running `stage2_audit.py` still prints
+"FINDING CONFIRMED" for Finding 1 — this is NOT a sign the fix failed. That test deliberately calls its own
+frozen reimplementation of the ORIGINAL flawed statistic (`loo_paired_as_described`), not the current
+`leg_b.py`, since AIQ's audit methodology re-derives from primitives rather than importing the engine's
+code (NN-3) — the script is a proof-of-bug artifact, not a regression test against current code. Confirmed
+this by reading the test function directly rather than being alarmed by stale-looking output.
+
+AI/ML messaged AIQ directly for re-verification (protocol 11, same pattern as the findings handoff) —
+holding for that rather than re-dispatching myself, given the duplicate-messaging confusion earlier this
+session. Updated AI/ML's row and ledger item 17.
+
 <!-- append new entries below -->
