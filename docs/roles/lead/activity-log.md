@@ -433,4 +433,21 @@ reviewed D-TRADE-036's locked P-4 values on catch-up, no objection, explicitly f
 the disclosed not-AIQ-cosigned shortcut — useful, unsolicited corroboration, not a formal protocol-17
 co-sign. Updated AIQ's board row to reflect the correction.
 
+### [Lead · 2026-08-31] AI/ML confirmed, self-verified, independently re-surfaced the unexplained WIP
+AI/ML confirmed identity and, unprompted, did its own D-TRADE-034/035/036 verification before treating the
+Stage 1 dispatch as legitimate — matching what was asked. Then flagged, rather than guessed past, the
+uncommitted WIP that's been sitting in this exact clone since ~2026-08-14 and that the Lead flagged to the
+Director early this session with no answer received. AI/ML's trace was sharper than the Lead's own —
+explicitly checked the committed `tools/rolling_watchlist.py` has zero EDGAR references and that the only
+authorized live-scanner touch from the Guardrail v2.1 episode (`382c514`) never went near this file,
+concluding correctly this is separate, unlogged content, not that fix. Stashed safely, proceeding on a
+clean base for the real Stage 1 scope.
+
+Confirmed the corroboration directly (the Lead has been carrying/protecting the identical WIP via
+stash-before-sync all session) and discovered something structural in the process: `git stash list` in
+this session now shows AI/ML's stash — meaning the Lead's session and the "Trade AI/ML" session share the
+literal same working directory, not separate clone copies, despite the charter's "one session per clone"
+framing. Logged both findings as open-items-ledger item 18 rather than let this keep floating as ambient
+context across sessions without resolution.
+
 <!-- append new entries below -->
