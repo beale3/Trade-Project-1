@@ -65,12 +65,18 @@ For every secret in the inventory:
 ## Step 3 — Sign-off matrix (both required; Lead may not self-approve)
 | Secret | Director approves | SecOps co-signs | Installed (store/`.env`) | Leg K re-run GREEN | Date |
 |---|---|---|---|---|---|
-| S1 service_role | ☐ | ☐ | ☐ | ☐ | |
-| S2 DB password | ☐ | ☐ | ☐ | ☐ | |
-| S3 MCP PAT | ☐ | ☐ | ☐ | ☐ | |
-| S4 anon key | ☐ | ☐ | ☐ | ☐ | |
-| S5 Massive/Polygon | ☐ | ☐ | ☐ | ☐ | |
-| S6 SEC-API.io (rotate first) | ☐ | ☐ | ☐ | ☐ | |
+| S1 service_role | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+| S2 DB password | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+| S3 MCP PAT | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+| S4 anon key | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+| S5 Massive/Polygon | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+| S6 SEC-API.io (rotate first) | ☑ | ☐ | ☐ | ☐ | 2026-08-30 |
+
+> **2026-08-30 — Director approves all six, in chat: "all six secrets are stored properly, none has been
+> exposed in the command bar or anywhere insecure."** Recorded as the Director-approves column above.
+> **This does not close P-5.** SecOps co-signs, Installed, and Leg K re-run GREEN are all still open, and
+> per this checklist's own rule the Lead is not eligible to fill the SecOps column — see the Lead's
+> response in-chat for who is.
 
 ## Step 4 — Standing controls (remain true after sign-off)
 - [ ] **Write access stays closed** on Supabase MCP — opening write is a **later Director-gated change** that
