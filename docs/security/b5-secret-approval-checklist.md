@@ -47,7 +47,12 @@ second slow approval round. Batch it.* Current known set:
       the new value live (HTTP 200) after — see `activity-log.md`. Exposure site deleted entirely. No
       evidence surfaced, at any point, of third-party use of the old value — this closure states that
       plainly rather than leaving it implied. Director + SecOps sign-off both recorded in Step 3 below.
-- [x] **S5 — CLOSED 2026-08-30. Exposure confirmed, no evidence of malicious use, proactively and fully
+- [ ] **S5 — REOPENED 2026-08-30 (was briefly closed same day).** Command-bar/rotation history below still
+      stands as described. **Reopened specifically because of the unresolved transcript candidate found in
+      the follow-up check directly below** — closing this while a real, unruled-out candidate sits open
+      would be exactly the "checked a box without evidence" pattern this project's culture exists to
+      prevent. Will re-close once that candidate is resolved either way.
+- [x] **S5 command-bar/rotation history — Exposure confirmed, no evidence of malicious use, proactively and fully
       remediated.** Director-reported (initially misattributed to S6, corrected same session): the
       Massive API key was pasted into a command bar the first time it was used; the Director's partner
       flagged this as bad practice at the time; Director confirms the key was rotated afterward. **Mixed
@@ -62,6 +67,19 @@ second slow approval round. Batch it.* Current known set:
       the post-rotation replacement — the Director's account is the source for that link. Logged, not
       hidden. SecOps's original Step 2/co-sign predated this information — re-confirmation requested
       separately (see `activity-log.md`).
+- [ ] **S5 shell/transcript history check — PARTIALLY DONE, ONE UNRESOLVED CANDIDATE, 2026-08-30.** Acting
+      on SecOps's re-confirmation recommendation (above): checked PowerShell `ConsoleHost_history.txt`
+      (0 matches), bash/zsh history (no such file exists on this machine), and Windows Run-box MRU
+      (0 entries) — all clean, count/existence-only checks, nothing printed. Also scanned this project's
+      23 local Claude Code session transcripts (`~/.claude/projects/C--Users-beale-Software-Dev/*.jsonl`)
+      for an `apiKey=`/`MASSIVE_API_KEY=` pattern followed by a real (non-placeholder-shaped) 20+ char
+      token — 2 of 3 candidate matches read as placeholder/example text (checked for "your"/"example"-class
+      wording, not printed); **1 candidate does NOT read as a placeholder** —
+      `517ca982-2b50-41cb-ab85-4da846eb94f2.jsonl`, line 1571, file dated 2026-08-23. Attempted to
+      determine via SHA-256 hash comparison against the current on-disk key (would confirm/rule out a match
+      **without ever displaying either value**) — **blocked by the permission classifier** before
+      completing. Not resolved. Value never displayed at any point in this check. See the Lead's
+      in-chat report for what's needed to close this.
 
 ## Step 2 — Per-secret approval (repeat for each S#)
 
@@ -135,12 +153,24 @@ post-install leg K) rather than checked off without evidence.
 > reconcile rather than have it sit as an unremarked contradiction. **New recommendation added to the Storage
 > column:** check/clear shell-history for the pasted value, matching the S6 precedent — not yet actioned
 > anywhere I can see.
+>
+> **2026-08-30, after SecOps's re-confirmation — the Lead acted on SecOps's shell-history recommendation
+> and found an unresolved candidate** (Step 1's new bullet above). This postdates SecOps's co-sign, which
+> was given without it. S5 reopened. Not un-checking SecOps's co-sign unilaterally — that's their
+> signature — but flagging it may need a second look once the candidate is resolved.
 
 > **2026-08-30 — Director approves all six, in chat: "all six secrets are stored properly, none has been
 > exposed in the command bar or anywhere insecure."** Recorded as the Director-approves column above.
 > **This does not close P-5.** SecOps co-signs, Installed, and Leg K re-run GREEN are all still open, and
 > per this checklist's own rule the Lead is not eligible to fill the SecOps column — see the Lead's
 > response in-chat for who is.
+>
+> **Reconciliation (SecOps-flagged tension, protocol 16) — this quote predates a later correction.** Later
+> the same session, the Director confirmed a command-bar exposure of S5 (Massive) did happen — initially
+> misattributed to S6, corrected, then closed above. The "none has been exposed" line above reflects the
+> Director's understanding *at that moment in the conversation*, not the final, reconciled record — kept
+> verbatim rather than edited, per this project's own append-don't-rewrite discipline; this note is the
+> reconciliation, not a silent fix.
 
 ## Step 4 — Standing controls (remain true after sign-off)
 - [ ] **Write access stays closed** on Supabase MCP — opening write is a **later Director-gated change** that
