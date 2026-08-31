@@ -1258,3 +1258,36 @@ outstanding co-sign gate before canonical absorption.
   runtime — no exemption, no blind spot, same decoded values, self-test still PASSES. Re-verified
   end-to-end (live plant/revert) before pushing the fix (`b028207`).
 - Reported once to the Lead, folded into the same completion report as item 13 rather than a second ping.
+
+### [AIQ · 2026-08-31] Caught up after ~26-day gap — prior "holding for P-1" status was STALE
+- **External flag, not self-caught.** Whoever's watching this session directly saw its own status text
+  ("still holding for P-1") and correctly called out that it conflicted with the repo's logged state —
+  D-TRADE-034 lifted P-1 for Phase-1 build on 2026-08-30, before this session last spoke. `git pull
+  --rebase` (clean, large fast-forward — dozens of commits since my last check) + full re-read:
+  AGENT-COORDINATION.md (board banner + build-chain spec), decisions-log.md through D-TRADE-036,
+  ADR-0001's current state, my own board row.
+- **Confirmed accurate now:** P-1 (D-TRADE-034), P-3 (D-TRADE-035), P-4 (D-TRADE-036) all ratified
+  2026-08-30 — real build-GO, not design-only. Director dispatched a 4-stage build chain: AI/ML (Stage 1,
+  Leg A/B build) → **AIQ (Stage 2, me — independent audit)** → QA (Stage 3, reproducibility re-run) →
+  DevOps (Stage 4, arm remaining gate legs), with **staged reporting at each handoff**, an explicit
+  Director override of the usual protocol-15 batched-report default for this chain.
+- **Substance check, not just a label change:** verified `helm/` does not exist in-repo (`find helm -type
+  f` → nothing) — AI/ML's own board row confirms Stage 1 hasn't delivered (idle). So the actual audit
+  queue position is unchanged (still nothing to audit); only the *reason* changes — correctly "queued
+  behind AI/ML's Stage 1," never "P-1 blocking." Getting this distinction right matters for anyone reading
+  status externally, which is exactly what surfaced the staleness in the first place.
+- **P-4's locked values (D-TRADE-036), sanity-checked on catch-up, not re-litigated:** OP-1 grid + primary
+  cell, OP-2 horizons, OP-3's fixed N=5 — read against my own methodology. No objection: OP-3 in
+  particular chose the **leakage-free fixed-N path**, not the train-fold-derived-median option, which
+  sidesteps my original audit finding #2 entirely. Noting for the record (not re-opening) that these 3
+  were an explicit, disclosed Director/Lead shortcut of ADR-0001 §12's AIQ-cosign expectation — my
+  after-the-fact read finds no defect, but it wasn't an independent gate the way D-TRADE-021/029 were.
+- **QA not spawned (blocks Stage 3)** — already tracked as open-items-ledger item 17 by the Lead; not
+  re-flagging as new, just confirmed I've seen it and it's not something I can or should act on myself.
+- Corrected `docs/eval/methodology-draft.md` (my write-lane) to match: P-4 section, HUMAN-boundary
+  section, and §6 status all updated; added a dated catch-up note rather than silently rewriting history
+  (matches the file's existing pattern of append-dated banners, not edited-in-place claims).
+- **Lesson for myself, recorded plainly:** I'd been re-reading before every repo *write*, per
+  dispatch-freshness, but let a chat *status reply* go stale across a long gap without the same check.
+  The discipline needs to cover what I say out loud, not just what I commit.
+- Reporting to the Lead now.

@@ -40,6 +40,19 @@
 > still reads "TBD"/"pending" for the floor value despite D-TRADE-029 already ratifying it — a stale-text
 > gap against the governing decisions-log record (protocol 16), not a design defect; flagged back to the
 > Architect for a quick fix, not held against co-sign.
+>
+> **2026-08-31 — CATCH-UP after a ~26-day gap; prior "holding for P-1" status was STALE, corrected.**
+> Flagged externally (not self-caught) that this session's displayed status still said "holding for P-1"
+> after **D-TRADE-034 lifted P-1 for Phase-1 build on 2026-08-30**. `git pull --rebase` + full re-read
+> (decisions-log through D-TRADE-036, AGENT-COORDINATION board, ADR-0001) confirms: P-1/P-3/P-4 all
+> ratified 2026-08-30, real build-GO issued, a 4-stage build chain dispatched (AI/ML→AIQ→QA→DevOps,
+> Director-mandated staged reporting). **Substance unchanged despite the stale wording — verified no
+> `helm/` directory exists in-repo, so Stage 1 (AI/ML) hasn't delivered and there is still nothing to
+> audit.** The correct current reason for holding is "queued as Stage 2, behind AI/ML," not "P-1
+> blocking" — a real difference for anyone reading status, not a cosmetic one. See §6 (bottom) and the
+> P-4 update in §0's parameter list. Lesson for myself: an idle lane must re-read before speaking, not
+> just before writing to the repo (§Routines dispatch-freshness) — I'd been doing that for repo edits but
+> let a chat status reply go stale.
 
 ---
 
@@ -59,11 +72,16 @@ generative AI — testing HELM's signal components for whether they predict a re
 legs, before a component/rule is called "cleared" — builder ≠ judge, on classical-statistics CV
 discipline, not LLM output.
 
-**Open parameters (P-4, ADR-0001 §9), NOT mine to invent — pending Director/AI/ML/AIQ ratification:**
-OP-1 (the pre-registered trail/init-stop grid + which single cell is primary), OP-2 (Leg-A horizon), OP-3
-(Leg-B baseline `N`'s exact value/derivation window). **OP-5 (the support floor) is RATIFIED at 30 events
-(D-TRADE-029)** — the one parameter already locked; the rest await the same ratification path before a
-first real run.
+**P-4 parameters — ALL LOCKED (D-TRADE-036, 2026-08-30):** OP-1 grid `trail_pct∈{5,8,12}%` /
+`init_stop_pct∈{2,3}%`, primary clearance-eligible cell = `(8,3)`, rest sensitivity-only · OP-2 = the
+studies' 1d/1w/1m · OP-3 = a **fully pre-registered fixed N=5 trading days** (not the train-fold-derived-
+median alternative — the leakage-free option I'd flagged as safer, which is what got chosen) · OP-5 = 30
+events (D-TRADE-029). **Flag, not an objection:** OP-1/2/3 were Director-authorized Lead defaults,
+explicitly **not AIQ-cosigned** (unlike D-TRADE-029/030's numbers) — a deliberate, disclosed shortcut of
+ADR-0001 §12's stated co-sign expectation, not a hidden gap. Quick read against my own methodology on
+catch-up (2026-08-30/31): the values are sound — OP-3 in particular sidesteps my original finding #2
+entirely by choosing the leakage-free fixed-N path over the data-derived-median one. No objection to raise
+retroactively; noting for the record that this step was HUMAN-shortcut, not independently verified by me.
 
 **Reference discipline** (Lead-cited template): `C:\Users\beale\catalyst-study\CATALYST_STUDY_FINDINGS.md`
 addendum — a nominal "beats naive" LOO-CV result at the 1-day horizon (+0.04% RMSE improvement, OOS R²
@@ -139,11 +157,14 @@ Lead/Director**. I certify mechanically whether a component/rule DID or DID NOT 
 not certify that the bar itself is correct. §2's bar and §3.9's floor both started as exactly that kind of
 recommendation and were ratified against precedent (D-TRADE-021, D-TRADE-029) rather than resting on my
 own authority; a future bar change would still need the same route, not a self-declared revision. OP-1/2/3
-(the grid, horizon, and baseline `N`'s exact value) are still open — HUMAN + AI/ML + me, pending.
+are now locked (D-TRADE-036) — see §0's flag on the not-AIQ-cosigned shortcut.
 
-## 6 · Status
-**CO-SIGNED ADR-0001 R2 (2026-08-04)** — the design is sound; still **HOLDING** on actual auditing. No
-AI/ML CV result or `helm/validation/` code exists in-repo yet (re-verified 2026-08-04, post-R2 — only
-`tools/`, the separate D-TRADE-023 dashboard side-tool, and docs exist; no `helm/` package). This protocol
-is pre-registered and ready to fire the moment AI/ML delivers a first CV result, once P-1 (build re-scope)
-and P-4 (remaining OP-1/2/3 ratification) clear.
+## 6 · Status (corrected on catch-up, 2026-08-31 — see working-log for the staleness note)
+**CO-SIGNED ADR-0001 R2 (2026-08-04, absorbed as D-TRADE-030).** **P-1 LIFTED for Phase-1 build
+(D-TRADE-034, 2026-08-30)** — build-GO issued; my prior "holding for P-1" status was stale and is
+corrected here. **P-3/P-4 also resolved** (D-TRADE-035/036). Director's 2026-08-30 build-chain dispatch:
+AI/ML (Stage 1) → **AIQ (Stage 2, me)** → QA (Stage 3, not yet spawned) → DevOps (Stage 4), staged
+reporting at each handoff per the Director's explicit override of the batched protocol-15 default.
+**Still nothing to audit** — verified no `helm/` directory exists in-repo (Stage 1 hasn't delivered yet;
+AI/ML's own board row shows idle). Correctly queued behind AI/ML's delivery, not blocked on any
+precondition anymore. Ready to fire the moment `helm/screener`/`helm/validation/engine` land.
