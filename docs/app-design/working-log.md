@@ -1339,3 +1339,49 @@ outstanding co-sign gate before canonical absorption.
   itself, which needs data assembly outside this build's stated scope).
 - Reported to the Lead (staged reporting per the Director's explicit dispatch, not held for a final
   summary) at each milestone: identity + verification, the WIP finding, and now Stage 1 complete.
+
+### [AIQ · 2026-08-31] STAGE 2 — independent audit of AI/ML's Stage-1 delivery. 6/6 own tests run, 4 findings
+- **Read the delivered code in full** (trailing-stop diff in `tools/rolling_watchlist.py`,
+  `helm/screener/adapter.py`, `helm/validation/engine/{bar,harness,leg_a,leg_b}.py`) before writing a
+  single line of my own — same discipline as the ADR-0001 review (LL-34, never audit from a summary).
+  Confirmed via `find helm -type f`: Stage 1 delivered LOGIC, not a real-data run — no `helm/ingest/`, no
+  historical data pulled (the Lead's own sanity-check was synthetic too). No actual CLEARED/DROPPED
+  verdict exists to reproduce yet; this audit covers the mechanism.
+- **Wrote and ran my own independent audit script** (`helm/validation/audit/stage2_audit.py`, my write-lane
+  per ADR-0001 Lane D) — calls `tools/rolling_watchlist.py`'s raw primitives directly, never imports
+  `helm/screener` or `helm/validation/engine` (NN-3). 6 tests, own fixtures throughout (different numbers
+  from AI/ML's or the Lead's own tests, a genuinely separate check):
+  1–4. Trailing-stop ratchet, init-floor bound, no-lookahead (truncation test), backward-compat — all
+  **independently confirmed correct** against hand-computed values (caught and fixed 2 arithmetic errors
+  in my OWN first-draft fixtures before trusting a false "FAIL" — verify-don't-attest applies to my own
+  work too, not just AI/ML's).
+  5. My own from-scratch LOO+5-fold×30-seed reimplementation (not importing `harness.py`) correctly
+  separates a planted signal (100% seed agreement) from pure noise (0%) — validates the ALGORITHM is
+  soundly implementable; not a claim their literal code reproduces (QA's Stage-3 job).
+  6. Independently verified (calling `scan_all_patterns`/`analyze_intraday_alignment` directly) that all 9
+  of `helm/screener/adapter.py`'s claimed Leg-A components are real scanner output columns, not invented.
+- **4 findings, all fixable, none invalidate the core mechanism:**
+  **#1 (empirically confirmed, not theoretical)** — `leg_b.py`'s `_loo_paired` outlier-robustness statistic
+  (mean of n leave-one-out estimates) fails to flag a single-trade-driven result on a constructed fixture:
+  the one leave-one-out estimate that actually excludes a planted outlier correctly reads negative, but
+  the reported MEAN of all 35 estimates stays positive — averaging nearly always preserves the full-sample
+  sign since each estimate only removes 1/n of one trade's influence. Recommend reporting the sign-flip
+  count instead of/alongside the mean.
+  **#2** — Leg B's translated bar tests in-sample stability (does the effect survive resampling of
+  already-known data), not out-of-sample generalization like Leg A's real held-out prediction — a
+  legitimate adaptation given D-TRADE-036 fixed the parameters (nothing to fit, nothing to hold out), but
+  the verdict record uses identical field names/labels as Leg A with no disclosure of the distinction —
+  an LL-40 violation (accuracy and consistency claims must be stated separately, never blended).
+  **#3** — `bar.py` returns `"NOT_CLEARED"`; the ratified schema (ADR-0001 §6.1, confirmed by direct
+  grep, not memory) is `verdict∈{cleared,dropped,void,unmeasured}` — should be `"DROPPED"`.
+  **#4** — `leg_b.py` introduces an undocumented 5th verdict string, `SENSITIVITY_ONLY_WOULD_CLEAR`
+  (intent correct — OP-1's anti-cherry-pick — but outside the ratified 4-state enum; recommend a separate
+  `is_primary` boolean instead of a new verdict string).
+- **Direct answer to AI/ML's explicit methodology question:** the paired-comparison translation for Leg B
+  is sound in its core logic given the real no-fitted-model constraint — not a fabricated shortcut. The
+  defect is in execution (findings #1/#2), not the method's existence. Does not block Stage 1 from being
+  considered structurally sound; recommend #1–4 land before/alongside the first real data run.
+- Full findings: `docs/eval/stage2-audit-findings.md`. Lane discipline: found issues in AI/ML's
+  `helm/validation/engine/` (their write-lane) — reported, not self-fixed, same as the ADR-0001 review.
+- Reporting to the Lead now (staged reporting, Director's explicit override) — this is the Stage-2
+  completion report.
