@@ -570,4 +570,29 @@ directly, respecting protocol 15. Updated QA's and DevOps's board rows, consolid
 covering all 3 completed stages), and will present F-1's severity question to the Director explicitly
 rather than default it myself.
 
+### [Lead · 2026-08-31] Stage 4 delivered — the Director's 4-stage build chain is fully closed
+DevOps delivered Stage 4 (`d4ed2ad`): `scripts/gate/legs/cv_reproducibility.py` (new) arms leg 3 against
+the real shipped `helm.validation.engine.{leg_b,bar}` — imports the engine directly, correctly reasoned as
+the one place in the chain allowed to (DevOps is neither builder nor judge, so this doesn't violate NN-3
+the way it would for AIQ or QA to do it) — and re-runs QA's own already-independently-reproduced fixtures
+against it as a mechanical regression trip-wire, not a second audit. Also redesigned `run.py`'s `LEG_TABLE`
+so every SKIP reason is computed from live repo state instead of hardcoded, fixing both the stale reason QA
+caught and the softer one QA flagged but didn't press.
+
+**Verified both fixes myself before accepting either.** Ran `cv_reproducibility.py --selftest` directly:
+confirmed GREEN on the real tree, watched it correctly go RED with the exact `beats_naive_baseline`
+False→True flip when the self-test reintroduces QA's exact Finding-1 bug, then GREEN again after revert —
+tree clean throughout. Ran the full `python scripts/gate/run.py`: 2 legs now ARMED (K, 3), both PASS, and
+every SKIP reason is accurate and specific (e.g. unit tests correctly names the one pytest-discoverable
+file it found, rather than a blanket stale string). Read the `harness-design.md` diff — DevOps flagged its
+own stale top banner rather than silently rewriting it, matching this project's own append-don't-rewrite
+discipline, and corrected the leg-3 design row to match what actually shipped.
+
+**This closes the entire Director-dispatched build chain.** Every one of its five deliveries (AI/ML's
+build, AIQ's audit, AI/ML's fixes, AIQ's re-verification, QA's reproducibility pass, DevOps's fix pass —
+six, really) was independently checked by the Lead at source before being accepted, not relayed on trust.
+Updated DevOps's board row, the LIVE BOARD banner with a closure milestone note, and consolidated ledger
+item 17 to its final closed state. What's explicitly NOT closed: NN-9's real-data mandate (blocked on
+SDE1's undispatched lane) and the Director's still-pending severity call on F-1.
+
 <!-- append new entries below -->
