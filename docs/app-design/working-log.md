@@ -1173,3 +1173,29 @@ outstanding co-sign gate before canonical absorption.
   S5, old-token dashboard re-check for S6) noted but don't gate the co-sign. **Installed** and **Leg K
   re-run GREEN** columns left genuinely open — did not check either, both still block full P-5 closure.
 - Reported once to the Lead (protocol 15), consolidated, not per-secret. No blocker hit.
+
+### [SecOps · 2026-08-30] S5 co-sign re-confirmed after the command-bar exposure surfaced
+- A peer Lead session (identity mismatch resolved first — corrected an initial DevOps misdirection, then
+  the same peer relayed new information after my prior message) reported: the Massive key was pasted into
+  a command bar on first use, flagged by the Director's partner, rotated afterward. Pulled latest, read
+  the Lead's own independently-checked findings (template git history clean, real key gitignored/never
+  committed, current key live HTTP 200) and the open-items-ledger #14 closure before responding — did not
+  take the report on faith alone, verified what was already checkable in the repo state.
+- **Re-confirmed the S5 co-sign stands**, updated (not retracted): classification/least-privilege/
+  ToS-tier-match are unaffected by a use-time handling mistake; Storage and Rotation-policy columns
+  updated with the new information, same treatment already given S6's own exposure.
+- **New finding of my own, not just relaying the Lead's:** my original Storage review only checked
+  repo/git-level persistence (`.gitignore`, `git ls-files`) — a command-bar paste is a different vector
+  (shell/terminal history) I hadn't covered. Added a recommendation to check/clear PowerShell
+  `ConsoleHost_history.txt` / bash `.bash_history` / any Claude Code transcript where the value might have
+  been echoed — matching the same class of check that found `log_pull.txt` for S6. Flagged as open, not
+  claimed as done — I can't do this myself (the incident's location isn't identified in what reached me).
+- **Named a tension, didn't adjudicate it:** the Director's own chat approval (already in this file) states
+  *"none has been exposed in the command bar or anywhere insecure"* — in apparent tension with this
+  incident. Surfaced per protocol 16 (governing artifact vs. statement disagreement) for the Lead/Director
+  to reconcile; not a SecOps call to resolve.
+- Also distinguished evidentiary strength honestly: S6 had a persistent artifact (`log_pull.txt`) checkable
+  before/after rotation; S5's rotation is Director-attested only, no independently-checkable before/after.
+  Treated as sufficient for co-sign (same standard the Director's own approval already relies on) but kept
+  visibly distinct from "independently verified," not blended together.
+- Reported once to the Lead (protocol 15). No blocker.
