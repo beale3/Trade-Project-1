@@ -450,4 +450,22 @@ literal same working directory, not separate clone copies, despite the charter's
 framing. Logged both findings as open-items-ledger item 18 rather than let this keep floating as ambient
 context across sessions without resolution.
 
+### [Lead · 2026-08-31] Stage 1 delivered and Lead-verified — dispatched Stage 2 to AIQ
+AI/ML delivered Stage 1 (`006db52`/`f8f685e`): the trailing-stop exit mode, `helm/screener/adapter.py`,
+`helm/validation/engine/{bar,harness,leg_a,leg_b}.py`. Verified at source before doing anything with it —
+read the trailing-stop diff against ADR-0001 §6.3's exact formula (matches: monotone non-decreasing via
+`max()`, bar-causal peak update, backward-compatible via both params defaulting `None`), read `bar.py`
+(correctly implements the D-TRADE-021 bar + D-TRADE-029 floor) and `leg_b.py` in full (the anti-cherry-pick
+enforcement is structural — `is_primary` is caller-supplied, never inferred, so a sensitivity cell can't
+silently read CLEARED). Went a step further than reading: **wrote and ran a standalone synthetic test
+against `leg_b.py`'s actual functions** — planted real effect → CLEARED, pure noise → NOT_CLEARED, n=10 →
+UNMEASURED, sensitivity cell with a real planted edge → SENSITIVITY_ONLY_WOULD_CLEAR, not CLEARED. Exact
+match with AI/ML's own claimed verification, independently reproduced, not just trusted.
+
+Dispatched Stage 2 to AIQ via `ccd_session_mgmt` (the reliable direct channel discovered this session,
+session `local_7adfedb4`), carrying forward AI/ML's explicit flag verbatim: Leg B has no fitted model once
+D-TRADE-036 fixed the exit parameters as constants, so the LOO/5-fold harness was adapted to a paired-
+comparison shape rather than a regression — AIQ's independent judgment on whether that translation is
+sound is the actual audit question, not a formality. Updated AI/ML's and AIQ's board rows accordingly.
+
 <!-- append new entries below -->
