@@ -543,4 +543,31 @@ Consolidated open-items-ledger item 17, which had grown into nine appended claus
 into a single current-state summary now that Stages 1-2 are actually done — the play-by-play stays in this
 log, the ledger just needs to say what's true now. Stage 3 (QA) remains the sole blocker, unchanged.
 
+### [Lead · 2026-08-31] Stage 3 delivered — QA found a real coverage gap, independently reproduced
+QA delivered Stage 3 (`3bae4db`): had to bootstrap its own clone first (the `Trade - QA` directory existed
+but was never initialized — genuinely unspawned, not just idle, correcting an understated board status),
+then independently re-ran every armed leg on exit codes in that clone, produced its own negative control
+that DevOps's original self-test didn't actually cover (a synthetic key-shaped value planted in tracked
+`README.md`, working tree only, confirmed leg K goes RED on the real `run_scan()` path, reverted clean),
+reproduced AIQ's full audit exactly and confirmed it deterministic across repeated runs and hash seeds,
+verified NN-3 mechanically via a `sys.modules` diff rather than reading the audit's prose, and — the check
+nobody had run yet — imported the shipped `helm.validation.engine` directly (which AIQ is structurally
+barred from doing) to confirm the real committed code, not just AIQ's independent reimplementation, carries
+all 4 Stage-2 fixes.
+
+**The most consequential finding (F-1, proposed SEV2) I verified myself rather than take on report:**
+reverted AI/ML's real Finding-1 fix in `helm/validation/engine/leg_b.py` (working tree only, one line),
+re-ran `stage2_audit.py` — still 8/8 PASS, exit 0, even the two tests specifically named after the fix.
+Confirmed exactly what QA described: nothing armed in this repo actually binds the shipped engine code, so
+Stage 2's closure and my own prior confirming re-run were both structurally incapable of catching a
+regression there. Reverted immediately after confirming (single-line diff, checked before and after).
+This is not AIQ's defect — NN-3 requires the audit never import the engine — but it's a real gap DevOps's
+Stage 4 needs to close, not a formality.
+
+QA correctly declined to set F-1's final severity itself (its own oracle-boundary row makes "is coverage
+sufficient" a HUMAN escalation) and routed both findings to me for dispatch rather than messaging DevOps
+directly, respecting protocol 15. Updated QA's and DevOps's board rows, consolidated ledger item 17 (now
+covering all 3 completed stages), and will present F-1's severity question to the Director explicitly
+rather than default it myself.
+
 <!-- append new entries below -->
