@@ -423,4 +423,14 @@ by message the moment those sessions are live, same pattern as SecOps/DevOps ear
 spawned. The Director's own dispatch names QA as Stage 3; that seat doesn't exist. Logged as open-items-
 ledger item 17's explicit status line rather than wait for Stages 1-2 to complete and hit this cold.
 
+### [Lead · 2026-08-31] AIQ self-corrected a stale status ahead of Stage 2 — verified clean at source
+AIQ reported (`bbf7a28`) catching its own stale "holding for P-1" status after an external flag, re-syncing
+against decisions-log through D-TRADE-036 and confirming the substantive queue position was unchanged
+(verified `helm/` doesn't exist yet — AI/ML's Stage 1 hasn't delivered) even though the stated *reason* was
+wrong. Pulled and read the actual diff before updating anything — `working-log.md`'s append and
+`methodology-draft.md`'s P-4/status corrections match the chat report exactly, no discrepancy. Also
+reviewed D-TRADE-036's locked P-4 values on catch-up, no objection, explicitly framed as not re-litigating
+the disclosed not-AIQ-cosigned shortcut — useful, unsolicited corroboration, not a formal protocol-17
+co-sign. Updated AIQ's board row to reflect the correction.
+
 <!-- append new entries below -->
