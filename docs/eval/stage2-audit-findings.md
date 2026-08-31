@@ -102,3 +102,28 @@ No real historical data has been pulled (`helm/ingest/` doesn't exist), so there
 record to independently re-derive against real trades yet — that audit (the one my methodology-draft.md's
 full §1–4 sequence targets) happens once SDE1/Data-Eng deliver real data and AI/ML runs the engine against
 it. This review covers the mechanism only.
+
+## Re-verification (2026-08-31) — all 4 findings CONFIRMED FIXED, independently re-checked
+AI/ML pushed fixes (`468ca2a`). Re-read the actual diff (not their summary message) before accepting
+anything, same standard as the original audit and the ADR-0001 review.
+
+- **Finding 3 (verdict string):** `bar.py` diff confirmed — `"NOT_CLEARED"` → `"DROPPED"`, matches the
+  ratified §6.1 enum exactly. Static text check, no computation needed. **Confirmed fixed.**
+- **Finding 4 (undocumented 5th state):** `leg_b.py` diff confirmed — the `SENSITIVITY_ONLY_WOULD_CLEAR`
+  downgrade branch is fully removed; `evaluate_exit_config` now always returns the true 4-state verdict,
+  with `is_primary` as the sole eligibility signal and an explicit binding-rule docstring for downstream
+  consumers. **Confirmed fixed.**
+- **Finding 2 (stability-vs-generalization disclosure):** `validation_kind` field confirmed present on
+  every return path in both `leg_a.py` (`"held_out_prediction"`, including the early UNMEASURED return)
+  and `leg_b.py` (`"stability_check"`). **Confirmed fixed.**
+- **Finding 1 (weak outlier check) — independently re-derived, not just read.** Reimplemented AI/ML's new
+  logic myself from the diff (unanimous sign-agreement across all n leave-one-out estimates), ran it
+  against my own original fixture (own code, `helm/validation/audit/stage2_audit.py`
+  `test_finding1_fix_rejects_my_original_outlier_fixture`): reproduces `full_sample_diff≈0.001886`,
+  `pct_agreeing=97.1%` exactly, and now correctly returns `beats_naive_baseline=False`. Also built a fresh
+  no-outlier fixture (uniform +0.005 advantage on every one of 40 trades, zero exceptions) to check the
+  fix doesn't overcorrect into a false-negative machine on a genuinely robust case — clears unanimously at
+  100%, `beats_naive_baseline=True`, as it should. **Confirmed fixed, independently, both directions.**
+
+8/8 own tests pass (`helm/validation/audit/stage2_audit.py`, extended with 2 new re-verification tests).
+**Stage 2 is CLOSED.** No outstanding findings against AI/ML's Stage-1 delivery.

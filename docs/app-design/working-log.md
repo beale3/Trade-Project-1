@@ -1415,3 +1415,22 @@ outstanding co-sign gate before canonical absorption.
 - All 4 fixes stayed in Lane C (`helm/validation/engine/`, my write-lane) per AIQ's own scoping — did not
   touch `helm/validation/audit/` or their findings doc.
 - Pushed → origin/main (`468ca2a`). Reporting to AIQ + the Lead now.
+
+### [AIQ · 2026-08-31] Stage 2 findings — re-verified AI/ML's fixes, all 4 CONFIRMED CLOSED
+- **Read the actual diff (`468ca2a`), not AI/ML's summary message**, before accepting anything — same
+  standard I've held throughout (LL-34). Findings 2/3/4 confirmed by direct text comparison against my
+  original citations: `bar.py`'s `"NOT_CLEARED"`→`"DROPPED"` matches §6.1 exactly; `leg_b.py`'s
+  `SENSITIVITY_ONLY_WOULD_CLEAR` downgrade fully removed, `is_primary` now the sole eligibility signal
+  with an explicit consumer-facing binding rule in the docstring; `validation_kind` field present on
+  every return path in both `leg_a.py` and `leg_b.py`, including the early UNMEASURED branch.
+- **Finding 1's fix independently re-derived, not just read** — reimplemented AI/ML's new unanimous-
+  sign-agreement logic myself from the diff (not imported), extended `helm/validation/audit/
+  stage2_audit.py` with 2 new tests: (a) re-ran my original 35-trade outlier fixture against my own
+  reimplementation of their fix — reproduces `full_sample_diff≈0.001886`, `97.1%` agreement exactly, now
+  correctly `beats_naive_baseline=False`; (b) built a FRESH no-outlier fixture (40 trades, uniform +0.005
+  advantage, zero exceptions) to check the fix doesn't overcorrect into a false-negative machine on a
+  genuinely robust case — clears unanimously at 100%, as it should. 8/8 own tests pass.
+- **Verdict: Stage 2 CLOSED.** No outstanding findings against AI/ML's Stage-1 delivery. Full
+  re-verification appended to `docs/eval/stage2-audit-findings.md`.
+- Pushed. Reporting to the Lead now (staged reporting, Director's directive) — Stage 3 (QA) can proceed
+  once a QA seat exists (open-items-ledger item 17, not mine to resolve).

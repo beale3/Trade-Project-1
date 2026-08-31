@@ -262,6 +262,68 @@ def test_leg_b_loo_outlier_sensitivity():
             f"leave-one-out estimates) fails to flag a single-trade-driven result: {result}")
 
 
+# =============================================================================
+# PART 4 -- re-verify AI/ML's fix for Finding 1 (commit 468ca2a). Reimplements
+# THEIR NEW LOGIC MYSELF (read from source, not imported) -- unanimous sign
+# agreement across all n leave-one-out estimates -- and re-runs it against my
+# own original fixture, plus a fresh no-outlier fixture to check the fix
+# isn't overcorrecting into a false-negative machine on a genuinely robust case.
+# =============================================================================
+
+def loo_paired_unanimous_fixed(y_treatment, y_baseline):
+    """My own reimplementation of the fixed _loo_paired (commit 468ca2a),
+    built from reading the diff, not by importing leg_b.py."""
+    n = len(y_treatment)
+    full_sample_diff = float(y_treatment.mean() - y_baseline.mean())
+    diffs = np.empty(n)
+    for i in range(n):
+        mask = np.ones(n, dtype=bool)
+        mask[i] = False
+        diffs[i] = y_treatment[mask].mean() - y_baseline[mask].mean()
+    if full_sample_diff > 0:
+        pct_agreeing = float(np.mean(diffs > 0)) * 100
+    elif full_sample_diff < 0:
+        pct_agreeing = float(np.mean(diffs < 0)) * 100
+    else:
+        pct_agreeing = 0.0
+    beats = bool(full_sample_diff > 0 and pct_agreeing == 100.0)
+    return full_sample_diff, pct_agreeing, beats
+
+
+def test_finding1_fix_rejects_my_original_outlier_fixture():
+    n = 35
+    y_treatment = np.full(n, 0.0)
+    y_baseline = np.full(n, 0.001)
+    y_treatment[-1] = 0.10
+    y_baseline[-1] = 0.0
+    full_diff, pct_agree, beats = loo_paired_unanimous_fixed(y_treatment, y_baseline)
+    assert abs(full_diff - 0.001886) < 1e-6, f"expected full_sample_diff ~0.001886, got {full_diff}"
+    assert abs(pct_agree - (34 / 35 * 100)) < 0.05, f"expected 34/35=97.1%, got {pct_agree}"
+    assert beats is False, "the fixed logic should now correctly reject the outlier-driven fixture"
+    return (f"PASS (independently reproduced, not just AI/ML's self-report): full_sample_diff="
+            f"{full_diff:.6f}, pct_agreeing={pct_agree:.1f}% (not unanimous), "
+            f"beats_naive_baseline={beats} -- fix confirmed correct on my own fixture")
+
+
+def test_finding1_fix_still_clears_a_genuinely_robust_case():
+    """
+    A FRESH fixture (not reused from the outlier test): 40 trades, a small
+    but UNIFORM advantage for trailing on every single trade, zero variance,
+    no outlier at all. If the unanimous-agreement bar is too strict, this
+    should fail to clear despite being maximally robust by construction.
+    """
+    n = 40
+    rng = np.random.RandomState(999)
+    y_baseline = rng.normal(0.0, 0.01, n)
+    y_treatment = y_baseline + 0.005  # every single trade is uniformly +0.005 better, no exceptions
+    full_diff, pct_agree, beats = loo_paired_unanimous_fixed(y_treatment, y_baseline)
+    assert pct_agree == 100.0, f"a uniform, outlier-free advantage should agree unanimously, got {pct_agree}%"
+    assert beats is True, "a genuinely robust case should still clear under the unanimous bar"
+    return (f"PASS: a uniform outlier-free advantage still clears unanimously (full_sample_diff="
+            f"{full_diff:.6f}, {pct_agree:.1f}% agreement) -- the fix does not overcorrect into a "
+            f"false-negative machine on a clean case")
+
+
 if __name__ == "__main__":
     tests = [
         test_trailing_stop_ratchet,
@@ -270,6 +332,8 @@ if __name__ == "__main__":
         test_trailing_stop_backward_compat,
         test_harness_detects_planted_effect_and_rejects_noise,
         test_leg_b_loo_outlier_sensitivity,
+        test_finding1_fix_rejects_my_original_outlier_fixture,
+        test_finding1_fix_still_clears_a_genuinely_robust_case,
     ]
     failures = 0
     for t in tests:
