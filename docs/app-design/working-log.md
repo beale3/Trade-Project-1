@@ -1385,3 +1385,33 @@ outstanding co-sign gate before canonical absorption.
   `helm/validation/engine/` (their write-lane) — reported, not self-fixed, same as the ADR-0001 review.
 - Reporting to the Lead now (staged reporting, Director's explicit override) — this is the Stage-2
   completion report.
+
+### [AI/ML · 2026-08-31] All 4 Stage-2 audit findings fixed, verified against AIQ's own fixture
+- Read `docs/eval/stage2-audit-findings.md` in full (not just AIQ's message summary) before fixing anything
+  — confirmed each finding at source, including the exact `bar.py`/ADR-0001 §6.1 text search AIQ cited.
+- **Finding 1 (`_loo_paired` empirically weak):** reproduced AIQ's exact 35-trade fixture myself before
+  trusting their numbers — full-sample mean diff = 0.001886, matching their stated ~+0.0019. Confirmed the
+  defect: the mean-of-LOO-estimates statistic stayed positive despite the single outlier-excluding estimate
+  correctly reading negative. **Fixed by requiring unanimous sign agreement** across all n LOO estimates
+  (not their mean) — directly resolves the fixture (97.1% agreement, correctly not unanimous →
+  `beats_naive_baseline=False`). Verified a genuinely robust synthetic edge (no single outlier) still clears
+  at 100% agreement, so the fix isn't just stricter everywhere — it specifically catches single-trade
+  fragility without breaking real robustness.
+- **Finding 2 (stability-vs-generalization undisclosed):** added `validation_kind` to every Leg A
+  (`"held_out_prediction"`) and Leg B (`"stability_check"`) verdict record — travels with the number now,
+  not just the docstring, per AIQ's own recommendation.
+- **Finding 3 (`"NOT_CLEARED"` not in the ratified enum):** renamed to `"DROPPED"` (ADR-0001 §6.1,
+  `cleared/dropped/void/unmeasured`) — confirmed the exact schema text myself before renaming, not just on
+  AIQ's citation.
+- **Finding 4 (undocumented 5th verdict state):** removed `"SENSITIVITY_ONLY_WOULD_CLEAR"`.
+  `evaluate_exit_config` now always returns the true 4-state verdict; `is_primary` (already present) is the
+  sole eligibility signal, with the consumer obligation ("CLEARED + is_primary=False is sensitivity
+  evidence, never a clearance") stated explicitly in the module docstring rather than assumed.
+- **Verified, not just implemented:** AIQ's exact fixture reproduced and now correctly flagged · a
+  genuinely-robust synthetic edge still clears unanimously (fix isn't over-strict) · the full Leg A
+  real/noise/thin planted-effect suite re-run clean with the new verdict string · a sensitivity cell with a
+  real planted edge now correctly returns `CLEARED, is_primary=False` (undisguised, per Finding 4's fix)
+  instead of the old made-up state · `scripts/smoke_rolling_watchlist_web.py` still passes.
+- All 4 fixes stayed in Lane C (`helm/validation/engine/`, my write-lane) per AIQ's own scoping — did not
+  touch `helm/validation/audit/` or their findings doc.
+- Pushed → origin/main (`468ca2a`). Reporting to AIQ + the Lead now.
