@@ -1591,3 +1591,33 @@ outstanding co-sign gate before canonical absorption.
   Director territory, not mine to work around) before any re-attempt: at 100 calls already spent, a blind
   retry against the same possibly-bad key would burn more of the approved budget for the same result; (2)
   coordination with AI/ML on the intraday-data requirement before proposing a revised scope.
+
+### [AI/ML · 2026-08-31] Lane-A/Lane-C data contract: intraday scope for Leg A/B (SDE1 coordination)
+- SDE1 flagged, while building `helm/ingest`/`helm/storage`, that `helm/screener/adapter.py` and
+  `leg_b.py`'s use of `simulate_day_trades` both need `intraday_df` — not covered by their Gate-1 sizing,
+  which was based on the daily-cohort-only precedent. Asked precisely: full-window intraday for all 100
+  tickers, or only specific event-days; what bar interval; whether any OP-4 component sidesteps this.
+  Answered from the actual code + the proven precedent, not from memory — this wasn't written down
+  anywhere before now, so recording it here as the real Lane-A/Lane-C contract:
+  1. **Event-days only, not a full daily walk.** `tools/rolling_watchlist.py::main()` itself only ever
+     calls `load_intraday()` for `holding_tickers` — tickers that already passed the guardrail/rollover
+     spike filter (`rolling_watchlist.py:1343-1346`) — never the full candidate universe; the 4 proven
+     equity studies also tested a pre-selected event cohort, not a rolling daily walk. SDE1's own
+     ~120-event estimate is the right order of magnitude, not ~100 tickers × 2 years of 5-min bars.
+  2. **Leg A's forward-return TARGET is daily-only** (1d/1w/1m closes, OP-2/proven-study convention) —
+     already covered by SDE1's planned 100-ticker daily-OHLCV pull. Intraday is needed only for the
+     FEATURE side (did a component fire that day) — two different parts of the same record, not two
+     independent asks.
+  3. **Bar interval: 5m**, matching `load_intraday`'s own default (`rolling_watchlist.py:145`) and the
+     pattern detectors' actual design assumption — a different interval would be an untested deviation
+     from the scanner's own proven logic.
+  4. **No daily-bar-only escape hatch.** All 9 of OP-4's final Leg-A components (8 pattern detectors +
+     the alignment trigger) are intraday-only; the daily-only signals (short_interest/catalyst) are
+     explicitly out of scope (OP-4: not re-litigated). A first real Leg-A verdict cannot happen without
+     solving the intraday-pull question — there is no smaller slice that avoids it.
+  5. **Leg A and Leg B likely share the same intraday pull, not two additive asks** — Leg B's entry set
+     is drawn from the same alignment-trigger events Leg A computes on the same days. Flagged as likely,
+     not yet confirmed — the actual cohort-construction logic (which specific days, drawn how) is a joint
+     Lane-A/Lane-C decision not yet designed.
+- Not yet a decision — a data-contract clarification for SDE1's Gate-1/2 sizing proposal, which is theirs
+  to bring back to the Lead/Director. Recording here so it doesn't live only in a DM.
