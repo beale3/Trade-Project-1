@@ -40,11 +40,22 @@ second slow approval round. Batch it.* Current known set:
 - [x] ~~Open blockers: S5 tier, S6 issuer confirmation~~ — **CLEARED 2026-08-01** (D-TRADE-020 pivot +
       SecOps confirmation, `docs/security/tos-taint-review.md`). Residual, non-blocking: Director may
       optionally verify the exact Massive plan name on the account dashboard.
-- [x] **S6 rotation — DONE 2026-08-30.** The Director rotated the SEC-API.io token at the provider
-      dashboard; the Lead independently verified the old value was still live (HTTP 200) before rotation
-      and the new value is live (HTTP 200) after — see `activity-log.md`. `float-study/log_pull.txt`
-      (the exposure site) deleted entirely. **This closes the pre-condition, not Step 3's sign-off** —
-      Director-approves + SecOps-co-signs for S6 is still unchecked below.
+- [x] **S6 — CLOSED 2026-08-30. Exposure confirmed, no evidence of malicious use, proactively and fully
+      remediated.** Found in plaintext in `float-study/log_pull.txt` (outside this repo, leaked into old
+      DNS-failure exception tracebacks); the Lead independently verified the old value was still live
+      (HTTP 200) before rotation, the Director rotated at the provider dashboard, and the Lead verified
+      the new value live (HTTP 200) after — see `activity-log.md`. Exposure site deleted entirely. No
+      evidence surfaced, at any point, of third-party use of the old value — this closure states that
+      plainly rather than leaving it implied. Director + SecOps sign-off both recorded in Step 3 below.
+- [ ] **S5 — command-bar exposure, logged 2026-08-30, NOT YET independently verified.** Director-reported
+      (initially misattributed to S6, corrected same session): the Massive API key was pasted into a
+      command bar the first time it was used; the Director's partner flagged this as bad practice at the
+      time. **Open question, blocking this item's closure:** was the key rotated after that flagged
+      incident, or is the value currently in the secret store the same one that was exposed? Nothing in
+      SecOps's 2026-08-30 Step 2 review (above) surfaced this — it predates that review's information.
+      Needs: (1) the Director's answer on rotation status, (2) if not yet rotated, treat as a live,
+      unremediated exposure needing the same rotate-and-verify sequence S6 went through, not just a
+      historical note.
 
 ## Step 2 — Per-secret approval (repeat for each S#)
 
@@ -94,6 +105,11 @@ post-install leg K) rather than checked off without evidence.
 > recommendations noted inline, none gate the co-sign. **Installed** and **Leg K re-run GREEN** remain
 > genuinely open — I did not check either (out of scope per the Lead's dispatch; leg K is blocked on
 > DevOps's gate-harness build). P-5 is still not fully closed by this pass — see the note below.
+>
+> **2026-08-30, after SecOps's review — S5's command-bar exposure (Step 1 note above) surfaced.** SecOps's
+> S5 co-sign above was given without this information. Not un-checked unilaterally by the Lead — that's
+> SecOps's own signature — but flagged: worth SecOps re-confirming the S5 co-sign stands once the
+> Director answers whether that key was ever rotated.
 
 > **2026-08-30 — Director approves all six, in chat: "all six secrets are stored properly, none has been
 > exposed in the command bar or anywhere insecure."** Recorded as the Director-approves column above.

@@ -354,4 +354,19 @@ dashboard recheck — the last one independently corroborating a caveat the Lead
 own credential-resolution record). Propagated to `open-items-ledger.md` item 13, `AGENT-COORDINATION.md`
 (SecOps row, banner, Program Lead row).
 
+### [Lead · 2026-08-30] S6 vs S5 reconciliation — closed S6, opened a new S5 finding
+Director asked to mark S6's exposure item closed as "never actually exposed or compromised" — this
+conflicted with three independent sources (the original SecOps finding, the Lead's own HTTP-200 check on
+the old on-disk key, and SecOps's fresh same-session re-confirmation), so held rather than complying —
+laid out the conflict plainly and asked for reconciliation rather than either silently overwriting the
+record or refusing outright.
+
+Director corrected: misremembered which key — the command-bar-paste incident was S5 (Massive), flagged by
+the Director's partner at the time; S6's history stands as documented. Closed S6 with the Director's
+requested language ("exposure confirmed, no evidence of malicious use, proactively and fully remediated")
+since it's consistent with the verified record, not a rewrite of it. Logged the newly-surfaced S5 incident
+as its own item (14) — explicitly caveated as Director-reported, not independently verified (no persistent
+artifact to check the way `log_pull.txt` was), and flagged the open, blocking question of whether that key
+was ever rotated since. Noted SecOps's S5 co-sign predates this information and may need re-confirming.
+
 <!-- append new entries below -->
