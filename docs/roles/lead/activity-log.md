@@ -331,4 +331,27 @@ myself** — module ownership (`helm/screener`/`validation/engine` = AI/ML, `val
 stays with the named seats; checked `ListAgents` and found no other live session reachable right now, so
 actual building is blocked on those seats' sessions existing, not on any remaining ratification.
 
+### [Lead · 2026-08-30] P-5 Step 2 + SecOps co-sign delivered, consolidated
+Director assigned P-5's Step 2 review to `Trade - SecOps` and asked the Lead to hand it off directly and
+confirm pickup. A new peer session appeared in `ListAgents` right as the assignment came in — didn't
+assume it was SecOps just from timing; messaged it asking to confirm identity first, with the full task
+scope attached in case it was. It replied confirming `Trade - SecOps` (and had independently re-verified
+the assignment itself — pulled latest, cross-checked `open-items-ledger.md` item 13, re-read its own
+oracle-boundary row — before accepting, not taking the Lead's message on faith).
+
+SecOps delivered Step 2 for all six secrets (classification/blast-radius, least-privilege, ToS-tier match,
+storage, rotation policy), pushed to `6498dae`, and checked its own Step 3 co-sign per its own PROFILE duty.
+**Verified at source before relaying anything to the Director** — pulled the actual commit and read the
+full diff rather than trusting the chat summary; every claim matched (evidence-backed per-secret rows,
+Step 3 checkboxes exactly as reported, fail-closed/leg-K honestly left NOT-YET-VERIFIABLE rather than
+checked off without evidence). No discrepancy found — a clean result, unlike several earlier verifications
+this session that caught real problems.
+
+Consolidated one report to the Director (protocol 15) rather than relaying SecOps's message verbatim:
+Step 2 + SecOps co-sign done, `Installed`/`Leg K` still open (correctly, blocked on DevOps), three
+non-blocking residual recommendations (S1/S2 rotation cadence, S5 duplicate-key check, S6 old-token
+dashboard recheck — the last one independently corroborating a caveat the Lead had already flagged in its
+own credential-resolution record). Propagated to `open-items-ledger.md` item 13, `AGENT-COORDINATION.md`
+(SecOps row, banner, Program Lead row).
+
 <!-- append new entries below -->
