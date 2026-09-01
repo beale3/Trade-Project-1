@@ -109,8 +109,8 @@ must never read as decided (LL-31).
   study's own successful precedent exactly — not a new invention.
 - **`<3.5>` Stack — 🔒 CONFIRMED per ADR-0001 R2 (Architect), Lead-ratified 2026-08-04 (D-TRADE-030,
   co-signed by AI/ML + AIQ).** **Python core; Node/Fastify/React dropped entirely** (N/A). Single package
-  `helm/`, disjoint-by-directory: `helm/ingest` · `helm/universe` (**conditional — likely drops, P-3,
-  Director to confirm**) · `helm/screener` (**RE-SCOPED: a thin feature-extraction adapter** over
+  `helm/`, disjoint-by-directory: `helm/ingest` · ~~`helm/universe`~~ (**DROPPED, D-TRADE-035 — not part
+  of the build; see `<2.2>`**) · `helm/screener` (**RE-SCOPED: a thin feature-extraction adapter** over
   `tools/rolling_watchlist.py` — imports the scanner, never forks it) · `helm/validation/{engine,audit}` ·
   `helm/storage` · `helm/spend`. **`tools/rolling_watchlist.py` is now a SHARED library** — imported by
   both `helm/screener` and `tools/web/` (D-TRADE-023), a single source of truth, not ingested/forked. Full
