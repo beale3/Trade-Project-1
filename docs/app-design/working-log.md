@@ -1787,3 +1787,40 @@ outstanding co-sign gate before canonical absorption.
 - **First real intraday data this project has ever pulled — Leg A/B's actual data contract (raw daily +
   raw event-day intraday) is now satisfied for a real, bounded sample**, not synthetic fixtures. Reporting
   both D-TRADE-040 and D-TRADE-041 complete to the Lead now.
+
+### [AIQ · 2026-08-31] D-TRADE-040/041 audit — MAJOR FINDING: split-exclusion coverage 3/30, not 3/3
+- Per the Director's build-chain discipline extension. Read `identify_events.py` in full before touching
+  anything; every check is my own code against the actual CSVs and `compute_relative_volume` called
+  directly (a raw primitive), never against `identify_events.py`'s own output as ground truth.
+- **NN-1 on `split_contaminated_mask`: confirmed safe.** Pure position arithmetic against a hardcoded,
+  already-known transition date — no row's exclusion depends on data after that row. The *discovery*
+  method (retrospective raw-vs-adjusted diff) is correctly self-disclosed by SDE1 as not generalizing to a
+  live/future pull — confirmed accurate, not a new issue.
+- **MAJOR FINDING: independently reproduced the raw-vs-adjusted divergence across all 100 tickers** (not
+  just SDE1's 4 spot-checked) — found **30 tickers with a genuine, clean, permanent in-window ratio step**
+  (verified several by hand: pre/post-jump ratio std ≈0.0, textbook reverse-split ratios like NKLA
+  0.033→1.0, TRVN 0.04→1.0). **Only 3 (ANY/AREBW/ASST) are in `SPLIT_TRANSITION_DATES`. 27 are missing**
+  (full ticker/date list in the findings doc).
+- **Quantified the impact, not just the gap:** 17 of the current 559 "clean" `event_days.csv` rows fall
+  within 20 trading days of one of the 27 missing transitions — several with the exact tell-tale extreme
+  signature SDE1's own docstring uses to define the problem (PSIG 937% gain/12.5x rel-vol, NUKK 825%, TCRT
+  590%, KZIA 366% — same order of magnitude as the ASST 455.74%/1312x founding example). **3 of these 17
+  already consumed real paid intraday-pull calls** (HTOO 2025-07-22, UPXI 2024-10-17, XHG 2024-12-09).
+- **Checked the Lead's specific ASST 2025-05-07 ask — correctly un-excluded, but SDE1's own docstring
+  characterization of WHY is wrong.** Mapped ASST's full ratio history: only 2 real transitions, neither
+  anywhere near 2025-05-07. Pulled the raw OHLCV directly: close 0.61→3.39, volume ~197K→**315.8M** shares
+  then sustained elevated (241.9M/54.4M/18.4M) over following days while price gradually decays — a real,
+  sustained multi-day market event (consistent with a short-squeeze/news spike), not a split-basis
+  discontinuity or a single bad tick. Correct outcome, wrong stated reason — the docstring should be fixed
+  so a future reader doesn't inherit the mischaracterization; no code change needed for this one event.
+- **Data sanity + point-in-time, both new files: zero violations.** `ohlcv_daily.csv` (raw, 45,426
+  rows/100 tickers) and `intraday_5m.csv` (15,703 rows/78 tickers): High≥Low, Close/Open in range, no
+  negative/zero volume or price, no dupes, no NaN — all clean. Every intraday bar's own date matches its
+  `event_date` exactly, 0 mismatches. 150-count cross-checked against `intraday_sample.csv` — matches.
+- **Not a co-sign as-is.** The mechanism is right (NN-1-safe, correctly diagnoses real splits where it's
+  been told about them) — coverage is the defect. Recommend: extend `SPLIT_TRANSITION_DATES` with the 27
+  found, re-run `identify_events.py` (559 will drop further), re-derive the intraday sample from the
+  corrected list (at minimum replace the 3 already-paid contaminated pulls), fix the ASST docstring.
+- Full findings + exact ticker/date list: `docs/eval/d-trade-040-041-audit.md`. Reporting to the Lead now —
+  flagging as high-severity given real spend already touched contaminated events, not holding this for a
+  routine end-of-task summary.
