@@ -1764,3 +1764,26 @@ outstanding co-sign gate before canonical absorption.
   docstring as a forward-looking gap (a real split detector needs an intrinsic method, e.g. a corporate-
   actions API or a joint price/volume-ratio heuristic), not solved here — out of this task's scope.
 - Pushed alongside D-TRADE-040 in the next commit. Moving to sampling ~150 of the 559 for D-TRADE-041.
+
+### [SDE1 · 2026-08-31] D-TRADE-041 executed — 150-event intraday pull, real 5-minute bars, first Leg-A/B-ready data
+- `helm/ingest/sample_events.py`: deterministic even-stride sample of the 559 cleaned events (ticker-then-
+  date sorted, same convention as the original 100-ticker cohort sample — no randomness, fully reproducible)
+  → **150 events, 78 unique tickers**, reasonable spread (median 1/ticker, max 6/ticker — not dominated by a
+  few names). Written to `helm/storage/data/intraday_sample.csv`, the checkable input to the pull.
+- Added `fetch_intraday_ohlcv`/`fetch_sampled_intraday` to `helm/ingest/massive.py` (5-minute bars, raw
+  prices per D-TRADE-039, one call per (ticker, event_date) pair) and `write_intraday_ohlcv` to
+  `helm/storage/raw_store.py` (long-format CSV, `event_date` carried explicitly alongside each bar's own
+  timestamp).
+- **Smoke-tested on 5 events before committing to the full run** (2.8s, 5/5 succeeded, no rate-limit
+  signal) — then executed the full 150. **150/150 succeeded, 15,703 bars, 79.8s total (~0.53s/call, same
+  pace as the smoke test and the D-TRADE-040 daily pull — no slowdown, no errors, no rate-limit signal
+  observed across the whole run, actively watched throughout per the standing condition, not just checked
+  at the end).**
+- Sanity-checked: 150/150 unique (ticker, event_date) pairs (exact match to the sample, no dupes/drops),
+  zero nulls, every bar's own timestamp date matches its labeled `event_date` (no cross-day contamination),
+  10-192 bars/event (median 100, plausible for a 5-min session with some extended-hours variation).
+  `spend_ledger.csv` now 460 rows total — the full honest history: 200 (D-TRADE-038 orig, incl. the 100
+  failed) + 10 (D-TRADE-039 verify) + 100 (D-TRADE-040 re-pull) + 150 (D-TRADE-041) = 460, exact.
+- **First real intraday data this project has ever pulled — Leg A/B's actual data contract (raw daily +
+  raw event-day intraday) is now satisfied for a real, bounded sample**, not synthetic fixtures. Reporting
+  both D-TRADE-040 and D-TRADE-041 complete to the Lead now.

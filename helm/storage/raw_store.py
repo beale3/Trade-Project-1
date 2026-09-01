@@ -37,6 +37,35 @@ def write_daily_ohlcv(data: dict, out_path: Path = None) -> Path:
     return out_path
 
 
+def write_intraday_ohlcv(data: dict, out_path: Path = None) -> Path:
+    """
+    data: {(ticker, event_date_str): DataFrame(Open,High,Low,Close,Volume,
+    DatetimeIndex of 5-min bars)} (helm.ingest.massive.fetch_sampled_intraday's
+    output shape). Writes one long-format CSV (event_date,ticker,bar_ts,
+    open,high,low,close,volume) -- event_date is carried explicitly
+    (distinct from bar_ts's own date) so a downstream reader can group by
+    "which sampled event" without re-deriving it from the first bar's
+    timestamp.
+    """
+    out_path = out_path or (DATA_DIR / "intraday_5m.csv")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    frames = []
+    for (ticker, event_date), df in data.items():
+        f = df.reset_index().rename(columns={
+            "date": "bar_ts", "Open": "open", "High": "high",
+            "Low": "low", "Close": "close", "Volume": "volume",
+        })
+        f.insert(0, "event_date", event_date)
+        f.insert(1, "ticker", ticker)
+        frames.append(f)
+
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(
+        columns=["event_date", "ticker", "bar_ts", "open", "high", "low", "close", "volume"])
+    combined.to_csv(out_path, index=False)
+    return out_path
+
+
 def append_spend_ledger(calls: list, provider: str, endpoint: str, out_path: Path = None) -> Path:
     """
     One row per provider call, even the failed/empty ones (D-TRADE-019) --
