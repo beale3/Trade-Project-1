@@ -1720,3 +1720,21 @@ outstanding co-sign gate before canonical absorption.
   as every pull so far.
 - Not yet re-pulled the full 100 — holding for the Lead/Director's decision on the open question before
   spending the next 100 calls.
+
+### [SDE1 · 2026-08-31] D-TRADE-040 executed — daily dataset re-pulled raw, old adjusted version preserved not overwritten
+- Verified D-TRADE-040 at source (`f435a33`) before acting. Preserved the superseded adjusted dataset —
+  `git mv ohlcv_daily.csv → ohlcv_daily_adjusted_D-TRADE-038_SUPERSEDED.csv` — before writing the new pull,
+  so no prior state is silently lost; `ohlcv_daily.csv` is now unambiguously the raw/authoritative file for
+  any downstream consumer that doesn't read this log.
+- Executed the same scope as D-TRADE-038 (same 100-ticker list, `2024-06-01` → fresh-recomputed
+  `execution_date − 45d`), now via the D-TRADE-039-fixed `adjusted=false` code. **100/100 tickers
+  succeeded, 45,426 rows (identical count to the original pull — same coverage, different prices), zero
+  nulls.** Timed the run (54.2s for 100 calls, ~0.54s/call, no errors/retries) — **no rate-limit signal
+  observed; flagging that I actively watched for one, per the standing condition, not that I skipped the
+  check because nothing went wrong.**
+- **Spot-verified the fix actually changed the data as expected**, not just that the pull succeeded: ANY,
+  AREBW, ASST (the 3 tickers already proven to diverge) show real differences from the old adjusted file;
+  ACFN (previously confirmed non-diverging) still matches — the same split/no-split pattern found during
+  D-TRADE-039's verification, now reproduced at full 100-ticker scale.
+- `spend_ledger.csv` append-only as designed — the D-TRADE-038 original 100 (failed+succeeded) and the
+  D-TRADE-039 10-ticker verification batch both remain, this run's 100 rows append on top.
