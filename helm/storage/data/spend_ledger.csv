@@ -459,3 +459,6 @@ ts,provider,endpoint,rows_returned,ok,est_cost,cumulative_day
 2026-09-01T01:49:29.316328+00:00,massive,v2/aggs/ticker/range/5/minute/YIBO@2024-12-04,42,True,0.0,258
 2026-09-01T01:49:29.316328+00:00,massive,v2/aggs/ticker/range/5/minute/YIBO@2025-05-14,146,True,0.0,259
 2026-09-01T01:49:29.316328+00:00,massive,v2/aggs/ticker/range/5/minute/ZEPP@2025-07-07,78,True,0.0,260
+2026-09-01T02:04:15.223928+00:00,massive,"v2/aggs/ticker/range/5/minute (D-TRADE-041 reconciliation, AIQ audit)/ACFN@2024-11-07",28,True,0.0,261
+2026-09-01T02:04:15.223928+00:00,massive,"v2/aggs/ticker/range/5/minute (D-TRADE-041 reconciliation, AIQ audit)/ACFN@2025-07-23",33,True,0.0,262
+2026-09-01T02:04:15.223928+00:00,massive,"v2/aggs/ticker/range/5/minute (D-TRADE-041 reconciliation, AIQ audit)/AEI@2025-09-03",191,True,0.0,263

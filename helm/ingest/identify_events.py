@@ -17,20 +17,38 @@ D-TRADE-040/041 addition: raw (unadjusted) prices have a real, discovered
 side effect -- a stock split makes the raw close/volume series jump
 discontinuously at the split-effective date, which pct_change()/
 compute_relative_volume() read as a spurious enormous "gain" + "volume
-spike" (found empirically: ASST 2025-05-07 shows gain_pct=455.74%,
-relative_volume=1312.00 -- not a real trading day, a split artifact).
-SPLIT_TRANSITION_DATES below is a ONE-TIME, exact list for the 3 tickers
-already proven (D-TRADE-039 verification) to have a split inside this
-pull's window, found by diffing this raw pull against the now-superseded
-adjusted dataset (ohlcv_daily_adjusted_D-TRADE-038_SUPERSEDED.csv) --
-this comparison-based method only works because that reference file still
-exists; it is NOT a general split detector and won't generalize to a
-future raw-only pull with no adjusted reference to diff against (flagged
-as a forward-looking gap, not solved here -- out of this task's scope).
+spike". SPLIT_TRANSITION_DATES below is a ONE-TIME, exact list found by
+diffing this raw pull against the now-superseded adjusted dataset
+(ohlcv_daily_adjusted_D-TRADE-038_SUPERSEDED.csv) -- this comparison-based
+method only works because that reference file still exists; it is NOT a
+general split detector and won't generalize to a future raw-only pull
+with no adjusted reference to diff against (flagged as a forward-looking
+gap, not solved here -- out of this task's scope).
+
+AIQ's independent D-TRADE-040/041 audit (docs/eval/d-trade-040-041-audit.md,
+2026-08-31) found the first version of this list covered only 3 of 30
+tickers with a genuine in-window transition (>15% relative step in the
+raw/adjusted close ratio between consecutive trading days, confirmed clean
+and permanent -- not reverting) -- independently re-reproduced by SDE1
+against all 100 tickers before extending this list, exact match to AIQ's
+27 additions (34 total transitions across 30 tickers). NOT every ticker
+with raw-vs-adjusted divergence belongs here -- some (e.g. RCON) have a
+constant ratio throughout the whole pulled window, meaning the split
+predates the pull's start; those introduce no IN-WINDOW pct_change()/
+rel-vol artifact and correctly need no entry (AIQ's audit sec-2).
+
 Excludes any event within 20 TRADING days after a transition (matching
 VOLUME_LOOKBACK -- the rolling relative-volume window stays contaminated
 by the pre/post-split volume-scale mismatch for that long), using each
 ticker's own trading-day index, not calendar days.
+
+ASST 2025-05-07 (gain_pct=455.74%, relative_volume=1312.00) is correctly
+NOT excluded -- it is nowhere near either of ASST's two real transitions.
+It is a REAL market event, not a split artifact (AIQ + Lead independently
+verified: close 0.61->3.39, volume 197K->315.8M shares, price then decays
+gradually over several days while volume stays elevated -- a sustained
+pattern, not a single corrupted tick or a split-basis jump). An earlier
+version of this docstring mischaracterized it as an artifact; corrected.
 """
 import sys
 from pathlib import Path
@@ -49,6 +67,33 @@ SPLIT_TRANSITION_DATES = {
     "ANY": [pd.Timestamp("2026-02-10")],
     "AREBW": [pd.Timestamp("2026-04-27")],
     "ASST": [pd.Timestamp("2024-07-02"), pd.Timestamp("2026-02-06")],
+    "BKYI": [pd.Timestamp("2026-04-30")],
+    "BTM": [pd.Timestamp("2026-02-23")],
+    "ENSC": [pd.Timestamp("2024-12-06")],
+    "GWH": [pd.Timestamp("2024-08-26")],
+    "HTOO": [pd.Timestamp("2025-07-14")],
+    "HYZN": [pd.Timestamp("2024-09-11")],
+    "ILLR": [pd.Timestamp("2026-06-23")],
+    "KZIA": [pd.Timestamp("2024-10-28"), pd.Timestamp("2025-04-17")],
+    "LESL": [pd.Timestamp("2025-09-29")],
+    "LUCY": [pd.Timestamp("2024-07-18")],
+    "LYEL": [pd.Timestamp("2025-06-02")],
+    "MSS": [pd.Timestamp("2026-04-24")],
+    "NKLA": [pd.Timestamp("2024-06-25")],
+    "NUKK": [pd.Timestamp("2024-10-24")],
+    "PHGE": [pd.Timestamp("2024-08-26"), pd.Timestamp("2025-11-25")],
+    "POLA": [pd.Timestamp("2024-11-19")],
+    "PSIG": [pd.Timestamp("2025-10-13")],
+    "SGN": [pd.Timestamp("2024-11-18")],
+    "SNSE": [pd.Timestamp("2025-06-17")],
+    "SRFM": [pd.Timestamp("2024-08-19")],
+    "TCRT": [pd.Timestamp("2024-07-18")],
+    "TRVN": [pd.Timestamp("2024-08-13")],
+    "UPXI": [pd.Timestamp("2024-10-03")],
+    "VATE": [pd.Timestamp("2024-08-09")],
+    "WORX": [pd.Timestamp("2026-04-10")],
+    "XHG": [pd.Timestamp("2024-11-08"), pd.Timestamp("2025-05-09")],
+    "ZEPP": [pd.Timestamp("2024-09-16")],
 }
 
 OHLCV_PATH = Path(__file__).resolve().parents[2] / "helm" / "storage" / "data" / "ohlcv_daily.csv"

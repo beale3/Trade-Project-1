@@ -1824,3 +1824,31 @@ outstanding co-sign gate before canonical absorption.
 - Full findings + exact ticker/date list: `docs/eval/d-trade-040-041-audit.md`. Reporting to the Lead now —
   flagging as high-severity given real spend already touched contaminated events, not holding this for a
   routine end-of-task summary.
+
+### [SDE1 · 2026-08-31] AIQ's D-TRADE-040/041 finding fixed — extended coverage, reconciled the sample, caught my own bug along the way
+- **Independently re-derived AIQ's finding before applying it, not just trusted it:** reproduced the
+  raw-vs-adjusted >15%-step detection across all 100 tickers myself — exact match, 30 tickers/34
+  transitions, identical dates. Extended `SPLIT_TRANSITION_DATES` from 3 to all 30. Re-ran
+  `identify_events.py`: **542 events (down from 559, 17 removed — exactly matching AIQ's table, confirming
+  no additional in-window events beyond what they'd already checked).**
+- **Reconciled the sample, not regenerated it** (per the Lead's instruction — completing the existing
+  authorization, not new scope): `helm/ingest/reconcile_d041_sample.py` confirmed the OLD 150-sample had
+  exactly the 3 contaminated events AIQ flagged (HTOO 2025-07-22, UPXI 2024-10-17, XHG 2024-12-09) and no
+  others, kept the 147 still-valid/already-paid events untouched, sampled 3 deterministic clean
+  replacements, and pulled intraday data for **only those 3** — not re-pulling the 147 already-good ones.
+- **Caught a real bug in my own reconciliation script before trusting its output:** first verification pass
+  showed `sample keys == intraday keys: False` despite both files reporting the right row counts — didn't
+  wave that off as a formatting quirk. Root cause: the 3 new rows' `event_date` was inserted as a raw
+  `.isoformat()` string while the 147 kept rows were `Timestamp`-typed; `pd.concat` silently mixed both
+  dtypes in one column, and `to_csv()` round-tripped them as two different string formats
+  (`"2024-11-07 00:00:00"` vs `"2024-11-07"`). Fixed the CSV directly (`format='mixed'` re-parse, no
+  re-pull needed — the underlying data was correct, only its string representation was inconsistent) and
+  fixed the root cause in the script (`pd.Timestamp(event_date)` before insert) so it doesn't recur if
+  re-run. Full re-verification after the fix: sample/intraday key sets match exactly, zero nulls, every
+  sampled event confirmed present in the corrected clean-event list, `spend_ledger.csv` at 463 rows (460 +
+  3 replacement calls, honest append-only history).
+- Fixed the docstring's ASST 2025-05-07 characterization per the Lead's specific ask — now states plainly
+  it's a real market event (independently corroborated by AIQ + Lead's own OHLCV pull), not a split
+  artifact; the exclusion behavior itself was already correct and needed no change.
+- Reporting to the Lead: fix complete, ready for AIQ's re-audit (not a rubber stamp — full re-derivation
+  against the corrected files, per their own stated standard).
