@@ -1738,3 +1738,29 @@ outstanding co-sign gate before canonical absorption.
   D-TRADE-039's verification, now reproduced at full 100-ticker scale.
 - `spend_ledger.csv` append-only as designed — the D-TRADE-038 original 100 (failed+succeeded) and the
   D-TRADE-039 10-ticker verification batch both remain, this run's 100 rows append on top.
+
+### [SDE1 · 2026-08-31] Re-identified event-days on corrected raw data; found + tested (not assumed) a real split-artifact risk, corrected my own overreach
+- Re-ran `identify_events.py` on the D-TRADE-040 raw data: **560 events (down from 651 under adjusted
+  prices)** — a real, expected change now that gain_pct/rel_vol are computed from corrected closes.
+- **Caught a genuine data-quality issue via manual inspection, not assumption:** ASST showed a
+  `gain_pct=455.74%, relative_volume=1312.00` "event" — investigated before trusting it. Confirmed
+  (precisely, by diffing this raw pull against the now-superseded adjusted file) 3 tickers have real split
+  transitions inside the window: ASST (2024-07-02, 2026-02-06), ANY (2026-02-10), AREBW (2026-04-27) — raw
+  prices/volumes jump discontinuously at these dates, which `pct_change()`/`compute_relative_volume()` can
+  misread as an organic move. Added `split_contaminated_mask()` to `identify_events.py`: excludes any
+  candidate event within 20 TRADING days (matching `VOLUME_LOOKBACK`, using each ticker's own trading-day
+  index) after a known transition. **559 events after exclusion — only 1 actually removed.**
+- **Went back and checked my own hypothesis before trusting the filter, and it was partly wrong:** the
+  transition DAYS themselves turned out NOT to spuriously qualify as events (`rel_vol` is actually LOW right
+  at a transition, 0.1x-0.7x, not high) — my initial worry about widespread contamination was overstated.
+  **And the specific 455.74%/1312x ASST event that triggered this whole investigation is REAL, not an
+  artifact** — checked for a coverage gap (none, consecutive trading days) and the raw OHLCV directly:
+  close jumped $0.61→$3.39 on 316M shares (vs. ~197K the prior day) — a genuine explosive move, exactly the
+  kind of event this cohort is designed to find, not a data defect. Correcting my own reasoning here rather
+  than silently keeping a filter that would have wrongly suppressed real data.
+- **Documented plainly as a one-time, non-general fix:** the transition-date list is a hardcoded, exact
+  result of diffing against a soon-to-be-deleted reference file (the old adjusted CSV) — it will NOT
+  generalize to a future raw-only pull with no adjusted file to compare against. Flagged in the module
+  docstring as a forward-looking gap (a real split detector needs an intrinsic method, e.g. a corporate-
+  actions API or a joint price/volume-ratio heuristic), not solved here — out of this task's scope.
+- Pushed alongside D-TRADE-040 in the next commit. Moving to sampling ~150 of the 559 for D-TRADE-041.
