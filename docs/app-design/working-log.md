@@ -1692,3 +1692,31 @@ outstanding co-sign gate before canonical absorption.
   ingest is point-in-time-safe for its stated purpose; row-count variance is explained by real market
   history. No blocker. Full audit: `docs/eval/d-trade-038-data-audit.md`.
 - Reporting to the Lead now (staged reporting, Director's directive).
+
+### [SDE1 · 2026-08-31] D-TRADE-039 — `helm/ingest/massive.py` flipped to raw prices, verified with real divergence, not just the param flip
+- **Scope exactly as dispatched:** flipped `adjusted=true` → `adjusted=false` in `helm/ingest/massive.py`
+  only (one line + a docstring note explaining why). Did NOT touch `tools/rolling_watchlist.py`'s own
+  `adjusted=true` live-scan call — out of scope per the Director's ruling, AIQ's own finding that the
+  distinction doesn't matter there.
+- **Verified with a real before/after check, not trust-the-parameter:** re-pulled 10 tickers raw
+  (`adjusted=false`) through the actual tracked `fetch_universe_daily`/`append_spend_ledger` path (10 real
+  calls, logged in `spend_ledger.csv`, tagged as a D-TRADE-039 verification pull — not part of any approved
+  Gate-2 scope, a diagnostic batch) and diffed against the existing D-TRADE-038 adjusted CSV for the same
+  ticker/dates. **3 of 10 tickers show clean, discrete divergence** — ANY (ratio 0.1 before a step, 1.0
+  after), AREBW (0.01 → 1.0), **ASST (0.01 → 0.05 → 1.0, two step-changes)** — exactly the signature of real
+  reverse splits (a constant ratio, not noise), not found from prior knowledge of these tickers' corporate
+  history but discovered empirically from the actual data. 7 of 10 show zero divergence (no split in-window
+  for those names) — the expected mix, not "everything differs" (which would suggest a bug) or "nothing
+  differs" (which would suggest the flip did nothing).
+- **Answering the Lead's re-pull question with a technical read, not just an opinion:** YES, the existing
+  D-TRADE-038 daily dataset (`3cf6cc7`) should be re-pulled before Leg A/B use it. This isn't a theoretical
+  risk anymore — I just proved at least 3 of the 100 approved tickers have MATERIAL (90-99%) price
+  differences between adjusted and raw in this exact dataset, over this exact window. Any Leg-A/B
+  computation touching ANY/AREBW/ASST (forward returns, trailing-stop trigger levels) using the existing
+  adjusted CSV would be silently wrong for those tickers specifically, not just theoretically inconsistent.
+  Given the same 100-ticker/date-range scope was already Director-approved once, re-pulling under the
+  corrected parameter is the same data source and method, not new scope in the D-TRADE-039 sense — but I'm
+  not self-authorizing another 100-call pull without the Lead/Director explicitly saying so, same discipline
+  as every pull so far.
+- Not yet re-pulled the full 100 — holding for the Lead/Director's decision on the open question before
+  spending the next 100 calls.

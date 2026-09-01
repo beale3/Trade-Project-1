@@ -10,6 +10,14 @@ HTTP call to api.massive.com lives here, parameterized by an explicit
 [start_date, end_date] historical window -- the scanner's own _massive_aggs
 only supports "N days back from today," which doesn't fit a point-in-time
 historical backtest pull (D-TRADE-037/038).
+
+D-TRADE-039: requests RAW (unadjusted) prices for Leg A/B specifically --
+adjusted historical prices can be retroactively restated by a later
+corporate action on this reverse-split-prone microcap cohort (AIQ's
+D-TRADE-038 audit finding). Deliberately diverges from
+tools/rolling_watchlist.py's own adjusted=true live-scan call, which stays
+adjusted (AIQ's own finding: the distinction doesn't matter there) -- do
+not "fix" this file to match that one.
 """
 import sys
 from datetime import date
@@ -37,7 +45,7 @@ def fetch_daily_ohlcv(ticker: str, start_date: date, end_date: date, api_key: st
     try:
         resp = requests.get(
             MASSIVE_AGGS_URL.format(ticker=ticker, start=start_date.isoformat(), end=end_date.isoformat()),
-            params={"adjusted": "true", "sort": "asc", "limit": 50000, "apiKey": api_key},
+            params={"adjusted": "false", "sort": "asc", "limit": 50000, "apiKey": api_key},
             timeout=20,
         )
         resp.raise_for_status()
