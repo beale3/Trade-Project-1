@@ -122,3 +122,38 @@ also have additional in-window events beyond what I checked), and re-derive the 
 corrected event list (at minimum, the 3 already-paid-for contaminated pulls should be replaced). Fix the
 docstring's ASST 2025-05-07 characterization to avoid a future reader inheriting the wrong reason. None of
 this is a redesign — the mechanism is right, the coverage just needs finishing.
+
+## Re-verification (2026-08-31) — fix confirmed, fully re-derived, all 6 checks pass. CO-SIGNED.
+SDE1 pushed a fix (`25ad716`). Re-derived every claim independently from raw primitives — never imported
+`identify_events.py`'s own output or trusted SDE1's/the Lead's report as ground truth, same discipline as
+the original audit.
+
+1. **Coverage complete, no second transitions missed.** Re-ran my exact >15%-ratio-step scan against the
+   current `ohlcv_daily.csv`/adjusted-superseded pair: **30 tickers, 34 total transitions — exact match**
+   to the corrected `SPLIT_TRANSITION_DATES`, date-for-date, ticker-for-ticker. Zero tickers found by me
+   that aren't in the list; zero date mismatches on any ticker (including the 4 with 2 transitions each).
+2. **Independently rebuilt `event_days.csv` from scratch** (my own re-implementation of
+   `identify_events_for_ticker`/`split_contaminated_mask`, calling `compute_relative_volume` directly —
+   never importing SDE1's module): **542 events, byte-identical to the delivered file** — 0 rows only in
+   mine, 0 rows only in theirs, 0 value mismatches on gain_pct/relative_volume across all 542 matched rows.
+   All 17 of my originally-flagged contaminated rows confirmed **gone** from both the actual file and my
+   independent rebuild.
+3. **All 150 intraday-sample events re-checked against the transition windows myself** (not just the 3
+   known replacements) — **0 land inside any of the 30 tickers' 20-trading-day contamination windows.**
+   The 3 originally-contaminated events (HTOO 2025-07-22, UPXI 2024-10-17, XHG 2024-12-09) are confirmed
+   gone from `intraday_sample.csv`; sample count still 150.
+4. **Dtype bug genuinely fixed, not just claimed.** Read the raw (unparsed) CSV directly: `event_date` and
+   `bar_ts` are uniformly `str` across all 15,561 rows with a single consistent format each (`YYYY-MM-DD`,
+   10 chars; `YYYY-MM-DD HH:MM:SS`, 19 chars) — checked by regex, not just Python type, since a
+   mixed-representation bug can hide behind "all strings" if the strings themselves have inconsistent
+   formats. Zero non-conforming rows.
+5. **Data sanity + point-in-time, regenerated `intraday_5m.csv`:** zero violations (High≥Low, Close/Open
+   in range, no negative/zero volume or price, no duplicate keys, no NaN); every bar's own date matches
+   its `event_date` exactly (0 mismatches, re-checked on the regenerated file).
+6. **Docstring fix (lines 45–51) reviewed — accurate, properly calibrated.** States the ASST event is real
+   and describes the observed pattern (price/volume trajectory) without overclaiming a specific cause
+   (doesn't assert "this was a short squeeze" as fact) and without understating that it was previously
+   mischaracterized. No further correction needed.
+
+**Verdict: CO-SIGNING.** Every one of my original findings is resolved and independently re-verified from
+raw data, not accepted on report. The mechanism was always sound; coverage is now complete.

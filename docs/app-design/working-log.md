@@ -1852,3 +1852,27 @@ outstanding co-sign gate before canonical absorption.
   artifact; the exclusion behavior itself was already correct and needed no change.
 - Reporting to the Lead: fix complete, ready for AIQ's re-audit (not a rubber stamp — full re-derivation
   against the corrected files, per their own stated standard).
+
+### [AIQ · 2026-08-31] D-TRADE-040/041 re-audit — fix confirmed, fully re-derived, CO-SIGNED
+- Full independent re-derivation per the Lead's 6-point dispatch, same discipline as the original audit —
+  never imported `identify_events.py`'s output, never trusted SDE1's or the Lead's report as ground truth.
+- **1-2. Coverage completeness:** re-ran my exact >15%-ratio-step scan against the current
+  `ohlcv_daily.csv`/adjusted-superseded pair — **30 tickers, 34 transitions, exact match** to the
+  corrected `SPLIT_TRANSITION_DATES`, date-for-date (including the 4 tickers with 2 transitions each).
+  Zero tickers or dates found by me that aren't already in the list.
+- **3. Independently rebuilt `event_days.csv` from scratch** (my own reimplementation, calling
+  `compute_relative_volume` directly, never importing SDE1's module) — **542 events, byte-identical to
+  the delivered file**: 0 rows only-mine, 0 rows only-theirs, 0 value mismatches across all 542 matched
+  rows. All 17 of my originally-flagged contaminated rows confirmed gone from both.
+- **4. Re-checked all 150 intraday-sample events myself** (not just the 3 known replacements) against the
+  30-ticker transition windows — **0 land inside any contamination window.** The 3 originally-contaminated
+  events confirmed gone; sample count still 150.
+- **5. Dtype bug genuinely fixed, verified by regex not just Python type** (a mixed-representation bug can
+  hide behind "all str" if formats differ) — `event_date`/`bar_ts` uniformly clean
+  `YYYY-MM-DD`/`YYYY-MM-DD HH:MM:SS` across all 15,561 raw intraday rows, 0 non-conforming. Data sanity +
+  point-in-time on the regenerated file: zero violations, 0 date mismatches.
+- **6. Docstring fix reviewed — accurate and properly calibrated**, describes the observed ASST pattern
+  without overclaiming a specific cause or understating the earlier mischaracterization.
+- **Verdict: CO-SIGNING.** Every finding from the original audit independently re-verified as resolved,
+  not accepted on report. Full re-verification: `docs/eval/d-trade-040-041-audit.md`. Reporting to the
+  Lead now.
