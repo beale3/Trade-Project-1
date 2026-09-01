@@ -145,6 +145,13 @@ must never read as decided (LL-31).
   fixed-N sensitivity only — the leakage-free-simplest option per ADR-0001 §10, not the train-fold-median
   alternative. This explicitly bypassed ADR-0001 §12's own stated AIQ co-sign expectation for these three
   numbers, at the Director's direct instruction — flagged, not hidden.
+  🔒 **RESOLVED (D-TRADE-039, 2026-08-31) — Leg A/B use RAW (unadjusted) prices, not
+  split/dividend-adjusted.** Surfaced by AIQ's D-TRADE-038 data-pull audit: `adjusted=true` was inherited
+  from `tools/rolling_watchlist.py`'s live-scan call, where it's harmless (a live scan always reads
+  today's own adjustment factor) — but load-bearing, and a genuine point-in-time risk, now that it feeds
+  an actual historical backtest on a reverse-split-prone microcap cohort. A deliberate, disclosed Director
+  choice, not an inherited default. Scoped to HELM's `helm/ingest/` pull path only — does **not** change
+  `tools/rolling_watchlist.py`'s existing live-scan behavior, which stays `adjusted=true`.
 
 ## 4 · Compliance / risk (bright-lines → armed gates, D-TRADE-006)
 - **`<4.1>` No secret in repo/logs** — provider keys live in the secret store only (B5).
