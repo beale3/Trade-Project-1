@@ -2064,3 +2064,32 @@ Pushed. All three D-TRADE-035/036/039 "ADR-0001 — named, not yet done" propaga
   block exposes: a cohort pre-selected on "big spike day" cannot test components that are themselves
   near-synonymous with "big spike day."
 - Pushed → origin/main (`7635bcc`). Reporting to the Lead; AIQ verifies the code change independently next.
+
+### [AIQ · 2026-09-06] D-TRADE-044 verified — correct implementation, Leg-B mapping ruled on
+- **Read the actual diff in full** (`bar.py`'s new required `n_comparison` param, `leg_a.py`'s pre-CV
+  floor + `n_not_fired`/`n_total` on the record, `leg_b.py`'s paired-arm mapping) before testing anything.
+- **Wrote my own negative-control fixtures** (`helm/validation/audit/stage4_d044_verification.py`) — 8
+  tests, different numbers from both AI/ML's (140/10, 75/75) and the Lead's own check, run directly
+  against the real armed functions (mechanism verification per protocol 14's admission test, distinct from
+  a real-data re-derivation — NN-3 governs the latter, not this). **8/8 pass**: exact 30/30 boundary runs
+  (inclusive ≥30), 29/31 correctly UNMEASURED with CV not run, my own strong-signal-but-imbalanced fixture
+  (205/15) correctly suppressed despite a signal that would have false-CLEARED under the old floor, the
+  same signal rebalanced (110/110) correctly still CLEARS (not a blanket suppressor), omitting
+  `n_comparison` raises `TypeError` not a silent skip, `VOID` still overrides even when the floor would
+  also fail, Leg B's paired floor correctly gates at n=28 vs n=30.
+- **Ruled on the flagged Leg-B mapping question, mine to own.** AI/ML's reading (the two paired arms are
+  the "two sides," equal by construction) is correct and properly disclosed rather than assumed — but I'm
+  naming plainly that it's **effectively vacuous**: since paired arms are always equal length, this can
+  never bind beyond the pre-existing single `n≥30` check D-TRADE-029 already provided; there's no
+  independently-sized second group for it to catch an imbalance in. Considered the real Leg-B analogue
+  (near-zero paired-difference variance across all trades — Leg B's version of `aligned_trigger`'s
+  constant-feature problem) and ruled **not to build a speculative new check now**: it's far less likely to
+  occur than the Leg-A case (two different exit mechanisms coinciding on every trade vs. a pre-selected
+  cohort making one binary trigger near-universal), and the existing unanimous-LOO-agreement check already
+  substantially covers the same spirit for Leg B's paired structure. If a future run ever shows that
+  near-zero-variance pattern, that's the trigger for a fresh proposal then, not now.
+- **Confirmed the headline is engine-computed, cross-checked against data I'd already independently
+  derived** (not the JSON treated as ground truth): Leg A `0/12/0/15`, Leg B `0/8/0/0` — recomputed from my
+  original D-TRADE-042 fired/not-fired counts (5 components fail the floor = 15 tests; the other 4
+  components' 12 tests were already DROPPED in my original run, unaffected) — exact match, independently.
+- Full detail: `docs/eval/d-trade-044-verification.md`. Reporting to the Lead now.
