@@ -55,6 +55,15 @@ must never read as decided (LL-31).
   trailing-stop rule belongs in Phase 1 (it's now Phase-1-critical per `<1.1>`) or Phase 2 is an open
   boundary question. The from-scratch predictive breakout-occurrence model (unchanged) stays Phase 2, out
   of scope now.
+  🔒 **D-TRADE-043 (2026-09-06): scoping formally dispatched to the Architect** — six required outputs
+  (boundary · `breakout_model` disposition · the validation bar for a predictive model · data requirements
+  · Phase 2 entry conditions · treatment of externally-built components) will resolve this marker; not yet
+  returned, boundary stays `▸ NOT DECIDED` until it is. **Ratified as a standing rule (not just this
+  instance):** scoping/design work is NOT gated by an open D-TRADE-010-class build freeze — only
+  build/train/data-pull actions are (precedent: ADR-0001 itself was authored and design-ratified,
+  D-TRADE-022/030, while D-TRADE-010 was fully in force). This is why Phase 2 scoping runs now, in
+  parallel with canonical Phase 1's still-open item 3 (the real Leg A/Leg B CV run, D-TRADE-042),
+  without waiting for Phase 1 closure — scoping is not build.
 
 ## 2 · Domain / data
 - **`<2.1>` External providers.**
