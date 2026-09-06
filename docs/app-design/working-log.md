@@ -1916,3 +1916,39 @@ PROPOSED. All 6 required outputs returned:
 - **Also outstanding (separate, flagged not done):** ADR-0001 housekeeping edits named in D-TRADE-035/036/039
   (§9 P-3 plain-drop, §10 OP-1/2/3 locked values, §6 raw-price note) — not part of this dispatch; offering to
   clean up as a follow-up so ADR-0001's text isn't stale against the CV run using it.
+
+### [AI/ML · 2026-09-06] D-TRADE-042 executed — the real Phase-1 Leg A/Leg B CV run, first time against real data
+- Resumed after a ~6-day gap (2026-08-31 → 2026-09-06) — did not trust the dispatch message on its own:
+  pulled clean, read D-TRADE-042's full decision text (incl. the Lead's §12 wave-entry ruling and the
+  spend-guard exemption reasoning), and independently re-confirmed zero provider-API calls in my own code
+  path myself (grepped for `requests`/Massive imports across `run_phase1_cv.py` +
+  `helm/screener`/`helm/validation/engine`) rather than trusting the Lead's grep alone.
+- **Built `helm/validation/run_phase1_cv.py`** — loads the real D-TRADE-040/041 CSVs, joins event-days to
+  intraday bars + daily forward returns, runs the existing (unmodified) Stage-1/2 engine against real data
+  for the first time. Three genuine data-construction decisions weren't pinned down before this run and are
+  documented explicitly in the script's own docstring (not buried): (1) Leg A is necessarily capped at the
+  150-event intraday-sampled subset, not the full 542-event cohort — the other ~392 events have no intraday
+  data to compute fired-flags from at all. (2) Leg A's forward-return target is daily-close-to-daily-close,
+  independent of intraday. (3) Leg B's two arms had to share one entry price for a valid pairing, but
+  `simulate_day_trades` is inherently same-day (no multi-day capability, not extended for this run) while
+  D-TRADE-036's N=5 baseline is a 5-**trading-day** horizon — resolved by anchoring both arms to the same
+  intraday entry price, with the fixed arm exiting at the daily close 5 days later.
+- **Results (full stats: `docs/eval/phase1-cv-results.md` + `helm/storage/phase1_cv_results.json`):** Leg A
+  26/27 DROPPED, 1/27 CLEARED (`opening_range_breakout`@1w: 0.46% RMSE improvement, 93.3% seed agreement —
+  small effect, short-interest-study-style caveat applies). Leg B all 7 configs DROPPED, primary decisively
+  so (−22.4pt mean diff, 100% LOO agreement, 2% seed agreement). No VOID, no UNMEASURED — n=148-150
+  throughout, well clear of D-TRADE-029's 30-event floor. **No tuning/re-gridding/re-selection performed on
+  any result**, per the Director's explicit instruction.
+- **🔴 Sanity-checked the results before trusting them, not just run-and-report.** `aligned_trigger`'s
+  148/148 fire rate (zero variance) looked suspicious enough to investigate by hand before writing anything
+  up — confirmed it's real (the cohort is pre-selected on a big spike day, which structurally implies
+  trading above yesterday's close almost all session) and mathematically degenerate
+  (`rmse_model_loo == rmse_naive_loo` exactly — a constant feature literally cannot beat naive). **This
+  surfaces a real gap in the D-TRADE-021/029 bar's own design**: the 30-event floor counts firings, not
+  comparison-group balance, so a fully-degenerate feature still produces a DROPPED verdict that reads as a
+  real tested-and-failed result when it isn't one. Flagged for AIQ/Architect as a future bar-revision
+  candidate — not something I patched myself mid-run. Also flagged the Leg-B duration-mismatch (same-day
+  exit vs. 5-day baseline) as a construction artifact worth AIQ's independent judgment, same discipline as
+  the Leg-B method itself was flagged at build time.
+- Pushed → origin/main (`26c6faf`). Reporting to the Lead now — AIQ's `reproduced_by_aiq` re-derivation is
+  the explicit next step before any CLEARED verdict counts as final.
