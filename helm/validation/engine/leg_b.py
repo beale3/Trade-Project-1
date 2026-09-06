@@ -64,7 +64,7 @@ not the design:
 """
 import numpy as np
 
-from helm.validation.engine.bar import clearance_verdict
+from helm.validation.engine.bar import MIN_SUPPORT, clearance_verdict
 
 PRIMARY_CONFIG = {"trail_pct": 8, "init_stop_pct": 3}  # D-TRADE-036
 SENSITIVITY_CONFIGS = (
@@ -155,14 +155,23 @@ def evaluate_exit_config(trailing_returns, fixed_returns, config_label, is_prima
     if len(y_t) != len(y_f):
         raise ValueError("trailing_returns and fixed_returns must be paired (same length)")
 
+    # D-TRADE-044's symmetric floor, mapped onto a PAIRED comparison: Leg B has
+    # no fired/not-fired split, so the "two sides" are the two arms (trailing vs
+    # fixed-N), which are equal by construction -- same trades, two exit rules.
+    # The floor therefore binds on the paired sample size itself. INTERPRETATION
+    # FLAGGED, not assumed silently: D-TRADE-044 and AIQ's proposal are both
+    # written in Leg-A terms (n_fired/n_not_fired) and neither spells out the
+    # Leg-B mapping; this reading satisfies the decision's "every leg" uniformity
+    # clause without changing any Leg-B outcome (both arms carry n=149).
     n_support = len(y_t)
-    if n_support < 30:
+    n_comparison = len(y_f)
+    if n_support < MIN_SUPPORT or n_comparison < MIN_SUPPORT:
         verdict = "UNMEASURED"
         loo_result = kfold_result = None
     else:
         loo_result = _loo_paired(y_t, y_f)
         kfold_result = _multiseed_kfold_paired(y_t, y_f)
-        verdict = clearance_verdict(loo_result, kfold_result, n_support)
+        verdict = clearance_verdict(loo_result, kfold_result, n_support, n_comparison)
         # Stage-2 audit fix (AIQ finding #4): no verdict-string downgrade here
         # anymore -- the true 4-state verdict is always returned. is_primary is
         # the ONLY clearance-eligibility signal (see module docstring's binding
@@ -171,6 +180,7 @@ def evaluate_exit_config(trailing_returns, fixed_returns, config_label, is_prima
 
     return {
         "config": config_label, "is_primary": is_primary, "n_support": n_support,
+        "n_comparison": n_comparison,
         "verdict": verdict, "loo": loo_result, "kfold": kfold_result,
         # Stage-2 audit (AIQ finding #2): Leg B checks whether the observed
         # advantage survives resampling the SAME known trades, not whether it

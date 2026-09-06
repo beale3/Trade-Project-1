@@ -14,7 +14,7 @@ stop LOGIC," not "wire verdicts into the live scanner").
 """
 import numpy as np
 
-from helm.validation.engine.bar import clearance_verdict
+from helm.validation.engine.bar import MIN_SUPPORT, clearance_verdict
 from helm.validation.engine.harness import evaluate_loo, evaluate_multiseed_kfold
 
 HORIZONS = ("1d", "1w", "1m")
@@ -42,10 +42,18 @@ def evaluate_component(fired_flags, forward_returns, component, horizon):
     if len(fired) != len(y):
         raise ValueError("fired_flags and forward_returns must be the same length")
 
+    n_total = int(len(fired))
     n_support = int(fired.sum())
-    if n_support < 30:
+    n_not_fired = n_total - n_support
+
+    # D-TRADE-044: BOTH sides must clear the floor. Checked before running CV --
+    # a degenerate/near-constant feature produces a meaningless fit, so there is
+    # nothing to gain by computing it. MIN_SUPPORT is imported, not re-typed, so
+    # this floor can never drift out of sync with bar.py's.
+    if n_support < MIN_SUPPORT or n_not_fired < MIN_SUPPORT:
         return {
             "component": component, "horizon": horizon, "n_support": n_support,
+            "n_not_fired": n_not_fired, "n_total": n_total,
             "verdict": "UNMEASURED", "loo": None, "kfold": None,
             "validation_kind": "held_out_prediction",
         }
@@ -53,10 +61,11 @@ def evaluate_component(fired_flags, forward_returns, component, horizon):
     X = fired.astype(float).reshape(-1, 1)
     loo_result = evaluate_loo(X, y)
     kfold_result = evaluate_multiseed_kfold(X, y)
-    verdict = clearance_verdict(loo_result, kfold_result, n_support)
+    verdict = clearance_verdict(loo_result, kfold_result, n_support, n_not_fired)
 
     return {
         "component": component, "horizon": horizon, "n_support": n_support,
+        "n_not_fired": n_not_fired, "n_total": n_total,
         "verdict": verdict, "loo": loo_result, "kfold": kfold_result,
         # Stage-2 audit (AIQ finding #2): this travels with every record, not just
         # a docstring -- Leg A genuinely predicts forward-return on data the fit

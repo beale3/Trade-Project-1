@@ -4,6 +4,8 @@
       "component": "bull_flag_breakout",
       "horizon": "1d",
       "n_support": 40,
+      "n_not_fired": 108,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -18,14 +20,14 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -2.283
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 108
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "bull_flag_breakout",
       "horizon": "1w",
       "n_support": 40,
+      "n_not_fired": 108,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -40,14 +42,14 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -1.713
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 108
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "bull_flag_breakout",
       "horizon": "1m",
       "n_support": 40,
+      "n_not_fired": 108,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -62,212 +64,113 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -0.965
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 108
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "flat_top_breakout",
       "horizon": "1d",
       "n_support": 131,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 30.089738,
-        "rmse_naive_loo": 30.10609,
-        "beats_naive_baseline": true,
-        "pct_improvement_vs_naive": 0.05
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 50.0,
-        "mean_pct_improvement_vs_naive": -0.106
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 17,
       "n_total": 148,
-      "n_not_fired": 17
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "flat_top_breakout",
       "horizon": "1w",
       "n_support": 131,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 41.160754,
-        "rmse_naive_loo": 41.171946,
-        "beats_naive_baseline": true,
-        "pct_improvement_vs_naive": 0.03
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 43.3,
-        "mean_pct_improvement_vs_naive": -0.084
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 17,
       "n_total": 148,
-      "n_not_fired": 17
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "flat_top_breakout",
       "horizon": "1m",
       "n_support": 131,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 74.962783,
-        "rmse_naive_loo": 75.280175,
-        "beats_naive_baseline": true,
-        "pct_improvement_vs_naive": 0.42
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 83.3,
-        "mean_pct_improvement_vs_naive": 0.346
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 17,
       "n_total": 148,
-      "n_not_fired": 17
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "abcd_pattern",
       "horizon": "1d",
       "n_support": 129,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 30.148773,
-        "rmse_naive_loo": 30.10609,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": -0.14
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": -0.3
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 19,
       "n_total": 148,
-      "n_not_fired": 19
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "abcd_pattern",
       "horizon": "1w",
       "n_support": 129,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 41.286012,
-        "rmse_naive_loo": 41.171946,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": -0.28
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 6.7,
-        "mean_pct_improvement_vs_naive": -0.532
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 19,
       "n_total": 148,
-      "n_not_fired": 19
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "abcd_pattern",
       "horizon": "1m",
       "n_support": 129,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 75.262444,
-        "rmse_naive_loo": 75.280175,
-        "beats_naive_baseline": true,
-        "pct_improvement_vs_naive": 0.02
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 40.0,
-        "mean_pct_improvement_vs_naive": -0.135
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 19,
       "n_total": 148,
-      "n_not_fired": 19
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "micro_pullback",
       "horizon": "1d",
       "n_support": 126,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 30.150644,
-        "rmse_naive_loo": 30.10609,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": -0.15
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 6.7,
-        "mean_pct_improvement_vs_naive": -0.198
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 22,
       "n_total": 148,
-      "n_not_fired": 22
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "micro_pullback",
       "horizon": "1w",
       "n_support": 126,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 41.281674,
-        "rmse_naive_loo": 41.171946,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": -0.27
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": -0.448
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 22,
       "n_total": 148,
-      "n_not_fired": 22
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "micro_pullback",
       "horizon": "1m",
       "n_support": 126,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 75.696242,
-        "rmse_naive_loo": 75.280175,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": -0.55
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": -0.648
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 22,
       "n_total": 148,
-      "n_not_fired": 22
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "round_number_breakout",
       "horizon": "1d",
       "n_support": 109,
+      "n_not_fired": 39,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -282,14 +185,14 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -0.351
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 39
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "round_number_breakout",
       "horizon": "1w",
       "n_support": 109,
+      "n_not_fired": 39,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -304,14 +207,14 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -0.765
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 39
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "round_number_breakout",
       "horizon": "1m",
       "n_support": 109,
+      "n_not_fired": 39,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -326,80 +229,47 @@
         "pct_seeds_beating_naive": 46.7,
         "mean_pct_improvement_vs_naive": -0.142
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 39
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "opening_range_breakout",
       "horizon": "1d",
       "n_support": 137,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 30.094247,
-        "rmse_naive_loo": 30.10609,
-        "beats_naive_baseline": true,
-        "pct_improvement_vs_naive": 0.04
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 53.3,
-        "mean_pct_improvement_vs_naive": -0.01
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 11,
       "n_total": 148,
-      "n_not_fired": 11
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "opening_range_breakout",
       "horizon": "1w",
       "n_support": 137,
-      "verdict": "CLEARED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 40.9836,
-        "rmse_naive_loo": 41.171946,
-        "beats_naive_baseline": true,
-        "pct_improvement_vs_naive": 0.46
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 93.3,
-        "mean_pct_improvement_vs_naive": 0.379
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 11,
       "n_total": 148,
-      "n_not_fired": 11
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "opening_range_breakout",
       "horizon": "1m",
       "n_support": 137,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 76.10021,
-        "rmse_naive_loo": 75.280175,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": -1.09
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": -1.86
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 11,
       "n_total": 148,
-      "n_not_fired": 11
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "premarket_pivot_break",
       "horizon": "1d",
       "n_support": 108,
+      "n_not_fired": 40,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -414,14 +284,14 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -0.404
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 40
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "premarket_pivot_break",
       "horizon": "1w",
       "n_support": 108,
+      "n_not_fired": 40,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -436,14 +306,14 @@
         "pct_seeds_beating_naive": 26.7,
         "mean_pct_improvement_vs_naive": -0.207
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 40
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "premarket_pivot_break",
       "horizon": "1m",
       "n_support": 108,
+      "n_not_fired": 40,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -458,14 +328,14 @@
         "pct_seeds_beating_naive": 6.7,
         "mean_pct_improvement_vs_naive": -1.428
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 40
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "premarket_high_break",
       "horizon": "1d",
       "n_support": 97,
+      "n_not_fired": 51,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -480,14 +350,14 @@
         "pct_seeds_beating_naive": 0.0,
         "mean_pct_improvement_vs_naive": -0.731
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 51
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "premarket_high_break",
       "horizon": "1w",
       "n_support": 97,
+      "n_not_fired": 51,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -502,14 +372,14 @@
         "pct_seeds_beating_naive": 50.0,
         "mean_pct_improvement_vs_naive": 0.053
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 51
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "premarket_high_break",
       "horizon": "1m",
       "n_support": 97,
+      "n_not_fired": 51,
+      "n_total": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -524,81 +394,47 @@
         "pct_seeds_beating_naive": 6.7,
         "mean_pct_improvement_vs_naive": -1.115
       },
-      "validation_kind": "held_out_prediction",
-      "n_total": 148,
-      "n_not_fired": 51
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "aligned_trigger",
       "horizon": "1d",
       "n_support": 148,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 30.10609,
-        "rmse_naive_loo": 30.10609,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": 0.0
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": 0.0
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 0,
       "n_total": 148,
-      "n_not_fired": 0
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "aligned_trigger",
       "horizon": "1w",
       "n_support": 148,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 41.171946,
-        "rmse_naive_loo": 41.171946,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": 0.0
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": 0.0
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 0,
       "n_total": 148,
-      "n_not_fired": 0
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     },
     {
       "component": "aligned_trigger",
       "horizon": "1m",
       "n_support": 148,
-      "verdict": "DROPPED",
-      "loo": {
-        "n": 148,
-        "rmse_model_loo": 75.280175,
-        "rmse_naive_loo": 75.280175,
-        "beats_naive_baseline": false,
-        "pct_improvement_vs_naive": 0.0
-      },
-      "kfold": {
-        "n_seeds": 30,
-        "n_splits": 5,
-        "pct_seeds_beating_naive": 0.0,
-        "mean_pct_improvement_vs_naive": 0.0
-      },
-      "validation_kind": "held_out_prediction",
+      "n_not_fired": 0,
       "n_total": 148,
-      "n_not_fired": 0
+      "verdict": "UNMEASURED",
+      "loo": null,
+      "kfold": null,
+      "validation_kind": "held_out_prediction"
     }
   ],
   "leg_b_primary": {
     "config": "trail=8/init=3 vs N=5",
     "is_primary": true,
     "n_support": 149,
+    "n_comparison": 149,
     "verdict": "DROPPED",
     "loo": {
       "n": 149,
@@ -618,6 +454,7 @@
       "config": "trail=5/init=2 vs N=5 (sensitivity)",
       "is_primary": false,
       "n_support": 149,
+      "n_comparison": 149,
       "verdict": "DROPPED",
       "loo": {
         "n": 149,
@@ -636,6 +473,7 @@
       "config": "trail=5/init=3 vs N=5 (sensitivity)",
       "is_primary": false,
       "n_support": 149,
+      "n_comparison": 149,
       "verdict": "DROPPED",
       "loo": {
         "n": 149,
@@ -654,6 +492,7 @@
       "config": "trail=8/init=2 vs N=5 (sensitivity)",
       "is_primary": false,
       "n_support": 149,
+      "n_comparison": 149,
       "verdict": "DROPPED",
       "loo": {
         "n": 149,
@@ -672,6 +511,7 @@
       "config": "trail=12/init=2 vs N=5 (sensitivity)",
       "is_primary": false,
       "n_support": 149,
+      "n_comparison": 149,
       "verdict": "DROPPED",
       "loo": {
         "n": 149,
@@ -690,6 +530,7 @@
       "config": "trail=12/init=3 vs N=5 (sensitivity)",
       "is_primary": false,
       "n_support": 149,
+      "n_comparison": 149,
       "verdict": "DROPPED",
       "loo": {
         "n": 149,
@@ -708,6 +549,7 @@
       "config": "trail=8/init=3 vs N=1 (sensitivity)",
       "is_primary": false,
       "n_support": 150,
+      "n_comparison": 150,
       "verdict": "DROPPED",
       "loo": {
         "n": 150,
@@ -726,6 +568,7 @@
       "config": "trail=8/init=3 vs N=21 (sensitivity)",
       "is_primary": false,
       "n_support": 148,
+      "n_comparison": 148,
       "verdict": "DROPPED",
       "loo": {
         "n": 148,
@@ -741,6 +584,18 @@
       "validation_kind": "stability_check"
     }
   ],
+  "leg_a_tally": {
+    "CLEARED": 0,
+    "DROPPED": 12,
+    "VOID": 0,
+    "UNMEASURED": 15
+  },
+  "leg_b_tally": {
+    "CLEARED": 0,
+    "DROPPED": 8,
+    "VOID": 0,
+    "UNMEASURED": 0
+  },
   "leg_a_skipped": [
     {
       "ticker": "DZZ",

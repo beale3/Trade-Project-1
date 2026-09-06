@@ -198,11 +198,10 @@ def main():
         n = sum(1 for _, _, rr in skipped_a if rr == reason)
         print(f"  skipped ({n}): {reason}")
 
+    # n_total/n_not_fired now come from leg_a.evaluate_component itself (D-TRADE-044
+    # armed in the engine), so the record is self-describing rather than patched
+    # here by the caller.
     leg_a_results = leg_a.evaluate_all(component_flags, forward_returns)
-    n_total_a = len(forward_returns["1d"])
-    for r in leg_a_results:
-        r["n_total"] = n_total_a
-        r["n_not_fired"] = n_total_a - r["n_support"]
 
     print("\n=== LEG A VERDICTS ===")
     for r in leg_a_results:
@@ -239,10 +238,27 @@ def main():
     for r in leg_b_sensitivity:
         print(f"  {r['config']:40s} n_support={r['n_support']:3d}  verdict={r['verdict']}")
 
+    # Headline tally, computed here so it never needs manual recomputation
+    # downstream (D-TRADE-044 dispatch). States all four ratified verdict
+    # states explicitly, including zero-counts, so a reader can see what was
+    # checked rather than infer it from omissions.
+    states = ("CLEARED", "DROPPED", "VOID", "UNMEASURED")
+    leg_a_tally = {s: sum(1 for r in leg_a_results if r["verdict"] == s) for s in states}
+    leg_b_all = [leg_b_primary] + leg_b_sensitivity
+    leg_b_tally = {s: sum(1 for r in leg_b_all if r["verdict"] == s) for s in states}
+
+    print("\n=== HEADLINE (D-TRADE-044 symmetric floor armed) ===")
+    print(f"  Leg A ({len(leg_a_results)} tests): "
+          + " / ".join(f"{leg_a_tally[s]} {s}" for s in states))
+    print(f"  Leg B ({len(leg_b_all)} configs, 1 primary + {len(leg_b_sensitivity)} sensitivity): "
+          + " / ".join(f"{leg_b_tally[s]} {s}" for s in states))
+
     results = {
         "leg_a": leg_a_results,
         "leg_b_primary": leg_b_primary,
         "leg_b_sensitivity": leg_b_sensitivity,
+        "leg_a_tally": leg_a_tally,
+        "leg_b_tally": leg_b_tally,
         "leg_a_skipped": [{"ticker": t, "date": d, "reason": r} for t, d, r in skipped_a],
         "leg_b_skipped": [{"ticker": t, "date": d, "reason": r} for t, d, r in skipped_b],
     }
