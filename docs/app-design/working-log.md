@@ -1952,3 +1952,15 @@ PROPOSED. All 6 required outputs returned:
   the Leg-B method itself was flagged at build time.
 - Pushed → origin/main (`26c6faf`). Reporting to the Lead now — AIQ's `reproduced_by_aiq` re-derivation is
   the explicit next step before any CLEARED verdict counts as final.
+
+### [Architect · 2026-09-06] ADR-0001 R2 text aligned to post-R2 ratifications (Lead-authorized housekeeping)
+Text-only, no design change — brings R2's wording into line with decisions ratified after it was written
+(canonical already governs on any conflict; this removes staleness against the live D-TRADE-042 CV run):
+- **Status line:** PROPOSED/awaiting-co-sign → ✅ RATIFIED+ABSORBED (D-TRADE-030), build-GO (D-TRADE-034).
+- **§9 P-3 + §4/§5 + §14:** `helm/universe` "CONDITIONAL/likely drops" → **DROPPED (D-TRADE-035)**; Data-Eng
+  references removed with the lane.
+- **§10 OP-1/2/3:** "e.g."/"recommend" ranges → **LOCKED (D-TRADE-036)**: OP-1 trail∈{5,8,12}/init∈{2,3},
+  primary cell trail=8/init=3; OP-2 = 1d/1w/1m; OP-3 = fixed N=5 (N=1/N=21 sensitivity). P-4 marked LOCKED.
+- **§6.5 (new):** price-data contract = **RAW/unadjusted (D-TRADE-039)**, `adjusted=false` for Leg A/B;
+  explicitly does not touch the scanner's live-scan `adjusted=true`.
+Pushed. All three D-TRADE-035/036/039 "ADR-0001 — named, not yet done" propagation items now closed.

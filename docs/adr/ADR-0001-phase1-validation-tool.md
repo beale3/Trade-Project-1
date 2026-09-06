@@ -1,9 +1,11 @@
 # ADR-0001 — HELM Phase-1: validation-tool structure, stack, lanes & the validation contract
 
-- **Status:** PROPOSED · **Revision 2 (2026-08-04, D-TRADE-028) + co-sign amendments** — re-authored, not
-  patched (LL-19/protocol 19). R2 supersedes R1's options framing entirely; the §14 delta declares every
-  removal/change (ADR-0001 §13 / A6a-A6b) + the AI/ML + AIQ co-sign amendments folded in pre-ratification.
-  Awaiting AIQ's re-review (its 3 objections now addressed) + Director wave-entry GO.
+- **Status:** ✅ **RATIFIED + ABSORBED into canonical `<3.5>`/`<3.6>` (D-TRADE-030).** Revision 2
+  (2026-08-04, D-TRADE-028) — re-authored, not patched (LL-19/protocol 19); AI/ML + AIQ both co-signed the
+  actual revised text; §14 declares every removal/change (§13 / A6a-A6b). **Build-GO issued (D-TRADE-034);
+  P-3/P-4 resolved (D-TRADE-035/036); price-data contract ruled (D-TRADE-039).** This text has been aligned
+  to those post-R2 ratifications (2026-09-06 housekeeping, Lead-authorized): §4/§5/§9 `helm/universe` DROPPED,
+  §10 OP-1/2/3 locked numbers, §6.5 raw-price note. Only P-5 (B5) remains before a real live-key run.
 - **adr_reference id:** `ADR-0001` (unchanged — build tasks keep citing it; protocol 8).
 - **Author:** Principal Architect (Fable5·Max). **R1:** 2026-08-01 (options). **R2:** 2026-08-04 (equity + trailing-stop).
 - **Governs:** canonical `<1.1>` `<1.4>` `<2.1>` `<2.2>` `<3.1>` `<3.2>` `<3.4>` `<3.5>` `<3.6>` `<4.1>` `<4.2>`;
@@ -72,7 +74,7 @@ does not bite a Python-only phase.
 | Module | Purpose | Owner | Oracle leg it feeds |
 |---|---|---|---|
 | `helm/ingest/` | provider adapters (Massive, SEC-API.io), **point-in-time** pulls; the **ONLY** place a provider SDK/host may appear (leg T) | SDE1 · Data-Eng | SecOps leg T; SDE1 schema/freshness |
-| `helm/universe/` | **CONDITIONAL — likely DROPS for Phase 1** (§9 P-3): scanner takes `--tickers`; validation runs over the studies' existing event-defined cohorts, not a maintained live universe | Data-Eng | (drops with the lane if confirmed) |
+| ~~`helm/universe/`~~ | **DROPPED for Phase 1 (D-TRADE-035):** scanner takes `--tickers`; validation runs over the studies' existing event-defined cohorts, not a maintained live universe | — (lane dropped) | — |
 | `helm/screener/` | **RE-SCOPED:** a thin **feature-extraction adapter** over `tools/rolling_watchlist.py` — exposes each component's per-bar signal (guardrail pass · S3 score · each pattern fire · pivot alignment) as a tidy feature frame the CV harness consumes. Imports the scanner as a library; **never forks its logic** | AI/ML | gate-flag conformance leg (NN-4) |
 | `helm/validation/engine/` | walk-forward-CV: `evaluate_loo`/`evaluate_multiseed_kfold`, the D-TRADE-021 bar, the two-leg contract (§6.2), verdict records | AI/ML (build) | AI/ML CV pass/fail leg |
 | `helm/validation/audit/` | **AIQ** re-derives from RAW data; **must not import `engine`'s outputs** (builder≠judge as an import rule) | AIQ | AIQ re-derivation leg |
@@ -89,7 +91,7 @@ lookahead/alignment bug there would otherwise be inherited silently by both the 
 builder≠judge would be defeated at the feature layer); provider SDK/host imports only under `helm/ingest`.
 
 ## 5 · Lane re-cut (R2 — absorb into charter §3)
-A ingest+store (SDE1·Data-Eng) — `helm/ingest`,`helm/storage` (**universe conditional, §9 P-3**) · B screener
+A ingest+store (SDE1) — `helm/ingest`,`helm/storage` (**`helm/universe` DROPPED, D-TRADE-035**) · B screener
 adapter (AI/ML) — `helm/screener` · C validation engine (AI/ML) — `helm/validation/engine` · D validation
 audit (AIQ, independent) — `helm/validation/audit` · E infra/CI/gate/spend (DevOps·FinOps). Plus the **shared**
 `tools/rolling_watchlist.py` (AI/ML owns the trailing-stop addition; coordinate with D-TRADE-023).
@@ -167,6 +169,13 @@ CV** — pick on the inner/training folds, score on the held-out outer fold, agg
 **never** pick whatever scores best on the full/test sample. Reporting all pre-registered points needs no
 selection and is the simpler default.
 
+**6.5 Price-data contract (🔒 D-TRADE-039).** Leg A/B use **RAW (unadjusted) historical prices** —
+`helm/ingest/massive.py` pulls with `adjusted=false`, a deliberate recorded choice, not the inherited
+`adjusted=true` default. Adjusted prices can be retroactively restated by later corporate actions (a real
+point-in-time/look-ahead risk on this reverse-split-prone microcap cohort), so they are barred for the
+historical backtest. **Explicitly does NOT touch `tools/rolling_watchlist.py`'s live-scan behavior**, which
+stays `adjusted=true` (AIQ's finding: the distinction is harmless for a live scan reading today's own factor).
+
 **Serialization/serializer** rules unchanged: NaN→null, Timestamp→ISO8601, DataFrame→records.
 
 ## 7 · Integration impact (R2)
@@ -204,31 +213,27 @@ NN-1/2/3/4/10 = **CRITICAL** (they define what "cleared" means + the new leakage
   outside D-TRADE-010's intent (Lead's recommendation; not yet ruled). Design proceeds; **no production code until P-1**.
 - **P-2 · MOOT (D-TRADE-028).** The "missing screener/0DTE ZIPs" were never missing — the scanner is
   `tools/rolling_watchlist.py`, in-repo. No artifact-location work remains.
-- **P-3 · `<2.2>` universe decision** (Director — **Data-Eng is unseated**, so the Lead is taking this
-  straight to the Director rather than a seat that doesn't exist): confirm the Phase-1 backtest cohort = the
-  studies' existing event-defined datasets + user-supplied tickers (⇒ `helm/universe` lane **drops**, and
-  NN-5/§4-§5's Data-Eng references vanish with it), vs. a maintained universe (⇒ lane stays; with Data-Eng
-  unseated its residual duties fall to **SDE1** until/unless the seat is created). *Recommend drop* —
-  matches the scanner's `--tickers` status quo + the studies' own cohorts, and needs no unseated role.
-- **P-4 · Ratify the Leg-A horizon + Leg-B baseline + the pre-registered trail set** (Director + AI/ML + AIQ)
-  before the run (LL-44). The D-TRADE-021 *bar* and the OP-5 support-floor (D-TRADE-029, =30) are already
-  ratified; what's open is the remaining label parameters (OP-1..3).
+- **P-3 · `<2.2>` universe decision — 🔒 RESOLVED (D-TRADE-035): `helm/universe` DROPS for Phase 1.** The
+  backtest cohort is the studies' existing event-defined datasets + user-supplied `--tickers` (the scanner's
+  status quo); no maintained universe list. NN-5's residual cohort duty and the §4/§5 Data-Eng references
+  drop with the lane (the seat was never spawned; no residual coverage needed).
+- **P-4 · 🔒 LOCKED (D-TRADE-036) — the Leg-A horizon + Leg-B baseline + the pre-registered trail set are
+  ratified** (see OP-1/2/3 below). The D-TRADE-021 bar and the OP-5 support-floor (D-TRADE-029, =30) were
+  already ratified. No open label parameters remain for Phase 1.
 - **P-5 · B5 secret approval** before any live-key use.
 
 ## 10 · Open points (LL-31) & non-goals (R2)
-- **OP-1 · the pre-registered trailing-stop set** (Director + AI/ML + AIQ): which `{trail_pct, init_stop_pct}`
-  settings Phase 1 tests. *Recommend* a small fixed grid (e.g. trail ∈ {5,8,12}%, init ∈ {2,3}%) fixed before
-  the run — **not** an optimization (Phase 2, `<1.4>`). **Anti-cherry-pick (AIQ objection #3):** exactly ONE
-  pre-registered grid cell is the **primary, clearance-eligible** config; the remaining cells are
-  **sensitivity-only — reported, never a clearance claim**. (Alternatively a stated multiplicity correction,
-  or nested-CV selection per §6.4 — but the single-primary-cell rule is the simplest leakage-free default and
-  is what I recommend.) "Test all 6, report whichever clears" is barred.
-- **OP-2 · Leg-A evaluation horizon** (AI/ML): the fixed forward window for entry-signal ranking. *Recommend*
-  the studies' existing 1d/1w/1m set (directly comparable to the 4 completed studies).
-- **OP-3 · Leg-B naive baseline** (AI/ML + AIQ): fixed-holding-period exit. *Recommend* N = the median
-  realized holding period of the trailing-stop arm (horizon-matched), **but computed train-fold-only per
-  NN-10** (never from the test-fold trades it's compared against — AIQ #2), plus a couple of fixed N as
-  sensitivity. A fully pre-registered fixed N is the leakage-free simplest option.
+- **OP-1 · the pre-registered trailing-stop set — 🔒 LOCKED (D-TRADE-036):** `trail_pct ∈ {5, 8, 12}`,
+  `init_stop_pct ∈ {2, 3}` (6 cells); **primary, clearance-eligible cell = trail_pct=8, init_stop_pct=3**
+  (middle trail + looser init floor, to reduce early-noise whipsaw while still bounding max loss). The other
+  5 cells are **sensitivity-only, never a clearance claim** (anti-cherry-pick, AIQ objection #3). "Test all 6,
+  report whichever clears" is barred.
+- **OP-2 · Leg-A evaluation horizon — 🔒 LOCKED (D-TRADE-036):** the studies' existing **1d/1w/1m** set
+  (directly comparable to the 4 completed studies).
+- **OP-3 · Leg-B naive baseline — 🔒 LOCKED (D-TRADE-036):** a **fully pre-registered fixed N = 5 trading
+  days** (the leakage-free simplest option this ADR flagged as preferred; horizon-matched to the 1w Leg-A
+  window). `N=1` and `N=21` (~1mo) are recorded as fixed-N **sensitivity** checks only. (The train-fold-derived-
+  median alternative was NOT chosen — the fixed N is data-independent by construction, satisfying NN-10 trivially.)
 - **OP-4 · component list** (final): drop IV-rank; test {each of the 8 pattern detectors, pivot/red-to-green trigger}
   as Leg-A entry signals + the trailing stop as Leg-B. The already-validated study components
   (short-interest kept, catalyst/float/regime as-ruled) are **not** re-litigated.
@@ -282,7 +287,8 @@ R2's own delta is §14.
 - component list — **RE-RESOLVED:** drop IV-rank; add pattern detectors + pivot/red-to-green trigger.
 - `helm/screener` purpose — **REPAIRED (re-scoped):** "ingest the missing options screener" → thin
   feature-extraction adapter over the in-repo scanner.
-- `helm/universe` — **RE-RESOLVED (conditional):** likely dropped for Phase 1 (P-3).
+- `helm/universe` — **RESOLVED: DROPPED for Phase 1 (D-TRADE-035)** (was "conditional" in R2; the Director
+  ratified the drop 2026-08-30).
 - NN-5 — **REPAIRED:** options-universe integrity → generic cohort integrity (no options-chain clause).
 
 **Carried forward UNCHANGED (explicit — not silently retained):** NN-1 (no-lookahead/point-in-time),
