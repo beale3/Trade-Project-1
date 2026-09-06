@@ -1964,3 +1964,46 @@ Text-only, no design change — brings R2's wording into line with decisions rat
 - **§6.5 (new):** price-data contract = **RAW/unadjusted (D-TRADE-039)**, `adjusted=false` for Leg A/B;
   explicitly does not touch the scanner's live-scan `adjusted=true`.
 Pushed. All three D-TRADE-035/036/039 "ADR-0001 — named, not yet done" propagation items now closed.
+
+### [AIQ · 2026-09-06] D-TRADE-042 independent re-derivation + 2 methodology judgments + ADR-0003 co-sign
+- **D-TRADE-042: full independent re-derivation, exact match on every number.** Wrote
+  `helm/validation/audit/stage3_phase1_cv_audit.py` — reimplements the entire pipeline from scratch (own
+  harness, own bar logic, own feature/label construction) calling `tools.rolling_watchlist`'s raw
+  primitives directly; never imports `helm.screener.adapter` or `helm.validation.engine` (NN-3). All 27
+  Leg-A fired-counts, the CLEARED result's exact LOO/kfold numbers (40.98360/41.17195/93.3%), the
+  `aligned_trigger` degeneracy (bit-for-bit `rmse_model==rmse_naive` on all 3 horizons, confirmed
+  mechanically: a constant regressor makes OLS degenerate to the training-fold mean, "beats naive" is
+  mathematically impossible), and all 8 Leg-B configs (primary −22.4426pts, 100% LOO agreement, 2.0% kfold,
+  all sensitivity n-counts) — **exact match** to `phase1-cv-results.md`. **`reproduced_by_aiq=TRUE` is
+  warranted for `opening_range_breakout`@1w** per D-TRADE-021/`<3.4>`.
+- **Judgment 1 — `aligned_trigger`/class-balance finding: confirmed real, recommending a bar addition.**
+  The floor counts firings, not comparison-group balance — a genuine, previously-uncaught gap, not milder
+  noise. **Recommend a symmetric floor: UNMEASURED unless both n_fired≥30 AND n_not_fired≥30**, reusing
+  D-TRADE-029's existing number rather than inventing a new one. Stated the consequence plainly rather than
+  softening it: applying this now would flip BOTH `aligned_trigger` and the one CLEARED result
+  (`opening_range_breakout`@1w, only 11 non-firing observations) to UNMEASURED — batch becomes 0/25/2, not
+  1/26/0. Mine to propose (same route as D-TRADE-021/029, Lead/Director ratifies), not self-applied.
+- **Judgment 2 — Leg-B's same-day-vs-5-day construction: defensible-as-disclosed, but confounded, verdict
+  stands as computed with the caveat attached.** Endorsed `run_phase1_cv.py`'s own self-assessment as
+  accurate rather than just accepting it — the −22.4pt DROPPED result conflates exit-rule quality with
+  holding-period length, so it answers a different, less useful question than ADR-0001 §6.2 actually posed.
+  Agreed with the Lead's framing: a re-construction needs fresh Director/AIQ sign-off BEFORE any re-run,
+  not after seeing this unfavorable result — even a well-motivated fix, done now, is the same process risk
+  the anti-tuning rule exists to prevent. Named two candidate fix directions (same-day/N=0 baseline using
+  the existing simulator; or extending `simulate_day_trades` to real multi-day capability) without
+  pre-committing to either — that choice belongs in a fresh proposal, not this audit.
+  Full detail: `docs/eval/d-trade-042-cv-reaudit.md`.
+- **ADR-0003 (§3 + §4, load-bearing co-sign): CO-SIGNED, 3 additive items for E-2, not a redesign.** §3
+  ("reused code does NOT inherit validation") is sound, no objections — correctly separates reusable
+  engineering from an inherited validation claim, same distinction my own audits already rely on. §4's bar
+  redesign (fold-consistency + ≥30-model-seed sensitivity replacing seed-shuffle agreement, since random
+  k-fold leaks time-order for a walk-forward classifier) is a genuinely well-reasoned decomposition, not a
+  weakening — endorsed. **3 items flagged:** (1) the primary baseline ("no-trade / base-rate-entry") is
+  ambiguous between two materially different comparators — recommend "no-trade" (EV=0) as the single
+  primary, base-rate-entry as a named secondary; (2) make the fold-consistency-AND-model-seed-sensitivity
+  relationship explicit at E-2, not implicit; (3) **cross-referenced today's Leg-B finding directly** — E-1's
+  escalation trigger ("if NOT-CLEARED/UNMEASURED") should explicitly cover "DROPPED under a disclosed
+  confound" too, since that's exactly Leg B's actual current state and Phase 2's own exit-mechanism
+  assumption depends on it. Full detail: `docs/eval/adr-0003-review.md`.
+- All three: reported to the Lead now, per their "report back on all three or the moment you hit a
+  blocker" — no blockers hit, all three completed in one pass.
