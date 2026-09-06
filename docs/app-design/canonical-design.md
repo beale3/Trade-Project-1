@@ -48,22 +48,29 @@ must never read as decided (LL-31).
   surface; no "regulated advice to others" question).
 - **`<1.3>` Cost model = billed per-use** (D-TRADE-004), but at **personal scale** — a spend GUARD
   (cap + visibility), not a SaaS-grade metered-chokepoint/billing-reconciliation system. See `<3.2>`.
-- **`<1.4>` Phase 2 — re-scoped, ▸ NOT DECIDED on the exact boundary, dispatched to the Architect.** The
-  old plan ("reuse the 0DTE backtest engine's slippage/spread modeling" for option P&L) is **deleted** —
-  there is no 0DTE engine in scope. `simulate_day_trades()` already does realistic stock-trade P&L
-  simulation (stop-loss, target, daily-loss/profit-giveback halts); whether validating the new
-  trailing-stop rule belongs in Phase 1 (it's now Phase-1-critical per `<1.1>`) or Phase 2 is an open
-  boundary question. The from-scratch predictive breakout-occurrence model (unchanged) stays Phase 2, out
-  of scope now.
-  🔒 **D-TRADE-043 (2026-09-06): scoping formally dispatched to the Architect** — six required outputs
-  (boundary · `breakout_model` disposition · the validation bar for a predictive model · data requirements
-  · Phase 2 entry conditions · treatment of externally-built components) will resolve this marker; not yet
-  returned, boundary stays `▸ NOT DECIDED` until it is. **Ratified as a standing rule (not just this
-  instance):** scoping/design work is NOT gated by an open D-TRADE-010-class build freeze — only
-  build/train/data-pull actions are (precedent: ADR-0001 itself was authored and design-ratified,
-  D-TRADE-022/030, while D-TRADE-010 was fully in force). This is why Phase 2 scoping runs now, in
-  parallel with canonical Phase 1's still-open item 3 (the real Leg A/Leg B CV run, D-TRADE-042),
-  without waiting for Phase 1 closure — scoping is not build.
+- **`<1.4>` Phase 2 — 🔒 RESOLVED (D-TRADE-045, 2026-09-06): boundary set by ADR-0003, ratified as to shape.**
+  Phase 2 = a from-scratch **predictive breakout-occurrence model** (predict, from day-`t` information only,
+  whether a name breaks out on `t+1`), over a broad small-cap daily panel (needs both breakout and
+  non-breakout days — Phase 1's event-defined cohort cannot train it), composed with Phase-1's validated
+  trailing-stop **exit** for P&L. OUT of scope: anything Phase 1 owns (detector/exit validation), options,
+  live execution, any multi-tenant surface, automatic adoption of externally-built components (`<2.2>`-style
+  gate, D-TRADE-032/ADR-0003 §7), and execution of Phase 2 itself (scoping ≠ build authorization).
+  **`breakout_model` disposition (D-TRADE-033's held pipeline): REWORK** — the label/walk-forward-harness
+  engineering carries forward; the data layer is rebuilt on `helm/ingest` (not the ungoverned Polygon-direct
+  original); features admitted feature-by-feature through validation, not because they're already coded;
+  catalyst features re-tested live first. **Reused code does NOT inherit validation** (ADR-0003 §3,
+  AIQ-co-signed) — full independent-validation discipline applies to the model's real-data output regardless
+  of code reuse. **Validation bar: D-TRADE-021 applies WITH MODIFICATION** for a classifier — OOS EV net of
+  costs exited via Phase-1's trailing stop vs. one named primary baseline, fold-consistency AND ≥30-model-seed
+  sensitivity replacing seed-shuffle agreement (numbers pre-registered at Phase-2 entry, not set here).
+  **Entry conditions:** the ONE hard dependency is Leg B (D-TRADE-042) validated/fully characterized — full
+  Phase-1 closure is NOT a blanket prerequisite. Full text + the 3 additive refinements still landing before
+  numbers are pre-registered: `docs/adr/ADR-0003-phase2-scope.md`. **Build/train/data-pull for `breakout_model`
+  remains NOT authorized** — D-TRADE-010 stays in force for it; this resolves scope only.
+  🔒 **Standing rule (D-TRADE-043, ratified):** scoping/design work is NOT gated by an open D-TRADE-010-class
+  build freeze — only build/train/data-pull actions are (precedent: ADR-0001 was authored and design-ratified
+  while D-TRADE-010 was fully in force). This is why Phase 2 scoping ran in parallel with canonical Phase 1's
+  own closing CV run (D-TRADE-042) rather than waiting for Phase 1 closure.
 
 ## 2 · Domain / data
 - **`<2.1>` External providers.**
@@ -116,6 +123,18 @@ must never read as decided (LL-31).
   baseline OOS under BOTH LOO-CV and 5-fold CV (≥30 seeds), **≥90% of seeds agreeing**; **NOT CLEARED**
   otherwise; **VOID** on any leakage/contamination finding regardless. Matches the short-interest
   study's own successful precedent exactly — not a new invention.
+  🔒 **The symmetric class-balance floor (D-TRADE-044, ratified 2026-09-06 — standing, not a one-off):** a
+  comparison is **UNMEASURED** (D-TRADE-029's 4th state) unless BOTH the fired side and the not-fired side
+  carry ≥30 observations — reuses D-TRADE-029's existing 30-count, no new number. Closes a real gap D-TRADE-029
+  alone didn't cover: a near-constant feature (fires on almost every observation) can sail past a firing-count
+  floor while being mathematically incapable of beating naive in either direction, on a real or null
+  relationship. Applies to every component, every leg, every future run — not selectively. **Any future
+  proposal to change this or any other validation-bar element after results are known must state which of
+  three conditions it satisfies (principled-not-tuned · applies uniformly · moves against the result, not
+  toward it) — failing any one is refused regardless of technical merit** (the standard this floor itself was
+  held to). **UNMEASURED is not a negative verdict** — it means insufficient observations on one side to
+  measure at all; the remedy is a larger cohort, not treating the component as failed. No downstream decision
+  may read UNMEASURED as equivalent to DROPPED.
 - **`<3.5>` Stack — 🔒 CONFIRMED per ADR-0001 R2 (Architect), Lead-ratified 2026-08-04 (D-TRADE-030,
   co-signed by AI/ML + AIQ).** **Python core; Node/Fastify/React dropped entirely** (N/A). Single package
   `helm/`, disjoint-by-directory: `helm/ingest` · ~~`helm/universe`~~ (**DROPPED, D-TRADE-035 — not part
