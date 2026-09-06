@@ -1876,3 +1876,43 @@ outstanding co-sign gate before canonical absorption.
 - **Verdict: CO-SIGNING.** Every finding from the original audit independently re-verified as resolved,
   not accepted on report. Full re-verification: `docs/eval/d-trade-040-041-audit.md`. Reporting to the
   Lead now.
+
+### [Architect · 2026-09-06] ADR-0003 — Phase-2 scoping ADR (D-TRADE-043), resolves `<1.4>`
+Dispatched by Lead. Dispatch-freshness: pulled, re-read decisions 030–043, canonical `<1.1>`/`<1.4>`,
+ADR-0001 current state; **read the actual `breakout_model` code in the separate `Trade/` repo in full**
+(read-only — labeling/config/features/train_model), not just D-TRADE-033's summary. `docs/adr/ADR-0003-phase2-scope.md`,
+PROPOSED. All 6 required outputs returned:
+1. **Boundary:** Phase 1 = validate what exists; **Phase 2 = build a from-scratch predictive
+   breakout-occurrence model** (predict the next-day breakout before it happens), whose entry signals are
+   **exited through Phase-1's validated trailing-stop**. OUT: options, live execution, dashboard, external
+   components (§7), and execution of Phase 2 itself.
+2. **`breakout_model` disposition = REWORK** (not as-is, not discard): the label + walk-forward harness are
+   sound and carry forward; but the data layer reads Polygon directly (outside `helm/ingest`, adjusted-status
+   unverified → rebuild on `helm/ingest`, `adjusted=false`), its consolidation/parabolic/VWAP features are
+   external-provenance (Copilot review, §7), catalyst features were never live-tested, and its 8 passing
+   tests are unit/synthetic only. **RULED (Lead's flagged inference — CONFIRMED, not left unruled): reused
+   code does NOT inherit validation** — full independent-validation discipline applies to the model's
+   real-data output regardless of code reuse. *(class)*
+3. **Validation bar:** D-TRADE-021 applies **WITH MODIFICATION** — same discipline (builder≠judge, AIQ
+   re-derive from raw, NN-1, D-TRADE-039), classifier-appropriate metric (OOS EV net of costs exited via the
+   Phase-1 trailing stop, vs a no-trade/base-rate baseline; not the model's optimistic next-day-high EV) +
+   robustness = fold-consistency + ≥30 model-seed sensitivity (the ≥90%-of-≥30-seeds analogue for a
+   time-deterministic walk-forward). Numbers pre-registered at entry (E-2), not set here.
+4. **Data:** the event cohort (D-TRADE-040/041) is **NOT reusable as the training panel** — a classifier needs
+   a broad daily panel with negatives; the event cohort has almost none. Fresh multi-year broad pull required
+   → materially larger than any pull to date → **hard precondition: rate-limit ceiling confirmed +
+   `helm/spend/` armed** (the "scales beyond this" case D-TRADE-038's standing condition names).
+5. **Entry conditions E-1..E-5:** Phase-1 full closure NOT a blanket prerequisite; the **one hard dependency
+   is Leg B (trailing-stop) validated** (D-TRADE-042) since Phase 2 exits through it. Plus §4 bar
+   pre-registered+AIQ-cosigned+Director-ratified, data preconditions, explicit Director build-GO, builder≠judge lanes.
+6. **External components:** OUT by default; admissible ONLY via formal Director scope-assignment + protocol-17
+   AIQ validation + a checkable artifact (D-TRADE-032 reaffirmed) — including the versions already embedded in
+   `breakout_model`'s features.py (presence ≠ adoption).
+- **CRITICAL tier → §4 + §3 need AIQ's load-bearing co-sign** (protocol 17); co-sign slots AIQ · AI/ML · SDE1
+  · DevOps · FinOps · Director. Authorizes no build (D-TRADE-043 explicit).
+- **Governance flag to Lead (protocol 11, not blocking):** my session's runtime reports model **Opus 4.8**,
+  but §2 locks the Architect seat to the frontier model. Surfacing the apparent deviation from the §2 lock
+  for the Director's awareness — I can't verify/change my own runtime model; not a defect in the ADR.
+- **Also outstanding (separate, flagged not done):** ADR-0001 housekeeping edits named in D-TRADE-035/036/039
+  (§9 P-3 plain-drop, §10 OP-1/2/3 locked values, §6 raw-price note) — not part of this dispatch; offering to
+  clean up as a follow-up so ADR-0001's text isn't stale against the CV run using it.
