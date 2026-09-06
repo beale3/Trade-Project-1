@@ -2007,3 +2007,24 @@ Pushed. All three D-TRADE-035/036/039 "ADR-0001 — named, not yet done" propaga
   assumption depends on it. Full detail: `docs/eval/adr-0003-review.md`.
 - All three: reported to the Lead now, per their "report back on all three or the moment you hit a
   blocker" — no blockers hit, all three completed in one pass.
+
+### [AIQ · 2026-09-06] Correction — the symmetric-floor impact number was wrong, caught by the Lead
+- **The Lead caught a real error in my own report before it reached the Director.** My stated impact of
+  the proposed symmetric class-balance floor ("2 components flip, batch becomes 0/25/2") only checked
+  `aligned_trigger` and `opening_range_breakout` — the two components already in front of me — instead of
+  systematically pulling `n_not_fired` for all 9 from my own script's output.
+- **Re-verified independently before accepting the Lead's correction**, not just taking their number:
+  re-ran `build_leg_a` from `stage3_phase1_cv_audit.py` and printed `n_fired`/`n_not_fired` for every
+  component. **Confirmed 5 components fail the floor, not 2**: `flat_top_breakout` (17 not-fired),
+  `abcd_pattern` (19), `micro_pullback` (22), `opening_range_breakout` (11), `aligned_trigger` (0) — 15 of
+  27 tests, not 2. **Corrected batch: 0 CLEARED / 12 DROPPED / 15 UNMEASURED**, not 0/25/2. Exact match to
+  the Lead's independently-pulled numbers.
+- **The direction of the recommendation is unchanged** (the floor is real and worth proposing, it's the
+  conservative choice, it removes the one marginal clearance) — **the magnitude was wrong**, and magnitude
+  is exactly the checkable-artifact protocol 16 exists to enforce. Root cause: I verified the RULE was
+  sound, then illustrated its impact using only the two components already salient to me, without
+  re-running the rule against the full table before stating a headline number — the "verify your own
+  synthesis" discipline I hold every other seat to, not applied to my own claim before sending it.
+- Corrected `docs/eval/d-trade-042-cv-reaudit.md` in place (full table + correction note, not a silent
+  edit) rather than leave the wrong number standing next to a quiet fix. Reporting the corrected figure to
+  the Lead now.

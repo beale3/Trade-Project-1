@@ -56,14 +56,42 @@ symmetric minimum-class-count floor — `UNMEASURED` unless **both** `n_fired �
 justification: anchored to the same statistical-power basis already established). This is a natural,
 narrow extension of an already-ratified rule, not a new methodology.
 
-**Stated plainly, since this is significant: applying this proposed floor to the current results would
-flip BOTH `aligned_trigger` (0 not-fired) and `opening_range_breakout`@1w (11 not-fired) to UNMEASURED.**
-The batch headline would become **0 CLEARED / 25 DROPPED / 2 UNMEASURED** of 27, not 1/26/0. This is the
-conservative direction (removing a marginal clearance, not manufacturing one), consistent with the
-project's established preference for stringency (D-TRADE-021's ≥90%-not-≥50% precedent) — but it is a
-real change to the headline result and needs Director/Lead ratification before it's applied to this run's
-verdicts, exactly like D-TRADE-021/029 were ratified before binding. I am not applying it unilaterally;
-flagging it with the concrete number so the decision-makers see the actual consequence, not an abstract gap.
+**CORRECTED 2026-09-06 (the Lead caught this — see the correction note at the end of this section):
+applying the proposed floor to the current results affects 5 of the 9 components, not the 2 I originally
+named.** I had only checked the two components already in front of me (`aligned_trigger`, the headline
+finding, and `opening_range_breakout`, the one CLEARED result) instead of systematically pulling
+`n_not_fired` for all 9. Re-run against my own script's per-component output for all 9:
+
+| component | n_fired | n_not_fired | passes both≥30? |
+|---|---|---|---|
+| bull_flag_breakout | 40 | 108 | ✅ passes |
+| flat_top_breakout | 131 | 17 | ❌ FAILS |
+| abcd_pattern | 129 | 19 | ❌ FAILS |
+| micro_pullback | 126 | 22 | ❌ FAILS |
+| round_number_breakout | 109 | 39 | ✅ passes |
+| opening_range_breakout | 137 | 11 | ❌ FAILS |
+| premarket_pivot_break | 108 | 40 | ✅ passes |
+| premarket_high_break | 97 | 51 | ✅ passes |
+| aligned_trigger | 148 | 0 | ❌ FAILS |
+
+**5 components fail (flat_top_breakout, abcd_pattern, micro_pullback, opening_range_breakout,
+aligned_trigger) — 15 of 27 tests (5×3 horizons), not 2. The corrected batch headline is
+`0 CLEARED / 12 DROPPED / 15 UNMEASURED` of 27, not the `0 CLEARED / 25 DROPPED / 2 UNMEASURED` I
+originally reported.** The direction of my conclusion (the floor is real, it's the conservative choice,
+it removes the one marginal clearance) is unchanged — but the MAGNITUDE was wrong, and magnitude is exactly
+the kind of number protocol 16 requires to be checkable, not asserted. This still needs Director/Lead
+ratification before it's applied to this run's verdicts, exactly like D-TRADE-021/029 were — I am not
+applying it unilaterally.
+
+**Correction note:** the Lead caught this by independently pulling `n_not_fired` for all 9 components from
+`phase1_cv_results.json` and finding my "2 components flip" claim didn't hold up against the full table.
+I re-verified their count against my own script's output before accepting it (ran `build_leg_a` again,
+printed `n_fired`/`n_not_fired` for every component) — their 5-component, 15-test, 0/12/15 figures are
+exactly right. My original error: I verified the RULE was sound and worth proposing, then illustrated its
+impact with the two components already salient in my own writeup, without re-running the rule against the
+full component table before stating a headline number. That is exactly the "verify my own synthesis, not
+just the builder's" discipline I hold everyone else to — I should have applied it to this claim before
+sending it, not after being asked to.
 
 **Whose job to spec:** mine, per the existing division of labor (AIQ authors bar/methodology rules,
 ratified by Lead/Director; the Architect owns structural/module-layout/label-form questions). This is a
@@ -111,8 +139,9 @@ legitimate doesn't change the process risk (even unconscious). **Recommendation:
 - **D-TRADE-042 numbers: independently re-derived, exact match. `reproduced_by_aiq=TRUE` for
   `opening_range_breakout`@1w.**
 - **`aligned_trigger` finding: confirmed real and exact. Recommend a symmetric 30/30 class-balance floor**
-  (mine to propose, Director/Lead to ratify) — flagging plainly that applying it now would flip the
-  batch to 0 CLEARED / 25 DROPPED / 2 UNMEASURED.
+  (mine to propose, Director/Lead to ratify) — flagging plainly that applying it now would flip **5 of 9
+  components (15 of 27 tests)** to UNMEASURED, batch becomes **0 CLEARED / 12 DROPPED / 15 UNMEASURED**
+  (corrected — see §2's correction note; my first pass only checked 2 of the 9 components).
 - **Leg-B construction: defensible-as-disclosed, but confounded — DROPPED verdict stands as computed, with
   the confound caveat attached; any re-construction needs fresh sign-off before running, not after seeing
   this result.**
