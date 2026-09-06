@@ -2028,3 +2028,39 @@ Pushed. All three D-TRADE-035/036/039 "ADR-0001 — named, not yet done" propaga
 - Corrected `docs/eval/d-trade-042-cv-reaudit.md` in place (full table + correction note, not a silent
   edit) rather than leave the wrong number standing next to a quiet fix. Reporting the corrected figure to
   the Lead now.
+
+### [AI/ML · 2026-09-06] D-TRADE-044 armed in code — the floor I surfaced now enforced, not just documented
+- Loop closed on the finding from the D-TRADE-042 run: flagged rather than self-patched → AIQ judged and
+  proposed → Lead caught AIQ's magnitude error → Director ratified → back to me as an authorized code
+  change. Verified the ratified rule at source (D-TRADE-044 text + AIQ's `§2` proposal) before writing
+  anything, and **independently re-derived the 0/12/15 arithmetic from the per-component fired/not-fired
+  counts myself** before implementing — it matched AIQ's corrected table exactly (4 components pass both
+  sides → 12 DROPPED; 5 fail → 15 UNMEASURED; 0 CLEARED).
+- **Armed in `bar.py`/`leg_a.py`/`leg_b.py`.** Three deliberate choices worth naming: (1) `n_comparison`
+  is a **required** parameter, not optional-with-a-default — an optional one would let a caller silently
+  skip a ratified floor, the exact vacuous-green hole builder≠judge exists to close. (2) The floor is
+  checked **before** running CV, since a degenerate fit is meaningless anyway. (3) `leg_a`/`leg_b` now
+  **import `MIN_SUPPORT`** instead of re-typing `30` — a latent drift risk I noticed while in there (the
+  floor could previously have been changed in `bar.py` without the legs following).
+- **Leg-B mapping flagged, not assumed.** D-TRADE-044 and AIQ's proposal are both written in Leg-A terms
+  (`n_fired`/`n_not_fired`); neither spells out how the floor applies to a *paired* comparison with no
+  fired/not-fired split. Implemented the reading that the two "sides" are the two arms (equal by
+  construction, so it binds on the paired sample size) — satisfies the decision's "every leg" uniformity
+  clause and changes no Leg-B outcome. **Stated explicitly in the code comment and in my report for AIQ to
+  confirm or correct**, rather than quietly picking an interpretation of a ratified rule.
+- **Planted negative control, as dispatched:** a near-constant feature (140 fired / 10 not-fired) carrying
+  a *strong* planted signal — one that would unambiguously have CLEARED under the old one-sided floor —
+  now returns UNMEASURED with CV never run. Paired against a balanced control (75/75, same signal
+  strength) that still CLEARS, proving the floor bites the degenerate case specifically rather than
+  suppressing everything. Also re-confirmed the original D-TRADE-029 direction and that the
+  required-parameter hole raises rather than silently skipping.
+- **Re-ran the real CV:** headline now printed directly by the script — `0 CLEARED / 12 DROPPED / 0 VOID /
+  15 UNMEASURED` (Leg A), Leg B unchanged at 8 DROPPED. Tally is computed and persisted to the JSON
+  artifact, so the corrected figure never needs manual recomputation by AIQ or the Lead again (the
+  dispatch's explicit ask).
+- Re-authored `docs/eval/phase1-cv-results.md` to the corrected verdicts rather than patching the
+  superseded 1-CLEARED reading alongside it (LL-19), including a note that UNMEASURED is not a negative
+  verdict and that the most actionable Phase-2 finding may be the cohort-design constraint the UNMEASURED
+  block exposes: a cohort pre-selected on "big spike day" cannot test components that are themselves
+  near-synonymous with "big spike day."
+- Pushed → origin/main (`7635bcc`). Reporting to the Lead; AIQ verifies the code change independently next.
